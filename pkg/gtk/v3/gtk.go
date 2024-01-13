@@ -861,7 +861,7 @@ import (
 // extern gboolean _gotk4_gtk3_TickCallback(GtkWidget*, GdkFrameClock*, gpointer);
 // extern gboolean _gotk4_gtk3_TextView_ConnectExtendSelection(gpointer, GtkTextExtendSelection, GtkTextIter*, GtkTextIter*, GtkTextIter*, guintptr);
 // extern gboolean _gotk4_gtk3_TextViewClass_extend_selection(GtkTextView*, GtkTextExtendSelection, GtkTextIter*, GtkTextIter*, GtkTextIter*);
-// extern gboolean _gotk4_gtk3_TextTag_ConnectEvent(gpointer, GObject, GdkEvent, GtkTextIter*, guintptr);
+// extern gboolean _gotk4_gtk3_TextTag_ConnectEvent(gpointer, GObject*, GdkEvent, GtkTextIter*, guintptr);
 // extern gboolean _gotk4_gtk3_TextTagClass_event(GtkTextTag*, GObject*, GdkEvent*, GtkTextIter*);
 // extern gboolean _gotk4_gtk3_TextCharPredicate(gunichar, gpointer);
 // extern gboolean _gotk4_gtk3_Switch_ConnectStateSet(gpointer, gboolean, guintptr);
@@ -951,7 +951,7 @@ import (
 // extern gboolean _gotk4_gtk3_CellAreaClass_focus(GtkCellArea*, GtkDirectionType);
 // extern gboolean _gotk4_gtk3_CellAreaClass_activate(GtkCellArea*, GtkCellAreaContext*, GtkWidget*, GdkRectangle*, GtkCellRendererState, gboolean);
 // extern gboolean _gotk4_gtk3_CellAllocCallback(GtkCellRenderer*, GdkRectangle*, GdkRectangle*, gpointer);
-// extern gboolean _gotk4_gtk3_AccelGroup_ConnectAccelActivate(gpointer, GObject, guint, GdkModifierType, guintptr);
+// extern gboolean _gotk4_gtk3_AccelGroup_ConnectAccelActivate(gpointer, GObject*, guint, GdkModifierType, guintptr);
 // extern gboolean _gotk4_gtk3_AboutDialog_ConnectActivateLink(gpointer, gchar*, guintptr);
 // extern gboolean _gotk4_gtk3_AboutDialogClass_activate_link(GtkAboutDialog*, gchar*);
 // extern GtkWidgetPath* _gotk4_gtk3_ContainerClass_get_path_for_child(GtkContainer*, GtkWidget*);
@@ -975,7 +975,7 @@ import (
 // extern GdkGLContext* _gotk4_gtk3_GLArea_ConnectCreateContext(gpointer, guintptr);
 // extern GType _gotk4_gtk3_ContainerClass_child_type(GtkContainer*);
 // extern GType _gotk4_gtk3_BuilderClass_get_type_from_name(GtkBuilder*, char*);
-// extern GObject _gotk4_gtk3_PrintOperation_ConnectCreateCustomWidget(gpointer, guintptr);
+// extern GObject* _gotk4_gtk3_PrintOperation_ConnectCreateCustomWidget(gpointer, guintptr);
 // extern AtkObject* _gotk4_gtk3_WidgetClass_get_accessible(GtkWidget*);
 // AtkObject* _gotk4_gtk3_Widget_virtual_get_accessible(void* fnptr, GtkWidget* arg0) {
 //   return ((AtkObject* (*)(GtkWidget*))(fnptr))(arg0);
