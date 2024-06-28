@@ -5234,9 +5234,7 @@ func BuilderErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -5519,9 +5517,7 @@ func CSSProviderErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -5949,9 +5945,7 @@ func FileChooserErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -6306,9 +6300,7 @@ func IconThemeErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -7334,9 +7326,7 @@ func PrintErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -7805,9 +7795,7 @@ func RecentChooserErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -7870,9 +7858,7 @@ func RecentManagerErrorQuark() glib.Quark {
 
 	var _quark glib.Quark // out
 
-	_quark = uint32(_cret)
-	type _ = glib.Quark
-	type _ = uint32
+	_quark = glib.Quark(_cret)
 
 	return _quark
 }
@@ -29477,9 +29463,7 @@ func (accelGroup *AccelGroup) Activate(accelQuark glib.Quark, acceleratable *cor
 	var _cret C.gboolean        // in
 
 	_arg0 = (*C.GtkAccelGroup)(unsafe.Pointer(coreglib.InternObject(accelGroup).Native()))
-	_arg1 = C.guint32(accelQuark)
-	type _ = glib.Quark
-	type _ = uint32
+	_arg1 = C.GQuark(accelQuark)
 	_arg2 = (*C.GObject)(unsafe.Pointer(acceleratable.Native()))
 	_arg3 = C.guint(accelKey)
 	_arg4 = C.GdkModifierType(accelMods)
@@ -150884,9 +150868,7 @@ func (a *AccelGroupEntry) Key() *AccelKey {
 func (a *AccelGroupEntry) AccelPathQuark() glib.Quark {
 	valptr := &a.native.accel_path_quark
 	var _v glib.Quark // out
-	_v = uint32(*valptr)
-	type _ = glib.Quark
-	type _ = uint32
+	_v = glib.Quark(*valptr)
 	return _v
 }
 
@@ -156620,9 +156602,7 @@ type rcProperty struct {
 func (r *RCProperty) TypeName() glib.Quark {
 	valptr := &r.native.type_name
 	var _v glib.Quark // out
-	_v = uint32(*valptr)
-	type _ = glib.Quark
-	type _ = uint32
+	_v = glib.Quark(*valptr)
 	return _v
 }
 
@@ -156630,9 +156610,7 @@ func (r *RCProperty) TypeName() glib.Quark {
 func (r *RCProperty) PropertyName() glib.Quark {
 	valptr := &r.native.property_name
 	var _v glib.Quark // out
-	_v = uint32(*valptr)
-	type _ = glib.Quark
-	type _ = uint32
+	_v = glib.Quark(*valptr)
 	return _v
 }
 
@@ -164862,9 +164840,7 @@ func (path *WidgetPath) IterHasQclass(pos int, qname glib.Quark) bool {
 
 	_arg0 = (*C.GtkWidgetPath)(gextras.StructNative(unsafe.Pointer(path)))
 	_arg1 = C.gint(pos)
-	_arg2 = C.guint32(qname)
-	type _ = glib.Quark
-	type _ = uint32
+	_arg2 = C.GQuark(qname)
 
 	_cret = C.gtk_widget_path_iter_has_qclass(_arg0, _arg1, _arg2)
 	runtime.KeepAlive(path)
@@ -164899,9 +164875,7 @@ func (path *WidgetPath) IterHasQname(pos int, qname glib.Quark) bool {
 
 	_arg0 = (*C.GtkWidgetPath)(gextras.StructNative(unsafe.Pointer(path)))
 	_arg1 = C.gint(pos)
-	_arg2 = C.guint32(qname)
-	type _ = glib.Quark
-	type _ = uint32
+	_arg2 = C.GQuark(qname)
 
 	_cret = C.gtk_widget_path_iter_has_qname(_arg0, _arg1, _arg2)
 	runtime.KeepAlive(path)
@@ -164940,9 +164914,7 @@ func (path *WidgetPath) IterHasQregion(pos int, qname glib.Quark) (RegionFlags, 
 
 	_arg0 = (*C.GtkWidgetPath)(gextras.StructNative(unsafe.Pointer(path)))
 	_arg1 = C.gint(pos)
-	_arg2 = C.guint32(qname)
-	type _ = glib.Quark
-	type _ = uint32
+	_arg2 = C.GQuark(qname)
 
 	_cret = C.gtk_widget_path_iter_has_qregion(_arg0, _arg1, _arg2, &_arg3)
 	runtime.KeepAlive(path)
