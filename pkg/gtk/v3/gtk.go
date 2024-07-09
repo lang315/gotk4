@@ -5226,7 +5226,6 @@ func (b BuilderError) String() string {
 	}
 }
 
-// The function returns the following values:
 func BuilderErrorQuark() glib.Quark {
 	var _cret C.GQuark // in
 
@@ -5509,7 +5508,6 @@ func (c CSSProviderError) String() string {
 	}
 }
 
-// The function returns the following values:
 func CSSProviderErrorQuark() glib.Quark {
 	var _cret C.GQuark // in
 
@@ -6292,7 +6290,6 @@ func (i IconThemeError) String() string {
 	}
 }
 
-// The function returns the following values:
 func IconThemeErrorQuark() glib.Quark {
 	var _cret C.GQuark // in
 
@@ -7787,7 +7784,6 @@ func (r RecentChooserError) String() string {
 	}
 }
 
-// The function returns the following values:
 func RecentChooserErrorQuark() glib.Quark {
 	var _cret C.GQuark // in
 
@@ -7850,7 +7846,6 @@ func (r RecentManagerError) String() string {
 	}
 }
 
-// The function returns the following values:
 func RecentManagerErrorQuark() glib.Quark {
 	var _cret C.GQuark // in
 
@@ -15528,8 +15523,6 @@ func SelectionRemoveAll(widget Widgetter) {
 }
 
 // SetDebugFlags sets the GTK+ debug flags.
-//
-// The function takes the following parameters:
 func SetDebugFlags(flags uint) {
 	var _arg1 C.guint // out
 
@@ -18185,7 +18178,6 @@ func marshalCellAccessibleParent(p uintptr) (interface{}, error) {
 	return wrapCellAccessibleParent(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) Activate(cell *CellAccessible) {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18198,7 +18190,6 @@ func (parent *CellAccessibleParent) Activate(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) Edit(cell *CellAccessible) {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18211,7 +18202,6 @@ func (parent *CellAccessibleParent) Edit(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) ExpandCollapse(cell *CellAccessible) {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18224,9 +18214,6 @@ func (parent *CellAccessibleParent) ExpandCollapse(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) CellArea(cell *CellAccessible) *gdk.Rectangle {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18288,8 +18275,6 @@ func (parent *CellAccessibleParent) CellExtents(cell *CellAccessible, coordType 
 	return _x, _y, _width, _height
 }
 
-// The function takes the following parameters:
-//
 // The function returns the following values:
 //
 //   - row
@@ -18316,9 +18301,6 @@ func (parent *CellAccessibleParent) CellPosition(cell *CellAccessible) (row, col
 	return _row, _column
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) ChildIndex(cell *CellAccessible) int {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18338,9 +18320,6 @@ func (parent *CellAccessibleParent) ChildIndex(cell *CellAccessible) int {
 	return _gint
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) RendererState(cell *CellAccessible) CellRendererState {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18360,9 +18339,6 @@ func (parent *CellAccessibleParent) RendererState(cell *CellAccessible) CellRend
 	return _cellRendererState
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) GrabFocus(cell *CellAccessible) bool {
 	var _arg0 *C.GtkCellAccessibleParent // out
 	var _arg1 *C.GtkCellAccessible       // out
@@ -18403,7 +18379,6 @@ func (parent *CellAccessibleParent) UpdateRelationset(cell *CellAccessible, rela
 	runtime.KeepAlive(relationset)
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) activate(cell *CellAccessible) {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.activate
@@ -18419,7 +18394,6 @@ func (parent *CellAccessibleParent) activate(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) edit(cell *CellAccessible) {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.edit
@@ -18435,7 +18409,6 @@ func (parent *CellAccessibleParent) edit(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
 func (parent *CellAccessibleParent) expandCollapse(cell *CellAccessible) {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.expand_collapse
@@ -18451,9 +18424,6 @@ func (parent *CellAccessibleParent) expandCollapse(cell *CellAccessible) {
 	runtime.KeepAlive(cell)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) cellArea(cell *CellAccessible) *gdk.Rectangle {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.get_cell_area
@@ -18521,8 +18491,6 @@ func (parent *CellAccessibleParent) cellExtents(cell *CellAccessible, coordType 
 	return _x, _y, _width, _height
 }
 
-// The function takes the following parameters:
-//
 // The function returns the following values:
 //
 //   - row
@@ -18552,9 +18520,6 @@ func (parent *CellAccessibleParent) cellPosition(cell *CellAccessible) (row, col
 	return _row, _column
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) childIndex(cell *CellAccessible) int {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.get_child_index
@@ -18577,9 +18542,6 @@ func (parent *CellAccessibleParent) childIndex(cell *CellAccessible) int {
 	return _gint
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) rendererState(cell *CellAccessible) CellRendererState {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.get_renderer_state
@@ -18602,9 +18564,6 @@ func (parent *CellAccessibleParent) rendererState(cell *CellAccessible) CellRend
 	return _cellRendererState
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (parent *CellAccessibleParent) grabFocus(cell *CellAccessible) bool {
 	gclass := (*C.GtkCellAccessibleParentIface)(coreglib.PeekParentClass(parent))
 	fnarg := gclass.grab_focus
@@ -19755,7 +19714,6 @@ func (chooser *ColorChooser) addPalette(orientation Orientation, colorsPerLine i
 	runtime.KeepAlive(colors)
 }
 
-// The function takes the following parameters:
 func (chooser *ColorChooser) colorActivated(color *gdk.RGBA) {
 	gclass := (*C.GtkColorChooserInterface)(coreglib.PeekParentClass(chooser))
 	fnarg := gclass.color_activated
@@ -23249,7 +23207,6 @@ func (fontchooser *FontChooser) SetShowPreviewEntry(showPreviewEntry bool) {
 	runtime.KeepAlive(showPreviewEntry)
 }
 
-// The function takes the following parameters:
 func (chooser *FontChooser) fontActivated(fontname string) {
 	gclass := (*C.GtkFontChooserIface)(coreglib.PeekParentClass(chooser))
 	fnarg := gclass.font_activated
@@ -23773,7 +23730,6 @@ func (preview *PrintOperationPreview) isSelected(pageNr int) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
 func (preview *PrintOperationPreview) ready(context *PrintContext) {
 	gclass := (*C.GtkPrintOperationPreviewIface)(coreglib.PeekParentClass(preview))
 	fnarg := gclass.ready
@@ -25722,7 +25678,6 @@ func (shell *ToolShell) ellipsizeMode() pango.EllipsizeMode {
 	return _ellipsizeMode
 }
 
-// The function returns the following values:
 func (shell *ToolShell) iconSize() IconSize {
 	gclass := (*C.GtkToolShellIface)(coreglib.PeekParentClass(shell))
 	fnarg := gclass.get_icon_size
@@ -28439,10 +28394,6 @@ func (sortable *TreeSortable) sortColumnChanged() {
 
 // AboutDialogOverrides contains methods that are overridable.
 type AboutDialogOverrides struct {
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	ActivateLink func(uri string) bool
 }
 
@@ -29334,9 +29285,6 @@ func (about *AboutDialog) SetWrapLicense(wrapLicense bool) {
 	runtime.KeepAlive(wrapLicense)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (dialog *AboutDialog) activateLink(uri string) bool {
 	gclass := (*C.GtkAboutDialogClass)(coreglib.PeekParentClass(dialog))
 	fnarg := gclass.activate_link
@@ -30624,9 +30572,7 @@ type ActionOverrides struct {
 	// It can also be used to manually activate an action.
 	//
 	// Deprecated: Use g_action_group_activate_action() on a #GAction instead.
-	Activate func()
-	// The function takes the following parameters:
-	//
+	Activate     func()
 	ConnectProxy func(proxy Widgetter)
 	// CreateMenu: if action provides a Menu widget as a submenu for the menu
 	// item or the toolbar item it creates, this function returns an instance of
@@ -30638,7 +30584,6 @@ type ActionOverrides struct {
 	// The function returns the following values:
 	//
 	//   - widget: menu item provided by the action, or NULL.
-	//
 	CreateMenu func() Widgetter
 	// CreateMenuItem creates a menu item widget that proxies for the given
 	// action.
@@ -30649,7 +30594,6 @@ type ActionOverrides struct {
 	// The function returns the following values:
 	//
 	//   - widget: menu item connected to the action.
-	//
 	CreateMenuItem func() Widgetter
 	// CreateToolItem creates a toolbar item widget that proxies for the given
 	// action.
@@ -30660,10 +30604,7 @@ type ActionOverrides struct {
 	// The function returns the following values:
 	//
 	//   - widget: toolbar item connected to the action.
-	//
-	CreateToolItem func() Widgetter
-	// The function takes the following parameters:
-	//
+	CreateToolItem  func() Widgetter
 	DisconnectProxy func(proxy Widgetter)
 }
 
@@ -31882,7 +31823,6 @@ func (action *Action) activate() {
 	runtime.KeepAlive(action)
 }
 
-// The function takes the following parameters:
 func (action *Action) connectProxy(proxy Widgetter) {
 	gclass := (*C.GtkActionClass)(coreglib.PeekParentClass(action))
 	fnarg := gclass.connect_proxy
@@ -32029,7 +31969,6 @@ func (action *Action) createToolItem() Widgetter {
 	return _widget
 }
 
-// The function takes the following parameters:
 func (action *Action) disconnectProxy(proxy Widgetter) {
 	gclass := (*C.GtkActionClass)(coreglib.PeekParentClass(action))
 	fnarg := gclass.disconnect_proxy
@@ -32235,7 +32174,6 @@ type ActionGroupOverrides struct {
 	// The function returns the following values:
 	//
 	//   - action: action, or NULL if no action by that name exists.
-	//
 	Action func(actionName string) *Action
 }
 
@@ -33612,8 +33550,6 @@ func (alignment *Alignment) SetPadding(paddingTop, paddingBottom, paddingLeft, p
 
 // AppChooserButtonOverrides contains methods that are overridable.
 type AppChooserButtonOverrides struct {
-	// The function takes the following parameters:
-	//
 	CustomItemActivated func(itemName string)
 }
 
@@ -33967,7 +33903,6 @@ func (self *AppChooserButton) SetShowDialogItem(setting bool) {
 	runtime.KeepAlive(setting)
 }
 
-// The function takes the following parameters:
 func (self *AppChooserButton) customItemActivated(itemName string) {
 	gclass := (*C.GtkAppChooserButtonClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.custom_item_activated
@@ -34229,17 +34164,12 @@ func (self *AppChooserDialog) SetHeading(heading string) {
 
 // AppChooserWidgetOverrides contains methods that are overridable.
 type AppChooserWidgetOverrides struct {
-	// The function takes the following parameters:
-	//
 	ApplicationActivated func(appInfo gio.AppInfor)
-	// The function takes the following parameters:
-	//
-	ApplicationSelected func(appInfo gio.AppInfor)
+	ApplicationSelected  func(appInfo gio.AppInfor)
 	// The function takes the following parameters:
 	//
 	//   - menu
 	//   - appInfo
-	//
 	PopulatePopup func(menu *Menu, appInfo gio.AppInfor)
 }
 
@@ -34667,7 +34597,6 @@ func (self *AppChooserWidget) SetShowRecommended(setting bool) {
 	runtime.KeepAlive(setting)
 }
 
-// The function takes the following parameters:
 func (self *AppChooserWidget) applicationActivated(appInfo gio.AppInfor) {
 	gclass := (*C.GtkAppChooserWidgetClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.application_activated
@@ -34683,7 +34612,6 @@ func (self *AppChooserWidget) applicationActivated(appInfo gio.AppInfor) {
 	runtime.KeepAlive(appInfo)
 }
 
-// The function takes the following parameters:
 func (self *AppChooserWidget) applicationSelected(appInfo gio.AppInfor) {
 	gclass := (*C.GtkAppChooserWidgetClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.application_selected
@@ -34723,11 +34651,7 @@ func (self *AppChooserWidget) populatePopup(menu *Menu, appInfo gio.AppInfor) {
 
 // ApplicationOverrides contains methods that are overridable.
 type ApplicationOverrides struct {
-	// The function takes the following parameters:
-	//
-	WindowAdded func(window *Window)
-	// The function takes the following parameters:
-	//
+	WindowAdded   func(window *Window)
 	WindowRemoved func(window *Window)
 }
 
@@ -35694,7 +35618,6 @@ func (application *Application) Uninhibit(cookie uint) {
 	runtime.KeepAlive(cookie)
 }
 
-// The function takes the following parameters:
 func (application *Application) windowAdded(window *Window) {
 	gclass := (*C.GtkApplicationClass)(coreglib.PeekParentClass(application))
 	fnarg := gclass.window_added
@@ -35710,7 +35633,6 @@ func (application *Application) windowAdded(window *Window) {
 	runtime.KeepAlive(window)
 }
 
-// The function takes the following parameters:
 func (application *Application) windowRemoved(window *Window) {
 	gclass := (*C.GtkApplicationClass)(coreglib.PeekParentClass(application))
 	fnarg := gclass.window_removed
@@ -36381,11 +36303,9 @@ func (aspectFrame *AspectFrame) Set(xalign, yalign, ratio float32, obeyChild boo
 
 // AssistantOverrides contains methods that are overridable.
 type AssistantOverrides struct {
-	Apply  func()
-	Cancel func()
-	Close  func()
-	// The function takes the following parameters:
-	//
+	Apply   func()
+	Cancel  func()
+	Close   func()
 	Prepare func(page Widgetter)
 }
 
@@ -37277,7 +37197,6 @@ func (assistant *Assistant) close() {
 	runtime.KeepAlive(assistant)
 }
 
-// The function takes the following parameters:
 func (assistant *Assistant) prepare(page Widgetter) {
 	gclass := (*C.GtkAssistantClass)(coreglib.PeekParentClass(assistant))
 	fnarg := gclass.prepare
@@ -38010,7 +37929,6 @@ type BuilderOverrides struct {
 	// The function returns the following values:
 	//
 	//   - gType found for type_name or TYPE_INVALID if no type was found.
-	//
 	TypeFromName func(typeName string) coreglib.Type
 }
 
@@ -40860,8 +40778,6 @@ func (calendar *Calendar) prevYear() {
 
 // CellAccessibleOverrides contains methods that are overridable.
 type CellAccessibleOverrides struct {
-	// The function takes the following parameters:
-	//
 	UpdateCache func(emitSignal bool)
 }
 
@@ -40937,7 +40853,6 @@ func marshalCellAccessible(p uintptr) (interface{}, error) {
 	return wrapCellAccessible(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function takes the following parameters:
 func (cell *CellAccessible) updateCache(emitSignal bool) {
 	gclass := (*C.GtkCellAccessibleClass)(coreglib.PeekParentClass(cell))
 	fnarg := gclass.update_cache
@@ -40973,14 +40888,12 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: whether area was successfully activated.
-	//
 	Activate func(context *CellAreaContext, widget Widgetter, cellArea *gdk.Rectangle, flags CellRendererState, editOnly bool) bool
 	// Add adds renderer to area with the default child cell properties.
 	//
 	// The function takes the following parameters:
 	//
 	//   - renderer to add to area.
-	//
 	Add func(renderer CellRendererer)
 	// ApplyAttributes applies any connected attributes to the renderers in area
 	// by pulling the values from tree_model.
@@ -40992,7 +40905,6 @@ type CellAreaOverrides struct {
 	//   - isExpander: whether iter has children.
 	//   - isExpanded: whether iter is expanded in the view and children are
 	//     visible.
-	//
 	ApplyAttributes func(treeModel TreeModeller, iter *TreeIter, isExpander, isExpanded bool)
 	// CopyContext: this is sometimes needed for cases where rows need to
 	// share alignments in one orientation but may be separately grouped in the
@@ -41011,7 +40923,6 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - cellAreaContext: newly created CellAreaContext copy of context.
-	//
 	CopyContext func(context *CellAreaContext) *CellAreaContext
 	// CreateContext creates a CellAreaContext to be used with area for all
 	// purposes. CellAreaContext stores geometry information for rows for which
@@ -41024,7 +40935,6 @@ type CellAreaOverrides struct {
 	//
 	//   - cellAreaContext: newly created CellAreaContext which can be used with
 	//     area.
-	//
 	CreateContext func() *CellAreaContext
 	// Event delegates event handling to a CellArea.
 	//
@@ -41039,7 +40949,6 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - gint: TRUE if the event was handled by area.
-	//
 	Event func(context *CellAreaContext, widget Widgetter, event *gdk.Event, cellArea *gdk.Rectangle, flags CellRendererState) int
 	// Focus: this should be called by the area’s owning layout widget when
 	// focus is to be passed to area, or moved within area for a given direction
@@ -41055,7 +40964,6 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if focus remains inside area as a result of this call.
-	//
 	Focus func(direction DirectionType) bool
 	// PreferredHeight retrieves a cell area’s initial minimum and natural
 	// height.
@@ -41077,7 +40985,6 @@ type CellAreaOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location to store the natural height,
 	//     or NULL.
-	//
 	PreferredHeight func(context *CellAreaContext, widget Widgetter) (minimumHeight, naturalHeight int)
 	// PreferredHeightForWidth retrieves a cell area’s minimum and natural
 	// height if it would be given the specified width.
@@ -41106,7 +41013,6 @@ type CellAreaOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location to store the natural height,
 	//     or NULL.
-	//
 	PreferredHeightForWidth func(context *CellAreaContext, widget Widgetter, width int) (minimumHeight, naturalHeight int)
 	// PreferredWidth retrieves a cell area’s initial minimum and natural width.
 	//
@@ -41127,7 +41033,6 @@ type CellAreaOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location to store the natural width,
 	//     or NULL.
-	//
 	PreferredWidth func(context *CellAreaContext, widget Widgetter) (minimumWidth, naturalWidth int)
 	// PreferredWidthForHeight retrieves a cell area’s minimum and natural width
 	// if it would be given the specified height.
@@ -41156,7 +41061,6 @@ type CellAreaOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location to store the natural width,
 	//     or NULL.
-	//
 	PreferredWidthForHeight func(context *CellAreaContext, widget Widgetter, height int) (minimumWidth, naturalWidth int)
 	// RequestMode gets whether the area prefers a height-for-width layout or a
 	// width-for-height layout.
@@ -41164,7 +41068,6 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - sizeRequestMode preferred by area.
-	//
 	RequestMode func() SizeRequestMode
 	// IsActivatable returns whether the area can do anything when activated,
 	// after applying new attributes to area.
@@ -41172,14 +41075,12 @@ type CellAreaOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: whether area can do anything when activated.
-	//
 	IsActivatable func() bool
 	// Remove removes renderer from area.
 	//
 	// The function takes the following parameters:
 	//
 	//   - renderer to remove from area.
-	//
 	Remove func(renderer CellRendererer)
 	// Render renders area’s cells according to area’s layout onto widget at the
 	// given coordinates.
@@ -41194,7 +41095,6 @@ type CellAreaOverrides struct {
 	//   - flags for area in this row.
 	//   - paintFocus: whether area should paint focus on focused cells for
 	//     focused rows or not.
-	//
 	Render func(context *CellAreaContext, widget Widgetter, cr *cairo.Context, backgroundArea, cellArea *gdk.Rectangle, flags CellRendererState, paintFocus bool)
 }
 
@@ -43722,7 +43622,6 @@ type CellAreaContextOverrides struct {
 	//     or -1.
 	//   - height: allocated height for all TreeModel rows rendered with
 	//     context, or -1.
-	//
 	Allocate func(width, height int)
 	// PreferredHeightForWidth gets the accumulative preferred height for width
 	// for all rows which have been requested for the same said width with this
@@ -43741,7 +43640,6 @@ type CellAreaContextOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location to store the natural height,
 	//     or NULL.
-	//
 	PreferredHeightForWidth func(width int) (minimumHeight, naturalHeight int)
 	// PreferredWidthForHeight gets the accumulative preferred width for height
 	// for all rows which have been requested for the same said height with this
@@ -43760,7 +43658,6 @@ type CellAreaContextOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location to store the natural width,
 	//     or NULL.
-	//
 	PreferredWidthForHeight func(height int) (minimumWidth, naturalWidth int)
 	// Reset resets any previously cached request and allocation data.
 	//
@@ -44338,14 +44235,12 @@ type CellRendererOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if the event was consumed/handled.
-	//
 	Activate        func(event *gdk.Event, widget Widgetter, path string, backgroundArea, cellArea *gdk.Rectangle, flags CellRendererState) bool
 	EditingCanceled func()
 	// The function takes the following parameters:
 	//
 	//   - editable
 	//   - path
-	//
 	EditingStarted func(editable CellEditabler, path string)
 	// AlignedArea gets the aligned area used by cell inside cell_area. Used for
 	// finding the appropriate edit and focus rectangle.
@@ -44361,7 +44256,6 @@ type CellRendererOverrides struct {
 	//
 	//   - alignedArea: return location for the space inside cell_area that
 	//     would acually be used to render.
-	//
 	AlignedArea func(widget Widgetter, flags CellRendererState, cellArea *gdk.Rectangle) *gdk.Rectangle
 	// PreferredHeight retreives a renderer’s natural size when rendered to
 	// widget.
@@ -44374,7 +44268,6 @@ type CellRendererOverrides struct {
 	//
 	//   - minimumSize (optional): location to store the minimum size, or NULL.
 	//   - naturalSize (optional): location to store the natural size, or NULL.
-	//
 	PreferredHeight func(widget Widgetter) (minimumSize, naturalSize int)
 	// PreferredHeightForWidth retreives a cell renderers’s minimum and natural
 	// height if it were rendered to widget with the specified width.
@@ -44390,7 +44283,6 @@ type CellRendererOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location for storing the preferred size,
 	//     or NULL.
-	//
 	PreferredHeightForWidth func(widget Widgetter, width int) (minimumHeight, naturalHeight int)
 	// PreferredWidth retreives a renderer’s natural size when rendered to
 	// widget.
@@ -44403,7 +44295,6 @@ type CellRendererOverrides struct {
 	//
 	//   - minimumSize (optional): location to store the minimum size, or NULL.
 	//   - naturalSize (optional): location to store the natural size, or NULL.
-	//
 	PreferredWidth func(widget Widgetter) (minimumSize, naturalSize int)
 	// PreferredWidthForHeight retreives a cell renderers’s minimum and natural
 	// width if it were rendered to widget with the specified height.
@@ -44419,7 +44310,6 @@ type CellRendererOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location for storing the preferred size,
 	//     or NULL.
-	//
 	PreferredWidthForHeight func(widget Widgetter, height int) (minimumWidth, naturalWidth int)
 	// RequestMode gets whether the cell renderer prefers a height-for-width
 	// layout or a width-for-height layout.
@@ -44427,7 +44317,6 @@ type CellRendererOverrides struct {
 	// The function returns the following values:
 	//
 	//   - sizeRequestMode preferred by this renderer.
-	//
 	RequestMode func() SizeRequestMode
 	// Size obtains the width and height needed to render the cell. Used by view
 	// widgets to determine the appropriate size for the cell_area passed to
@@ -44454,7 +44343,6 @@ type CellRendererOverrides struct {
 	//     or NULL.
 	//   - height (optional): location to return height needed to render a cell,
 	//     or NULL.
-	//
 	Size func(widget Widgetter, cellArea *gdk.Rectangle) (xOffset, yOffset, width, height int)
 	// Render invokes the virtual render function of the CellRenderer. The three
 	// passed-in rectangles are areas in cr. Most renderers will draw within
@@ -44472,7 +44360,6 @@ type CellRendererOverrides struct {
 	//     padding on the sides).
 	//   - cellArea: area normally rendered by a cell renderer.
 	//   - flags that affect rendering.
-	//
 	Render func(cr *cairo.Context, widget Widgetter, backgroundArea, cellArea *gdk.Rectangle, flags CellRendererState)
 	// StartEditing starts editing the contents of this cell, through a new
 	// CellEditable widget created by the CellRendererClass.start_editing
@@ -44493,7 +44380,6 @@ type CellRendererOverrides struct {
 	//
 	//   - cellEditable (optional): new CellEditable for editing this cell,
 	//     or NULL if editing is not possible.
-	//
 	StartEditing func(event *gdk.Event, widget Widgetter, path string, backgroundArea, cellArea *gdk.Rectangle, flags CellRendererState) *CellEditable
 }
 
@@ -45923,8 +45809,6 @@ func (cell *CellRenderer) startEditing(event *gdk.Event, widget Widgetter, path 
 
 // CellRendererAccelOverrides contains methods that are overridable.
 type CellRendererAccelOverrides struct {
-	// The function takes the following parameters:
-	//
 	AccelCleared func(pathString string)
 	// The function takes the following parameters:
 	//
@@ -45932,7 +45816,6 @@ type CellRendererAccelOverrides struct {
 	//   - accelKey
 	//   - accelMods
 	//   - hardwareKeycode
-	//
 	AccelEdited func(pathString string, accelKey uint, accelMods gdk.ModifierType, hardwareKeycode uint)
 }
 
@@ -46026,7 +45909,6 @@ func NewCellRendererAccel() *CellRendererAccel {
 	return _cellRendererAccel
 }
 
-// The function takes the following parameters:
 func (accel *CellRendererAccel) accelCleared(pathString string) {
 	gclass := (*C.GtkCellRendererAccelClass)(coreglib.PeekParentClass(accel))
 	fnarg := gclass.accel_cleared
@@ -46484,7 +46366,6 @@ type CellRendererTextOverrides struct {
 	//
 	//   - path
 	//   - newText
-	//
 	Edited func(path, newText string)
 }
 
@@ -46625,8 +46506,6 @@ func (cellRendererText *CellRendererText) edited(path, newText string) {
 
 // CellRendererToggleOverrides contains methods that are overridable.
 type CellRendererToggleOverrides struct {
-	// The function takes the following parameters:
-	//
 	Toggled func(path string)
 }
 
@@ -46848,7 +46727,6 @@ func (toggle *CellRendererToggle) SetRadio(radio bool) {
 	runtime.KeepAlive(radio)
 }
 
-// The function takes the following parameters:
 func (cellRendererToggle *CellRendererToggle) toggled(path string) {
 	gclass := (*C.GtkCellRendererToggleClass)(coreglib.PeekParentClass(cellRendererToggle))
 	fnarg := gclass.toggled
@@ -47348,8 +47226,6 @@ func (cellView *CellView) SetModel(model TreeModeller) {
 
 // CheckButtonOverrides contains methods that are overridable.
 type CheckButtonOverrides struct {
-	// The function takes the following parameters:
-	//
 	DrawIndicator func(cr *cairo.Context)
 }
 
@@ -47527,7 +47403,6 @@ func NewCheckButtonWithMnemonic(label string) *CheckButton {
 	return _checkButton
 }
 
-// The function takes the following parameters:
 func (checkButton *CheckButton) drawIndicator(cr *cairo.Context) {
 	gclass := (*C.GtkCheckButtonClass)(coreglib.PeekParentClass(checkButton))
 	fnarg := gclass.draw_indicator
@@ -47545,8 +47420,6 @@ func (checkButton *CheckButton) drawIndicator(cr *cairo.Context) {
 
 // CheckMenuItemOverrides contains methods that are overridable.
 type CheckMenuItemOverrides struct {
-	// The function takes the following parameters:
-	//
 	DrawIndicator func(cr *cairo.Context)
 	// Toggled emits the CheckMenuItem::toggled signal.
 	Toggled func()
@@ -47879,7 +47752,6 @@ func (checkMenuItem *CheckMenuItem) Toggled() {
 	runtime.KeepAlive(checkMenuItem)
 }
 
-// The function takes the following parameters:
 func (checkMenuItem *CheckMenuItem) drawIndicator(cr *cairo.Context) {
 	gclass := (*C.GtkCheckMenuItemClass)(coreglib.PeekParentClass(checkMenuItem))
 	fnarg := gclass.draw_indicator
@@ -49812,11 +49684,7 @@ func (colorsel *ColorSelectionDialog) ColorSelection() Widgetter {
 
 // ComboBoxOverrides contains methods that are overridable.
 type ComboBoxOverrides struct {
-	Changed func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Changed         func()
 	FormatEntryText func(path string) string
 }
 
@@ -50934,9 +50802,6 @@ func (comboBox *ComboBox) changed() {
 	runtime.KeepAlive(comboBox)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (comboBox *ComboBox) formatEntryText(path string) string {
 	gclass := (*C.GtkComboBoxClass)(coreglib.PeekParentClass(comboBox))
 	fnarg := gclass.format_entry_text
@@ -51415,7 +51280,6 @@ type ContainerOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - widget to be placed inside container.
-	//
 	Add         func(widget Widgetter)
 	CheckResize func()
 	// ChildType returns the type of the children supported by the container.
@@ -51426,12 +51290,7 @@ type ContainerOverrides struct {
 	// The function returns the following values:
 	//
 	//   - gType: #GType.
-	//
-	ChildType func() coreglib.Type
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	ChildType     func() coreglib.Type
 	CompositeName func(child Widgetter) string
 	// PathForChild returns a newly created widget path representing all the
 	// widget hierarchy from the toplevel down to and including child.
@@ -51443,7 +51302,6 @@ type ContainerOverrides struct {
 	// The function returns the following values:
 	//
 	//   - widgetPath: newly created WidgetPath.
-	//
 	PathForChild func(child Widgetter) *WidgetPath
 	// Remove removes widget from container. widget must be inside container.
 	// Note that container will own a reference to widget, and that this
@@ -51458,7 +51316,6 @@ type ContainerOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - widget: current child of container.
-	//
 	Remove func(widget Widgetter)
 	// SetFocusChild: sets, or unsets if child is NULL, the focused child of
 	// container.
@@ -51474,7 +51331,6 @@ type ContainerOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - child (optional) or NULL.
-	//
 	SetFocusChild func(child Widgetter)
 }
 
@@ -52577,9 +52433,6 @@ func (container *Container) childType() coreglib.Type {
 	return _gType
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (container *Container) compositeName(child Widgetter) string {
 	gclass := (*C.GtkContainerClass)(coreglib.PeekParentClass(container))
 	fnarg := gclass.composite_name
@@ -52849,7 +52702,6 @@ func marshalContainerCellAccessible(p uintptr) (interface{}, error) {
 	return wrapContainerCellAccessible(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function returns the following values:
 func NewContainerCellAccessible() *ContainerCellAccessible {
 	var _cret *C.GtkContainerCellAccessible // in
 
@@ -52862,7 +52714,6 @@ func NewContainerCellAccessible() *ContainerCellAccessible {
 	return _containerCellAccessible
 }
 
-// The function takes the following parameters:
 func (container *ContainerCellAccessible) AddChild(child *CellAccessible) {
 	var _arg0 *C.GtkContainerCellAccessible // out
 	var _arg1 *C.GtkCellAccessible          // out
@@ -52876,8 +52727,6 @@ func (container *ContainerCellAccessible) AddChild(child *CellAccessible) {
 }
 
 // Children: get a list of children.
-//
-// The function returns the following values:
 func (container *ContainerCellAccessible) Children() []*CellAccessible {
 	var _arg0 *C.GtkContainerCellAccessible // out
 	var _cret *C.GList                      // in
@@ -52900,7 +52749,6 @@ func (container *ContainerCellAccessible) Children() []*CellAccessible {
 	return _list
 }
 
-// The function takes the following parameters:
 func (container *ContainerCellAccessible) RemoveChild(child *CellAccessible) {
 	var _arg0 *C.GtkContainerCellAccessible // out
 	var _arg1 *C.GtkCellAccessible          // out
@@ -52919,7 +52767,6 @@ type CSSProviderOverrides struct {
 	//
 	//   - section
 	//   - err
-	//
 	ParsingError func(section *CSSSection, err error)
 }
 
@@ -53254,7 +53101,6 @@ type DialogOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - responseId: response ID.
-	//
 	Response func(responseId int)
 }
 
@@ -54045,7 +53891,6 @@ type EntryOverrides struct {
 	//
 	//   - typ
 	//   - count
-	//
 	DeleteFromCursor func(typ DeleteType, count int)
 	// The function takes the following parameters:
 	//
@@ -54053,7 +53898,6 @@ type EntryOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	FrameSize func(x, y, width, height *int)
 	// The function takes the following parameters:
 	//
@@ -54061,10 +53905,7 @@ type EntryOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
-	TextAreaSize func(x, y, width, height *int)
-	// The function takes the following parameters:
-	//
+	TextAreaSize   func(x, y, width, height *int)
 	InsertAtCursor func(str string)
 	InsertEmoji    func()
 	// The function takes the following parameters:
@@ -54072,11 +53913,8 @@ type EntryOverrides struct {
 	//   - step
 	//   - count
 	//   - extendSelection
-	//
-	MoveCursor     func(step MovementStep, count int, extendSelection bool)
-	PasteClipboard func()
-	// The function takes the following parameters:
-	//
+	MoveCursor      func(step MovementStep, count int, extendSelection bool)
+	PasteClipboard  func()
 	PopulatePopup   func(popup Widgetter)
 	ToggleOverwrite func()
 }
@@ -55055,8 +54893,6 @@ func (entry *Entry) InnerBorder() *Border {
 }
 
 // InputHints gets the value of the Entry:input-hints property.
-//
-// The function returns the following values:
 func (entry *Entry) InputHints() InputHints {
 	var _arg0 *C.GtkEntry     // out
 	var _cret C.GtkInputHints // in
@@ -55074,8 +54910,6 @@ func (entry *Entry) InputHints() InputHints {
 }
 
 // InputPurpose gets the value of the Entry:input-purpose property.
-//
-// The function returns the following values:
 func (entry *Entry) InputPurpose() InputPurpose {
 	var _arg0 *C.GtkEntry       // out
 	var _cret C.GtkInputPurpose // in
@@ -56473,7 +56307,6 @@ func (entry *Entry) textAreaSize(x, y, width, height *int) {
 	runtime.KeepAlive(height)
 }
 
-// The function takes the following parameters:
 func (entry *Entry) insertAtCursor(str string) {
 	gclass := (*C.GtkEntryClass)(coreglib.PeekParentClass(entry))
 	fnarg := gclass.insert_at_cursor
@@ -56542,7 +56375,6 @@ func (entry *Entry) pasteClipboard() {
 	runtime.KeepAlive(entry)
 }
 
-// The function takes the following parameters:
 func (entry *Entry) populatePopup(popup Widgetter) {
 	gclass := (*C.GtkEntryClass)(coreglib.PeekParentClass(entry))
 	fnarg := gclass.populate_popup
@@ -56656,26 +56488,19 @@ type EntryBufferOverrides struct {
 	// The function returns the following values:
 	//
 	//   - guint: number of characters deleted.
-	//
 	DeleteText func(position, nChars uint) uint
 	// The function takes the following parameters:
 	//
 	//   - position
 	//   - nChars
-	//
 	DeletedText func(position, nChars uint)
 	// Length retrieves the length in characters of the buffer.
 	//
 	// The function returns the following values:
 	//
 	//   - guint: number of characters in the buffer.
-	//
 	Length func() uint
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	Text func(nBytes *uint) string
+	Text   func(nBytes *uint) string
 	// InsertText inserts n_chars characters of chars into the contents of the
 	// buffer, at position position.
 	//
@@ -56695,14 +56520,12 @@ type EntryBufferOverrides struct {
 	// The function returns the following values:
 	//
 	//   - guint: number of characters actually inserted.
-	//
 	InsertText func(position uint, chars string, nChars uint) uint
 	// The function takes the following parameters:
 	//
 	//   - position
 	//   - chars
 	//   - nChars
-	//
 	InsertedText func(position uint, chars string, nChars uint)
 }
 
@@ -57192,9 +57015,6 @@ func (buffer *EntryBuffer) length() uint {
 	return _guint
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (buffer *EntryBuffer) text(nBytes *uint) string {
 	gclass := (*C.GtkEntryBufferClass)(coreglib.PeekParentClass(buffer))
 	fnarg := gclass.get_text
@@ -57293,29 +57113,17 @@ func (buffer *EntryBuffer) insertedText(position uint, chars string, nChars uint
 
 // EntryCompletionOverrides contains methods that are overridable.
 type EntryCompletionOverrides struct {
-	// The function takes the following parameters:
-	//
 	ActionActivated func(index_ int)
 	// The function takes the following parameters:
 	//
 	//   - model
 	//   - iter
-	//
-	// The function returns the following values:
-	//
 	CursorOnMatch func(model TreeModeller, iter *TreeIter) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	InsertPrefix func(prefix string) bool
+	InsertPrefix  func(prefix string) bool
 	// The function takes the following parameters:
 	//
 	//   - model
 	//   - iter
-	//
-	// The function returns the following values:
-	//
 	MatchSelected func(model TreeModeller, iter *TreeIter) bool
 	NoMatches     func()
 }
@@ -58084,7 +57892,6 @@ func (completion *EntryCompletion) SetTextColumn(column int) {
 	runtime.KeepAlive(column)
 }
 
-// The function takes the following parameters:
 func (completion *EntryCompletion) actionActivated(index_ int) {
 	gclass := (*C.GtkEntryCompletionClass)(coreglib.PeekParentClass(completion))
 	fnarg := gclass.action_activated
@@ -58104,8 +57911,6 @@ func (completion *EntryCompletion) actionActivated(index_ int) {
 //
 //   - model
 //   - iter
-//
-// The function returns the following values:
 func (completion *EntryCompletion) cursorOnMatch(model TreeModeller, iter *TreeIter) bool {
 	gclass := (*C.GtkEntryCompletionClass)(coreglib.PeekParentClass(completion))
 	fnarg := gclass.cursor_on_match
@@ -58133,9 +57938,6 @@ func (completion *EntryCompletion) cursorOnMatch(model TreeModeller, iter *TreeI
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (completion *EntryCompletion) insertPrefix(prefix string) bool {
 	gclass := (*C.GtkEntryCompletionClass)(coreglib.PeekParentClass(completion))
 	fnarg := gclass.insert_prefix
@@ -58165,8 +57967,6 @@ func (completion *EntryCompletion) insertPrefix(prefix string) bool {
 //
 //   - model
 //   - iter
-//
-// The function returns the following values:
 func (completion *EntryCompletion) matchSelected(model TreeModeller, iter *TreeIter) bool {
 	gclass := (*C.GtkEntryCompletionClass)(coreglib.PeekParentClass(completion))
 	fnarg := gclass.match_selected
@@ -58653,9 +58453,6 @@ func (controller *EventControllerKey) ConnectModifiers(f func(object gdk.Modifie
 	return coreglib.ConnectGeneratedClosure(controller, "modifiers", false, unsafe.Pointer(C._gotk4_gtk3_EventControllerKey_ConnectModifiers), f)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func NewEventControllerKey(widget Widgetter) *EventControllerKey {
 	var _arg1 *C.GtkWidget          // out
 	var _cret *C.GtkEventController // in
@@ -58672,9 +58469,6 @@ func NewEventControllerKey(widget Widgetter) *EventControllerKey {
 	return _eventControllerKey
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (controller *EventControllerKey) Forward(widget Widgetter) bool {
 	var _arg0 *C.GtkEventControllerKey // out
 	var _arg1 *C.GtkWidget             // out
@@ -58696,7 +58490,6 @@ func (controller *EventControllerKey) Forward(widget Widgetter) bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (controller *EventControllerKey) Group() uint {
 	var _arg0 *C.GtkEventControllerKey // out
 	var _cret C.guint                  // in
@@ -58750,7 +58543,6 @@ func (controller *EventControllerKey) IMContext() IMContexter {
 	return _imContext
 }
 
-// The function takes the following parameters:
 func (controller *EventControllerKey) SetIMContext(imContext IMContexter) {
 	var _arg0 *C.GtkEventControllerKey // out
 	var _arg1 *C.GtkIMContext          // out
@@ -61219,16 +61011,11 @@ func (fixed *Fixed) Put(widget Widgetter, x, y int) {
 // FlowBoxOverrides contains methods that are overridable.
 type FlowBoxOverrides struct {
 	ActivateCursorChild func()
-	// The function takes the following parameters:
-	//
-	ChildActivated func(child *FlowBoxChild)
+	ChildActivated      func(child *FlowBoxChild)
 	// The function takes the following parameters:
 	//
 	//   - step
 	//   - count
-	//
-	// The function returns the following values:
-	//
 	MoveCursor func(step MovementStep, count int) bool
 	// SelectAll: select all children of box, if the selection mode allows it.
 	SelectAll               func()
@@ -62139,7 +61926,6 @@ func (box *FlowBox) activateCursorChild() {
 	runtime.KeepAlive(box)
 }
 
-// The function takes the following parameters:
 func (box *FlowBox) childActivated(child *FlowBoxChild) {
 	gclass := (*C.GtkFlowBoxClass)(coreglib.PeekParentClass(box))
 	fnarg := gclass.child_activated
@@ -62159,8 +61945,6 @@ func (box *FlowBox) childActivated(child *FlowBoxChild) {
 //
 //   - step
 //   - count
-//
-// The function returns the following values:
 func (box *FlowBox) moveCursor(step MovementStep, count int) bool {
 	gclass := (*C.GtkFlowBoxClass)(coreglib.PeekParentClass(box))
 	fnarg := gclass.move_cursor
@@ -64002,8 +63786,6 @@ func (fsd *FontSelectionDialog) SetPreviewText(text string) {
 
 // FrameOverrides contains methods that are overridable.
 type FrameOverrides struct {
-	// The function takes the following parameters:
-	//
 	ComputeChildAllocation func(allocation *Allocation)
 }
 
@@ -64338,7 +64120,6 @@ func (frame *Frame) SetShadowType(typ ShadowType) {
 	runtime.KeepAlive(typ)
 }
 
-// The function takes the following parameters:
 func (frame *Frame) computeChildAllocation(allocation *Allocation) {
 	gclass := (*C.GtkFrameClass)(coreglib.PeekParentClass(frame))
 	fnarg := gclass.compute_child_allocation
@@ -64412,16 +64193,11 @@ func marshalFrameAccessible(p uintptr) (interface{}, error) {
 
 // GLAreaOverrides contains methods that are overridable.
 type GLAreaOverrides struct {
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	Render func(context gdk.GLContexter) bool
 	// The function takes the following parameters:
 	//
 	//   - width
 	//   - height
-	//
 	Resize func(width, height int)
 }
 
@@ -65002,9 +64778,6 @@ func (area *GLArea) SetUseES(useEs bool) {
 	runtime.KeepAlive(useEs)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (area *GLArea) render(context gdk.GLContexter) bool {
 	gclass := (*C.GtkGLAreaClass)(coreglib.PeekParentClass(area))
 	fnarg := gclass.render
@@ -67795,9 +67568,7 @@ func NewHPaned() *HPaned {
 // HSVOverrides contains methods that are overridable.
 type HSVOverrides struct {
 	Changed func()
-	// The function takes the following parameters:
-	//
-	Move func(typ DirectionType)
+	Move    func(typ DirectionType)
 }
 
 func defaultHSVOverrides(v *HSV) HSVOverrides {
@@ -68036,7 +67807,6 @@ func (hsv *HSV) changed() {
 	runtime.KeepAlive(hsv)
 }
 
-// The function takes the following parameters:
 func (hsv *HSV) move(typ DirectionType) {
 	gclass := (*C.GtkHSVClass)(coreglib.PeekParentClass(hsv))
 	fnarg := gclass.move
@@ -68427,11 +68197,7 @@ func NewHSeparator() *HSeparator {
 
 // HandleBoxOverrides contains methods that are overridable.
 type HandleBoxOverrides struct {
-	// The function takes the following parameters:
-	//
 	ChildAttached func(child Widgetter)
-	// The function takes the following parameters:
-	//
 	ChildDetached func(child Widgetter)
 }
 
@@ -68721,7 +68487,6 @@ func (handleBox *HandleBox) SetSnapEdge(edge PositionType) {
 	runtime.KeepAlive(edge)
 }
 
-// The function takes the following parameters:
 func (handleBox *HandleBox) childAttached(child Widgetter) {
 	gclass := (*C.GtkHandleBoxClass)(coreglib.PeekParentClass(handleBox))
 	fnarg := gclass.child_attached
@@ -68737,7 +68502,6 @@ func (handleBox *HandleBox) childAttached(child Widgetter) {
 	runtime.KeepAlive(child)
 }
 
-// The function takes the following parameters:
 func (handleBox *HandleBox) childDetached(child Widgetter) {
 	gclass := (*C.GtkHandleBoxClass)(coreglib.PeekParentClass(handleBox))
 	fnarg := gclass.child_detached
@@ -69209,8 +68973,6 @@ func wrapHeaderBarAccessible(obj *coreglib.Object) *HeaderBarAccessible {
 
 // IMContextOverrides contains methods that are overridable.
 type IMContextOverrides struct {
-	// The function takes the following parameters:
-	//
 	Commit func(str string)
 	// DeleteSurrounding asks the widget that the input context is attached
 	// to to delete characters around the cursor position by emitting the
@@ -69238,7 +69000,6 @@ type IMContextOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if the signal was handled.
-	//
 	DeleteSurrounding func(offset, nChars int) bool
 	// FilterKeypress: allow an input method to internally handle key press and
 	// release events. If this function returns TRUE, then no further processing
@@ -69251,7 +69012,6 @@ type IMContextOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if the input method handled the key event.
-	//
 	FilterKeypress func(event *gdk.EventKey) bool
 	// FocusIn: notify the input method that the widget to which this input
 	// context corresponds has gained focus. The input method may, for example,
@@ -69275,7 +69035,6 @@ type IMContextOverrides struct {
 	//     pango_attr_list_unref().
 	//   - cursorPos: location to store position of cursor (in characters)
 	//     within the preedit string.
-	//
 	PreeditString func() (string, *pango.AttrList, int)
 	// Surrounding retrieves context around the insertion point. Input methods
 	// typically want context in order to constrain input text based on existing
@@ -69299,7 +69058,6 @@ type IMContextOverrides struct {
 	//     within text.
 	//   - ok: TRUE if surrounding text was provided; in this case you must free
 	//     the result stored in *text.
-	//
 	Surrounding    func() (string, int, bool)
 	PreeditChanged func()
 	PreeditEnd     func()
@@ -69307,9 +69065,7 @@ type IMContextOverrides struct {
 	// Reset: notify the input method that a change such as a change in cursor
 	// position has been made. This will typically cause the input method to
 	// clear the preedit state.
-	Reset func()
-	// The function returns the following values:
-	//
+	Reset               func()
 	RetrieveSurrounding func() bool
 	// SetClientWindow: set the client window for the input context; this is
 	// the Window in which the input appears. This window is used in order to
@@ -69320,7 +69076,6 @@ type IMContextOverrides struct {
 	//
 	//   - window (optional): client window. This may be NULL to indicate that
 	//     the previous client window no longer exists.
-	//
 	SetClientWindow func(window gdk.Windower)
 	// SetCursorLocation: notify the input method that a change in cursor
 	// position has been made. The location is relative to the client window.
@@ -69328,7 +69083,6 @@ type IMContextOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - area: new location.
-	//
 	SetCursorLocation func(area *gdk.Rectangle)
 	// SetSurrounding sets surrounding context around the insertion point and
 	// preedit string. This function is expected to be called in response to the
@@ -69341,7 +69095,6 @@ type IMContextOverrides struct {
 	//     should not be included within text.
 	//   - len: length of text, or -1 if text is nul-terminated.
 	//   - cursorIndex: byte index of the insertion cursor within text.
-	//
 	SetSurrounding func(text string, len, cursorIndex int)
 	// SetUsePreedit sets whether the IM context should use the preedit
 	// string to display feedback. If use_preedit is FALSE (default is TRUE),
@@ -69351,7 +69104,6 @@ type IMContextOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - usePreedit: whether the IM context should use the preedit string.
-	//
 	SetUsePreedit func(usePreedit bool)
 }
 
@@ -69873,7 +69625,6 @@ func (context *IMContext) SetUsePreedit(usePreedit bool) {
 	runtime.KeepAlive(usePreedit)
 }
 
-// The function takes the following parameters:
 func (context *IMContext) commit(str string) {
 	gclass := (*C.GtkIMContextClass)(coreglib.PeekParentClass(context))
 	fnarg := gclass.commit
@@ -70152,7 +69903,6 @@ func (context *IMContext) reset() {
 	runtime.KeepAlive(context)
 }
 
-// The function returns the following values:
 func (context *IMContext) retrieveSurrounding() bool {
 	gclass := (*C.GtkIMContextClass)(coreglib.PeekParentClass(context))
 	fnarg := gclass.retrieve_surrounding
@@ -72847,23 +72597,17 @@ func IconThemeGetForScreen(screen *gdk.Screen) *IconTheme {
 
 // IconViewOverrides contains methods that are overridable.
 type IconViewOverrides struct {
-	// The function returns the following values:
-	//
 	ActivateCursorItem func() bool
 	// ItemActivated activates the item determined by path.
 	//
 	// The function takes the following parameters:
 	//
 	//   - path to be activated.
-	//
 	ItemActivated func(path *TreePath)
 	// The function takes the following parameters:
 	//
 	//   - step
 	//   - count
-	//
-	// The function returns the following values:
-	//
 	MoveCursor func(step MovementStep, count int) bool
 	// SelectAll selects all the icons. icon_view must has its selection mode
 	// set to K_SELECTION_MULTIPLE.
@@ -74711,7 +74455,6 @@ func (iconView *IconView) UnsetModelDragSource() {
 	runtime.KeepAlive(iconView)
 }
 
-// The function returns the following values:
 func (iconView *IconView) activateCursorItem() bool {
 	gclass := (*C.GtkIconViewClass)(coreglib.PeekParentClass(iconView))
 	fnarg := gclass.activate_cursor_item
@@ -74757,8 +74500,6 @@ func (iconView *IconView) itemActivated(path *TreePath) {
 //
 //   - step
 //   - count
-//
-// The function returns the following values:
 func (iconView *IconView) moveCursor(step MovementStep, count int) bool {
 	gclass := (*C.GtkIconViewClass)(coreglib.PeekParentClass(iconView))
 	fnarg := gclass.move_cursor
@@ -76369,7 +76110,6 @@ type InfoBarOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - responseId: response ID.
-	//
 	Response func(responseId int)
 }
 
@@ -77017,10 +76757,6 @@ func (invisible *Invisible) SetScreen(screen *gdk.Screen) {
 
 // LabelOverrides contains methods that are overridable.
 type LabelOverrides struct {
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	ActivateLink  func(uri string) bool
 	CopyClipboard func()
 	// The function takes the following parameters:
@@ -77028,10 +76764,7 @@ type LabelOverrides struct {
 	//   - step
 	//   - count
 	//   - extendSelection
-	//
-	MoveCursor func(step MovementStep, count int, extendSelection bool)
-	// The function takes the following parameters:
-	//
+	MoveCursor    func(step MovementStep, count int, extendSelection bool)
 	PopulatePopup func(menu *Menu)
 }
 
@@ -78379,9 +78112,6 @@ func (label *Label) SetYAlign(yalign float32) {
 	runtime.KeepAlive(yalign)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (label *Label) activateLink(uri string) bool {
 	gclass := (*C.GtkLabelClass)(coreglib.PeekParentClass(label))
 	fnarg := gclass.activate_link
@@ -78447,7 +78177,6 @@ func (label *Label) moveCursor(step MovementStep, count int, extendSelection boo
 	runtime.KeepAlive(extendSelection)
 }
 
-// The function takes the following parameters:
 func (label *Label) populatePopup(menu *Menu) {
 	gclass := (*C.GtkLabelClass)(coreglib.PeekParentClass(label))
 	fnarg := gclass.populate_popup
@@ -78876,8 +78605,6 @@ func (layout *Layout) SetVAdjustment(adjustment *Adjustment) {
 
 // LevelBarOverrides contains methods that are overridable.
 type LevelBarOverrides struct {
-	// The function takes the following parameters:
-	//
 	OffsetChanged func(name string)
 }
 
@@ -79324,7 +79051,6 @@ func (self *LevelBar) SetValue(value float64) {
 	runtime.KeepAlive(value)
 }
 
-// The function takes the following parameters:
 func (self *LevelBar) offsetChanged(name string) {
 	gclass := (*C.GtkLevelBarClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.offset_changed
@@ -79400,8 +79126,6 @@ func marshalLevelBarAccessible(p uintptr) (interface{}, error) {
 
 // LinkButtonOverrides contains methods that are overridable.
 type LinkButtonOverrides struct {
-	// The function returns the following values:
-	//
 	ActivateLink func() bool
 }
 
@@ -79667,7 +79391,6 @@ func (linkButton *LinkButton) SetVisited(visited bool) {
 	runtime.KeepAlive(visited)
 }
 
-// The function returns the following values:
 func (button *LinkButton) activateLink() bool {
 	gclass := (*C.GtkLinkButtonClass)(coreglib.PeekParentClass(button))
 	fnarg := gclass.activate_link
@@ -79766,14 +79489,9 @@ type ListBoxOverrides struct {
 	//
 	//   - step
 	//   - count
-	//
-	MoveCursor func(step MovementStep, count int)
-	// The function takes the following parameters:
-	//
+	MoveCursor   func(step MovementStep, count int)
 	RowActivated func(row *ListBoxRow)
-	// The function takes the following parameters:
-	//
-	RowSelected func(row *ListBoxRow)
+	RowSelected  func(row *ListBoxRow)
 	// SelectAll: select all children of box, if the selection mode allows it.
 	SelectAll           func()
 	SelectedRowsChanged func()
@@ -80618,7 +80336,6 @@ func (box *ListBox) moveCursor(step MovementStep, count int) {
 	runtime.KeepAlive(count)
 }
 
-// The function takes the following parameters:
 func (box *ListBox) rowActivated(row *ListBoxRow) {
 	gclass := (*C.GtkListBoxClass)(coreglib.PeekParentClass(box))
 	fnarg := gclass.row_activated
@@ -80634,7 +80351,6 @@ func (box *ListBox) rowActivated(row *ListBoxRow) {
 	runtime.KeepAlive(row)
 }
 
-// The function takes the following parameters:
 func (box *ListBox) rowSelected(row *ListBoxRow) {
 	gclass := (*C.GtkListBoxClass)(coreglib.PeekParentClass(box))
 	fnarg := gclass.row_selected
@@ -83700,7 +83416,6 @@ type MenuItemOverrides struct {
 	//
 	//   - utf8: text in the menu_item label. This is the internal string used
 	//     by the label, and must not be modified.
-	//
 	Label func() string
 	// Select emits the MenuItem::select signal on the given item.
 	Select func()
@@ -83709,7 +83424,6 @@ type MenuItemOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - label: text you want to set.
-	//
 	SetLabel func(label string)
 	// ToggleSizeAllocate emits the MenuItem::toggle-size-allocate signal on the
 	// given item.
@@ -83717,7 +83431,6 @@ type MenuItemOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - allocation to use as signal data.
-	//
 	ToggleSizeAllocate func(allocation int)
 }
 
@@ -84497,8 +84210,6 @@ func marshalMenuItemAccessible(p uintptr) (interface{}, error) {
 
 // MenuShellOverrides contains methods that are overridable.
 type MenuShellOverrides struct {
-	// The function takes the following parameters:
-	//
 	ActivateCurrent func(forceHide bool)
 	// Cancel cancels the selection within the menu shell.
 	Cancel func()
@@ -84506,8 +84217,6 @@ type MenuShellOverrides struct {
 	//
 	// Typically this results in the menu shell being erased from the screen.
 	Deactivate func()
-	// The function returns the following values:
-	//
 	PopupDelay func() int
 	// Insert adds a new MenuItem to the menu shell’s item list at the position
 	// indicated by position.
@@ -84517,22 +84226,14 @@ type MenuShellOverrides struct {
 	//   - child to add.
 	//   - position in the item list where child is added. Positions are
 	//     numbered from 0 to n-1.
-	//
-	Insert func(child Widgetter, position int)
-	// The function takes the following parameters:
-	//
-	MoveCurrent func(direction MenuDirectionType)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Insert       func(child Widgetter, position int)
+	MoveCurrent  func(direction MenuDirectionType)
 	MoveSelected func(distance int) bool
 	// SelectItem selects the menu item from the menu shell.
 	//
 	// The function takes the following parameters:
 	//
 	//   - menuItem to select.
-	//
 	SelectItem    func(menuItem Widgetter)
 	SelectionDone func()
 }
@@ -85085,7 +84786,6 @@ func (menuShell *MenuShell) SetTakeFocus(takeFocus bool) {
 	runtime.KeepAlive(takeFocus)
 }
 
-// The function takes the following parameters:
 func (menuShell *MenuShell) activateCurrent(forceHide bool) {
 	gclass := (*C.GtkMenuShellClass)(coreglib.PeekParentClass(menuShell))
 	fnarg := gclass.activate_current
@@ -85131,7 +84831,6 @@ func (menuShell *MenuShell) deactivate() {
 	runtime.KeepAlive(menuShell)
 }
 
-// The function returns the following values:
 func (menuShell *MenuShell) popupDelay() int {
 	gclass := (*C.GtkMenuShellClass)(coreglib.PeekParentClass(menuShell))
 	fnarg := gclass.get_popup_delay
@@ -85177,7 +84876,6 @@ func (menuShell *MenuShell) insert(child Widgetter, position int) {
 	runtime.KeepAlive(position)
 }
 
-// The function takes the following parameters:
 func (menuShell *MenuShell) moveCurrent(direction MenuDirectionType) {
 	gclass := (*C.GtkMenuShellClass)(coreglib.PeekParentClass(menuShell))
 	fnarg := gclass.move_current
@@ -85193,9 +84891,6 @@ func (menuShell *MenuShell) moveCurrent(direction MenuDirectionType) {
 	runtime.KeepAlive(direction)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (menuShell *MenuShell) moveSelected(distance int) bool {
 	gclass := (*C.GtkMenuShellClass)(coreglib.PeekParentClass(menuShell))
 	fnarg := gclass.move_selected
@@ -86342,9 +86037,7 @@ type NativeDialogOverrides struct {
 	// until after the next call to gtk_native_dialog_show().
 	//
 	// If the dialog is not visible this does nothing.
-	Hide func()
-	// The function takes the following parameters:
-	//
+	Hide     func()
 	Response func(responseId int)
 	// Show shows the dialog on the display, allowing the user to interact
 	// with it. When the user accepts the state of the dialog the dialog will
@@ -86728,7 +86421,6 @@ func (self *NativeDialog) hide() {
 	runtime.KeepAlive(self)
 }
 
-// The function takes the following parameters:
 func (self *NativeDialog) response(responseId int) {
 	gclass := (*C.GtkNativeDialogClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.response
@@ -86763,65 +86455,41 @@ func (self *NativeDialog) show() {
 
 // NotebookOverrides contains methods that are overridable.
 type NotebookOverrides struct {
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	ChangeCurrentPage func(offset int) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	FocusTab func(typ NotebookTab) bool
+	FocusTab          func(typ NotebookTab) bool
 	// The function takes the following parameters:
 	//
 	//   - child
 	//   - tabLabel
 	//   - menuLabel
 	//   - position
-	//
-	// The function returns the following values:
-	//
-	InsertPage func(child, tabLabel, menuLabel Widgetter, position int) int
-	// The function takes the following parameters:
-	//
+	InsertPage   func(child, tabLabel, menuLabel Widgetter, position int) int
 	MoveFocusOut func(direction DirectionType)
 	// The function takes the following parameters:
 	//
 	//   - child
 	//   - pageNum
-	//
 	PageAdded func(child Widgetter, pageNum uint)
 	// The function takes the following parameters:
 	//
 	//   - child
 	//   - pageNum
-	//
 	PageRemoved func(child Widgetter, pageNum uint)
 	// The function takes the following parameters:
 	//
 	//   - child
 	//   - pageNum
-	//
 	PageReordered func(child Widgetter, pageNum uint)
 	// The function takes the following parameters:
 	//
 	//   - direction
 	//   - moveToLast
-	//
-	// The function returns the following values:
-	//
 	ReorderTab func(direction DirectionType, moveToLast bool) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	SelectPage func(moveFocus bool) bool
 	// The function takes the following parameters:
 	//
 	//   - page
 	//   - pageNum
-	//
 	SwitchPage func(page Widgetter, pageNum uint)
 }
 
@@ -88310,9 +87978,6 @@ func (notebook *Notebook) SetTabReorderable(child Widgetter, reorderable bool) {
 	runtime.KeepAlive(reorderable)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (notebook *Notebook) changeCurrentPage(offset int) bool {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.change_current_page
@@ -88337,9 +88002,6 @@ func (notebook *Notebook) changeCurrentPage(offset int) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (notebook *Notebook) focusTab(typ NotebookTab) bool {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.focus_tab
@@ -88370,8 +88032,6 @@ func (notebook *Notebook) focusTab(typ NotebookTab) bool {
 //   - tabLabel
 //   - menuLabel
 //   - position
-//
-// The function returns the following values:
 func (notebook *Notebook) insertPage(child, tabLabel, menuLabel Widgetter, position int) int {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.insert_page
@@ -88403,7 +88063,6 @@ func (notebook *Notebook) insertPage(child, tabLabel, menuLabel Widgetter, posit
 	return _gint
 }
 
-// The function takes the following parameters:
 func (notebook *Notebook) moveFocusOut(direction DirectionType) {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.move_focus_out
@@ -88489,8 +88148,6 @@ func (notebook *Notebook) pageReordered(child Widgetter, pageNum uint) {
 //
 //   - direction
 //   - moveToLast
-//
-// The function returns the following values:
 func (notebook *Notebook) reorderTab(direction DirectionType, moveToLast bool) bool {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.reorder_tab
@@ -88520,9 +88177,6 @@ func (notebook *Notebook) reorderTab(direction DirectionType, moveToLast bool) b
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (notebook *Notebook) selectPage(moveFocus bool) bool {
 	gclass := (*C.GtkNotebookClass)(coreglib.PeekParentClass(notebook))
 	fnarg := gclass.select_page
@@ -88686,8 +88340,6 @@ func marshalNotebookPageAccessible(p uintptr) (interface{}, error) {
 //
 //   - notebook
 //   - child
-//
-// The function returns the following values:
 func NewNotebookPageAccessible(notebook *NotebookAccessible, child Widgetter) *NotebookPageAccessible {
 	var _arg1 *C.GtkNotebookAccessible // out
 	var _arg2 *C.GtkWidget             // out
@@ -89274,9 +88926,6 @@ type OverlayOverrides struct {
 	//
 	//   - widget
 	//   - allocation
-	//
-	// The function returns the following values:
-	//
 	ChildPosition func(widget Widgetter, allocation *Allocation) bool
 }
 
@@ -89509,8 +89158,6 @@ func (overlay *Overlay) SetOverlayPassThrough(widget Widgetter, passThrough bool
 //
 //   - widget
 //   - allocation
-//
-// The function returns the following values:
 func (overlay *Overlay) childPosition(widget Widgetter, allocation *Allocation) bool {
 	gclass := (*C.GtkOverlayClass)(coreglib.PeekParentClass(overlay))
 	fnarg := gclass.get_child_position
@@ -90471,29 +90118,11 @@ func (setup *PageSetup) ToKeyFile(keyFile *glib.KeyFile, groupName string) {
 
 // PanedOverrides contains methods that are overridable.
 type PanedOverrides struct {
-	// The function returns the following values:
-	//
-	AcceptPosition func() bool
-	// The function returns the following values:
-	//
-	CancelPosition func() bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	CycleChildFocus func(reverse bool) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	CycleHandleFocus func(reverse bool) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	MoveHandle func(scroll ScrollType) bool
-	// The function returns the following values:
-	//
+	AcceptPosition    func() bool
+	CancelPosition    func() bool
+	CycleChildFocus   func(reverse bool) bool
+	CycleHandleFocus  func(reverse bool) bool
+	MoveHandle        func(scroll ScrollType) bool
 	ToggleHandleFocus func() bool
 }
 
@@ -90991,7 +90620,6 @@ func (paned *Paned) SetWideHandle(wide bool) {
 	runtime.KeepAlive(wide)
 }
 
-// The function returns the following values:
 func (paned *Paned) acceptPosition() bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.accept_position
@@ -91013,7 +90641,6 @@ func (paned *Paned) acceptPosition() bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (paned *Paned) cancelPosition() bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.cancel_position
@@ -91035,9 +90662,6 @@ func (paned *Paned) cancelPosition() bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (paned *Paned) cycleChildFocus(reverse bool) bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.cycle_child_focus
@@ -91064,9 +90688,6 @@ func (paned *Paned) cycleChildFocus(reverse bool) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (paned *Paned) cycleHandleFocus(reverse bool) bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.cycle_handle_focus
@@ -91093,9 +90714,6 @@ func (paned *Paned) cycleHandleFocus(reverse bool) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (paned *Paned) moveHandle(scroll ScrollType) bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.move_handle
@@ -91120,7 +90738,6 @@ func (paned *Paned) moveHandle(scroll ScrollType) bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (paned *Paned) toggleHandleFocus() bool {
 	gclass := (*C.GtkPanedClass)(coreglib.PeekParentClass(paned))
 	fnarg := gclass.toggle_handle_focus
@@ -92269,7 +91886,6 @@ func marshalPlugAccessible(p uintptr) (interface{}, error) {
 	return wrapPlugAccessible(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function returns the following values:
 func (plug *PlugAccessible) ID() string {
 	var _arg0 *C.GtkPlugAccessible // out
 	var _cret *C.gchar             // in
@@ -93516,44 +93132,27 @@ func (context *PrintContext) SetCairoContext(cr *cairo.Context, dpiX, dpiY float
 
 // PrintOperationOverrides contains methods that are overridable.
 type PrintOperationOverrides struct {
-	// The function takes the following parameters:
-	//
-	BeginPrint func(context *PrintContext)
-	// The function takes the following parameters:
-	//
+	BeginPrint        func(context *PrintContext)
 	CustomWidgetApply func(widget Widgetter)
-	// The function takes the following parameters:
-	//
-	Done func(result PrintOperationResult)
+	Done              func(result PrintOperationResult)
 	// The function takes the following parameters:
 	//
 	//   - context
 	//   - pageNr
-	//
 	DrawPage func(context *PrintContext, pageNr int)
-	// The function takes the following parameters:
-	//
 	EndPrint func(context *PrintContext)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	Paginate func(context *PrintContext) bool
 	// The function takes the following parameters:
 	//
 	//   - preview
 	//   - context
 	//   - parent
-	//
-	// The function returns the following values:
-	//
 	Preview func(preview PrintOperationPreviewer, context *PrintContext, parent *Window) bool
 	// The function takes the following parameters:
 	//
 	//   - context
 	//   - pageNr
 	//   - setup
-	//
 	RequestPageSetup func(context *PrintContext, pageNr int, setup *PageSetup)
 	StatusChanged    func()
 	// The function takes the following parameters:
@@ -93561,7 +93160,6 @@ type PrintOperationOverrides struct {
 	//   - widget
 	//   - setup
 	//   - settings
-	//
 	UpdateCustomWidget func(widget Widgetter, setup *PageSetup, settings *PrintSettings)
 }
 
@@ -94604,7 +94202,6 @@ func (op *PrintOperation) SetUseFullPage(fullPage bool) {
 	runtime.KeepAlive(fullPage)
 }
 
-// The function takes the following parameters:
 func (operation *PrintOperation) beginPrint(context *PrintContext) {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.begin_print
@@ -94620,7 +94217,6 @@ func (operation *PrintOperation) beginPrint(context *PrintContext) {
 	runtime.KeepAlive(context)
 }
 
-// The function takes the following parameters:
 func (operation *PrintOperation) customWidgetApply(widget Widgetter) {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.custom_widget_apply
@@ -94636,7 +94232,6 @@ func (operation *PrintOperation) customWidgetApply(widget Widgetter) {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
 func (operation *PrintOperation) done(result PrintOperationResult) {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.done
@@ -94674,7 +94269,6 @@ func (operation *PrintOperation) drawPage(context *PrintContext, pageNr int) {
 	runtime.KeepAlive(pageNr)
 }
 
-// The function takes the following parameters:
 func (operation *PrintOperation) endPrint(context *PrintContext) {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.end_print
@@ -94690,9 +94284,6 @@ func (operation *PrintOperation) endPrint(context *PrintContext) {
 	runtime.KeepAlive(context)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (operation *PrintOperation) paginate(context *PrintContext) bool {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.paginate
@@ -94722,8 +94313,6 @@ func (operation *PrintOperation) paginate(context *PrintContext) bool {
 //   - preview
 //   - context
 //   - parent
-//
-// The function returns the following values:
 func (operation *PrintOperation) preview(preview PrintOperationPreviewer, context *PrintContext, parent *Window) bool {
 	gclass := (*C.GtkPrintOperationClass)(coreglib.PeekParentClass(operation))
 	fnarg := gclass.preview
@@ -97062,8 +96651,6 @@ func marshalProgressBarAccessible(p uintptr) (interface{}, error) {
 
 // RadioActionOverrides contains methods that are overridable.
 type RadioActionOverrides struct {
-	// The function takes the following parameters:
-	//
 	Changed func(current *RadioAction)
 }
 
@@ -97340,7 +96927,6 @@ func (action *RadioAction) SetGroup(group []*RadioAction) {
 	runtime.KeepAlive(group)
 }
 
-// The function takes the following parameters:
 func (action *RadioAction) changed(current *RadioAction) {
 	gclass := (*C.GtkRadioActionClass)(coreglib.PeekParentClass(action))
 	fnarg := gclass.changed
@@ -98691,31 +98277,21 @@ func (button *RadioToolButton) SetGroup(group []*RadioButton) {
 
 // RangeOverrides contains methods that are overridable.
 type RangeOverrides struct {
-	// The function takes the following parameters:
-	//
 	AdjustBounds func(newValue float64)
 	// The function takes the following parameters:
 	//
 	//   - scroll
 	//   - newValue
-	//
-	// The function returns the following values:
-	//
 	ChangeValue func(scroll ScrollType, newValue float64) bool
-	// The function takes the following parameters:
-	//
 	RangeBorder func(border_ *Border)
 	// The function takes the following parameters:
 	//
 	//   - orientation
 	//   - minimum
 	//   - natural
-	//
 	RangeSizeRequest func(orientation Orientation, minimum, natural *int)
-	// The function takes the following parameters:
-	//
-	MoveSlider   func(scroll ScrollType)
-	ValueChanged func()
+	MoveSlider       func(scroll ScrollType)
+	ValueChanged     func()
 }
 
 func defaultRangeOverrides(v *Range) RangeOverrides {
@@ -99495,7 +99071,6 @@ func (_range *Range) SetValue(value float64) {
 	runtime.KeepAlive(value)
 }
 
-// The function takes the following parameters:
 func (_range *Range) adjustBounds(newValue float64) {
 	gclass := (*C.GtkRangeClass)(coreglib.PeekParentClass(_range))
 	fnarg := gclass.adjust_bounds
@@ -99515,8 +99090,6 @@ func (_range *Range) adjustBounds(newValue float64) {
 //
 //   - scroll
 //   - newValue
-//
-// The function returns the following values:
 func (_range *Range) changeValue(scroll ScrollType, newValue float64) bool {
 	gclass := (*C.GtkRangeClass)(coreglib.PeekParentClass(_range))
 	fnarg := gclass.change_value
@@ -99544,7 +99117,6 @@ func (_range *Range) changeValue(scroll ScrollType, newValue float64) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
 func (_range *Range) rangeBorder(border_ *Border) {
 	gclass := (*C.GtkRangeClass)(coreglib.PeekParentClass(_range))
 	fnarg := gclass.get_range_border
@@ -99586,7 +99158,6 @@ func (_range *Range) rangeSizeRequest(orientation Orientation, minimum, natural 
 	runtime.KeepAlive(natural)
 }
 
-// The function takes the following parameters:
 func (_range *Range) moveSlider(scroll ScrollType) {
 	gclass := (*C.GtkRangeClass)(coreglib.PeekParentClass(_range))
 	fnarg := gclass.move_slider
@@ -99673,16 +99244,11 @@ func marshalRangeAccessible(p uintptr) (interface{}, error) {
 
 // RCStyleOverrides contains methods that are overridable.
 type RCStyleOverrides struct {
-	// The function takes the following parameters:
-	//
 	Merge func(src *RCStyle)
 	// The function takes the following parameters:
 	//
 	//   - settings
 	//   - scanner
-	//
-	// The function returns the following values:
-	//
 	Parse func(settings *Settings, scanner *glib.Scanner) uint
 }
 
@@ -99785,7 +99351,6 @@ func (orig *RCStyle) Copy() *RCStyle {
 	return _rcStyle
 }
 
-// The function takes the following parameters:
 func (dest *RCStyle) merge(src *RCStyle) {
 	gclass := (*C.GtkRcStyleClass)(coreglib.PeekParentClass(dest))
 	fnarg := gclass.merge
@@ -99805,8 +99370,6 @@ func (dest *RCStyle) merge(src *RCStyle) {
 //
 //   - settings
 //   - scanner
-//
-// The function returns the following values:
 func (rcStyle *RCStyle) parse(settings *Settings, scanner *glib.Scanner) uint {
 	gclass := (*C.GtkRcStyleClass)(coreglib.PeekParentClass(rcStyle))
 	fnarg := gclass.parse
@@ -101339,9 +100902,6 @@ func marshalRendererCellAccessible(p uintptr) (interface{}, error) {
 	return wrapRendererCellAccessible(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func NewRendererCellAccessible(renderer CellRendererer) *RendererCellAccessible {
 	var _arg1 *C.GtkCellRenderer // out
 	var _cret *C.AtkObject       // in
@@ -101601,11 +101161,7 @@ func (revealer *Revealer) SetTransitionType(transition RevealerTransitionType) {
 
 // ScaleOverrides contains methods that are overridable.
 type ScaleOverrides struct {
-	DrawValue func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	DrawValue   func()
 	FormatValue func(value float64) string
 	// LayoutOffsets obtains the coordinates where the scale will draw the
 	// Layout representing the text in the scale. Remember when using the Layout
@@ -101619,7 +101175,6 @@ type ScaleOverrides struct {
 	//
 	//   - x (optional): location to store X offset of layout, or NULL.
 	//   - y (optional): location to store Y offset of layout, or NULL.
-	//
 	LayoutOffsets func() (x, y int)
 }
 
@@ -102158,9 +101713,6 @@ func (scale *Scale) drawValue() {
 	runtime.KeepAlive(scale)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (scale *Scale) formatValue(value float64) string {
 	gclass := (*C.GtkScaleClass)(coreglib.PeekParentClass(scale))
 	fnarg := gclass.format_value
@@ -102275,8 +101827,6 @@ func marshalScaleAccessible(p uintptr) (interface{}, error) {
 
 // ScaleButtonOverrides contains methods that are overridable.
 type ScaleButtonOverrides struct {
-	// The function takes the following parameters:
-	//
 	ValueChanged func(value float64)
 }
 
@@ -102647,7 +102197,6 @@ func (button *ScaleButton) SetValue(value float64) {
 	runtime.KeepAlive(value)
 }
 
-// The function takes the following parameters:
 func (button *ScaleButton) valueChanged(value float64) {
 	gclass := (*C.GtkScaleButtonClass)(coreglib.PeekParentClass(button))
 	fnarg := gclass.value_changed
@@ -102864,16 +102413,11 @@ func NewScrollbar(orientation Orientation, adjustment *Adjustment) *Scrollbar {
 
 // ScrolledWindowOverrides contains methods that are overridable.
 type ScrolledWindowOverrides struct {
-	// The function takes the following parameters:
-	//
 	MoveFocusOut func(direction DirectionType)
 	// The function takes the following parameters:
 	//
 	//   - scroll
 	//   - horizontal
-	//
-	// The function returns the following values:
-	//
 	ScrollChild func(scroll ScrollType, horizontal bool) bool
 }
 
@@ -103859,7 +103403,6 @@ func (scrolledWindow *ScrolledWindow) UnsetPlacement() {
 	runtime.KeepAlive(scrolledWindow)
 }
 
-// The function takes the following parameters:
 func (scrolledWindow *ScrolledWindow) moveFocusOut(direction DirectionType) {
 	gclass := (*C.GtkScrolledWindowClass)(coreglib.PeekParentClass(scrolledWindow))
 	fnarg := gclass.move_focus_out
@@ -103879,8 +103422,6 @@ func (scrolledWindow *ScrolledWindow) moveFocusOut(direction DirectionType) {
 //
 //   - scroll
 //   - horizontal
-//
-// The function returns the following values:
 func (scrolledWindow *ScrolledWindow) scrollChild(scroll ScrollType, horizontal bool) bool {
 	gclass := (*C.GtkScrolledWindowClass)(coreglib.PeekParentClass(scrolledWindow))
 	fnarg := gclass.scroll_child
@@ -105858,9 +105399,7 @@ func (sizeGroup *SizeGroup) SetMode(mode SizeGroupMode) {
 
 // SocketOverrides contains methods that are overridable.
 type SocketOverrides struct {
-	PlugAdded func()
-	// The function returns the following values:
-	//
+	PlugAdded   func()
 	PlugRemoved func() bool
 }
 
@@ -106054,7 +105593,6 @@ func (socket_ *Socket) plugAdded() {
 	runtime.KeepAlive(socket_)
 }
 
-// The function returns the following values:
 func (socket_ *Socket) plugRemoved() bool {
 	gclass := (*C.GtkSocketClass)(coreglib.PeekParentClass(socket_))
 	fnarg := gclass.plug_removed
@@ -106130,7 +105668,6 @@ func marshalSocketAccessible(p uintptr) (interface{}, error) {
 	return wrapSocketAccessible(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
-// The function takes the following parameters:
 func (socket *SocketAccessible) Embed(path string) {
 	var _arg0 *C.GtkSocketAccessible // out
 	var _arg1 *C.gchar               // out
@@ -106146,16 +105683,8 @@ func (socket *SocketAccessible) Embed(path string) {
 
 // SpinButtonOverrides contains methods that are overridable.
 type SpinButtonOverrides struct {
-	// The function takes the following parameters:
-	//
-	ChangeValue func(scroll ScrollType)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	Input func(newValue *float64) int
-	// The function returns the following values:
-	//
+	ChangeValue  func(scroll ScrollType)
+	Input        func(newValue *float64) int
 	Output       func() int
 	ValueChanged func()
 	Wrapped      func()
@@ -106905,7 +106434,6 @@ func (spinButton *SpinButton) Update() {
 	runtime.KeepAlive(spinButton)
 }
 
-// The function takes the following parameters:
 func (spinButton *SpinButton) changeValue(scroll ScrollType) {
 	gclass := (*C.GtkSpinButtonClass)(coreglib.PeekParentClass(spinButton))
 	fnarg := gclass.change_value
@@ -106921,9 +106449,6 @@ func (spinButton *SpinButton) changeValue(scroll ScrollType) {
 	runtime.KeepAlive(scroll)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (spinButton *SpinButton) input(newValue *float64) int {
 	gclass := (*C.GtkSpinButtonClass)(coreglib.PeekParentClass(spinButton))
 	fnarg := gclass.input
@@ -106946,7 +106471,6 @@ func (spinButton *SpinButton) input(newValue *float64) int {
 	return _gint
 }
 
-// The function returns the following values:
 func (spinButton *SpinButton) output() int {
 	gclass := (*C.GtkSpinButtonClass)(coreglib.PeekParentClass(spinButton))
 	fnarg := gclass.output
@@ -108161,22 +107685,13 @@ func (switcher *StackSwitcher) SetStack(stack *Stack) {
 
 // StatusIconOverrides contains methods that are overridable.
 type StatusIconOverrides struct {
-	Activate func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ButtonPressEvent func(event *gdk.EventButton) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Activate           func()
+	ButtonPressEvent   func(event *gdk.EventButton) bool
 	ButtonReleaseEvent func(event *gdk.EventButton) bool
 	// The function takes the following parameters:
 	//
 	//   - button
 	//   - activateTime
-	//
 	PopupMenu func(button uint, activateTime uint32)
 	// The function takes the following parameters:
 	//
@@ -108184,20 +107699,9 @@ type StatusIconOverrides struct {
 	//   - y
 	//   - keyboardMode
 	//   - tooltip
-	//
-	// The function returns the following values:
-	//
 	QueryTooltip func(x, y int, keyboardMode bool, tooltip *Tooltip) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ScrollEvent func(event *gdk.EventScroll) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	SizeChanged func(size int) bool
+	ScrollEvent  func(event *gdk.EventScroll) bool
+	SizeChanged  func(size int) bool
 }
 
 func defaultStatusIconOverrides(v *StatusIcon) StatusIconOverrides {
@@ -109338,9 +108842,6 @@ func (statusIcon *StatusIcon) activate() {
 	runtime.KeepAlive(statusIcon)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (statusIcon *StatusIcon) buttonPressEvent(event *gdk.EventButton) bool {
 	gclass := (*C.GtkStatusIconClass)(coreglib.PeekParentClass(statusIcon))
 	fnarg := gclass.button_press_event
@@ -109365,9 +108866,6 @@ func (statusIcon *StatusIcon) buttonPressEvent(event *gdk.EventButton) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (statusIcon *StatusIcon) buttonReleaseEvent(event *gdk.EventButton) bool {
 	gclass := (*C.GtkStatusIconClass)(coreglib.PeekParentClass(statusIcon))
 	fnarg := gclass.button_release_event
@@ -109420,8 +108918,6 @@ func (statusIcon *StatusIcon) popupMenu(button uint, activateTime uint32) {
 //   - y
 //   - keyboardMode
 //   - tooltip
-//
-// The function returns the following values:
 func (statusIcon *StatusIcon) queryTooltip(x, y int, keyboardMode bool, tooltip *Tooltip) bool {
 	gclass := (*C.GtkStatusIconClass)(coreglib.PeekParentClass(statusIcon))
 	fnarg := gclass.query_tooltip
@@ -109457,9 +108953,6 @@ func (statusIcon *StatusIcon) queryTooltip(x, y int, keyboardMode bool, tooltip 
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (statusIcon *StatusIcon) scrollEvent(event *gdk.EventScroll) bool {
 	gclass := (*C.GtkStatusIconClass)(coreglib.PeekParentClass(statusIcon))
 	fnarg := gclass.scroll_event
@@ -109484,9 +108977,6 @@ func (statusIcon *StatusIcon) scrollEvent(event *gdk.EventScroll) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (statusIcon *StatusIcon) sizeChanged(size int) bool {
 	gclass := (*C.GtkStatusIconClass)(coreglib.PeekParentClass(statusIcon))
 	fnarg := gclass.size_changed
@@ -109517,13 +109007,11 @@ type StatusbarOverrides struct {
 	//
 	//   - contextId
 	//   - text
-	//
 	TextPopped func(contextId uint, text string)
 	// The function takes the following parameters:
 	//
 	//   - contextId
 	//   - text
-	//
 	TextPushed func(contextId uint, text string)
 }
 
@@ -109908,8 +109396,6 @@ func marshalStatusbarAccessible(p uintptr) (interface{}, error) {
 
 // StyleOverrides contains methods that are overridable.
 type StyleOverrides struct {
-	// The function takes the following parameters:
-	//
 	Copy func(src *Style)
 	// The function takes the following parameters:
 	//
@@ -109924,7 +109410,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawArrow func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, arrowType ArrowType, fill bool, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -109937,7 +109422,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawBox func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -109953,7 +109437,6 @@ type StyleOverrides struct {
 	//   - gapSide
 	//   - gapX
 	//   - gapWidth
-	//
 	DrawBoxGap func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int, gapSide PositionType, gapX, gapWidth int)
 	// The function takes the following parameters:
 	//
@@ -109966,7 +109449,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawCheck func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -109979,7 +109461,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawDiamond func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -109990,7 +109471,6 @@ type StyleOverrides struct {
 	//   - x
 	//   - y
 	//   - expanderStyle
-	//
 	DrawExpander func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, x, y int, expanderStyle ExpanderStyle)
 	// The function takes the following parameters:
 	//
@@ -110004,7 +109484,6 @@ type StyleOverrides struct {
 	//   - width
 	//   - height
 	//   - gapSide
-	//
 	DrawExtension func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int, gapSide PositionType)
 	// The function takes the following parameters:
 	//
@@ -110017,7 +109496,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawFlatBox func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110029,7 +109507,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawFocus func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110043,7 +109520,6 @@ type StyleOverrides struct {
 	//   - width
 	//   - height
 	//   - orientation
-	//
 	DrawHandle func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int, orientation Orientation)
 	// The function takes the following parameters:
 	//
@@ -110054,7 +109530,6 @@ type StyleOverrides struct {
 	//   - x1
 	//   - x2
 	//   - y
-	//
 	DrawHline func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, x1, x2, y int)
 	// The function takes the following parameters:
 	//
@@ -110066,7 +109541,6 @@ type StyleOverrides struct {
 	//   - x
 	//   - y
 	//   - layout
-	//
 	DrawLayout func(cr *cairo.Context, stateType StateType, useText bool, widget Widgetter, detail string, x, y int, layout *pango.Layout)
 	// The function takes the following parameters:
 	//
@@ -110079,7 +109553,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawOption func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110092,7 +109565,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawResizeGrip func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, edge gdk.WindowEdge, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110105,7 +109577,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawShadow func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110121,7 +109592,6 @@ type StyleOverrides struct {
 	//   - gapSide
 	//   - gapX
 	//   - gapWidth
-	//
 	DrawShadowGap func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int, gapSide PositionType, gapX, gapWidth int)
 	// The function takes the following parameters:
 	//
@@ -110135,7 +109605,6 @@ type StyleOverrides struct {
 	//   - width
 	//   - height
 	//   - orientation
-	//
 	DrawSlider func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int, orientation Orientation)
 	// The function takes the following parameters:
 	//
@@ -110148,7 +109617,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawSpinner func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, step uint, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110161,7 +109629,6 @@ type StyleOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	DrawTab func(cr *cairo.Context, stateType StateType, shadowType ShadowType, widget Widgetter, detail string, x, y, width, height int)
 	// The function takes the following parameters:
 	//
@@ -110172,10 +109639,7 @@ type StyleOverrides struct {
 	//   - y1
 	//   - y2
 	//   - x
-	//
-	DrawVline func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, y1, y2, x int)
-	// The function takes the following parameters:
-	//
+	DrawVline  func(cr *cairo.Context, stateType StateType, widget Widgetter, detail string, y1, y2, x int)
 	InitFromRC func(rcStyle *RCStyle)
 	Realize    func()
 	// RenderIcon renders the icon specified by source at the given size
@@ -110196,7 +109660,6 @@ type StyleOverrides struct {
 	// The function returns the following values:
 	//
 	//   - pixbuf: newly-created Pixbuf containing the rendered icon.
-	//
 	RenderIcon func(source *IconSource, direction TextDirection, state StateType, size int, widget Widgetter, detail string) *gdkpixbuf.Pixbuf
 	// SetBackground sets the background of window to the background color or
 	// pixmap specified by style for the given state.
@@ -110207,7 +109670,6 @@ type StyleOverrides struct {
 	//
 	//   - window: Window.
 	//   - stateType: state.
-	//
 	SetBackground func(window gdk.Windower, stateType StateType)
 	Unrealize     func()
 }
@@ -110737,7 +110199,6 @@ func (style *Style) SetBackground(window gdk.Windower, stateType StateType) {
 	runtime.KeepAlive(stateType)
 }
 
-// The function takes the following parameters:
 func (style *Style) copy(src *Style) {
 	gclass := (*C.GtkStyleClass)(coreglib.PeekParentClass(style))
 	fnarg := gclass.copy
@@ -111789,7 +111250,6 @@ func (style *Style) drawVline(cr *cairo.Context, stateType StateType, widget Wid
 	runtime.KeepAlive(x)
 }
 
-// The function takes the following parameters:
 func (style *Style) initFromRC(rcStyle *RCStyle) {
 	gclass := (*C.GtkStyleClass)(coreglib.PeekParentClass(style))
 	fnarg := gclass.init_from_rc
@@ -113812,10 +113272,6 @@ func (props *StyleProperties) UnsetProperty(property string, state StateFlags) {
 // SwitchOverrides contains methods that are overridable.
 type SwitchOverrides struct {
 	Activate func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	StateSet func(state bool) bool
 }
 
@@ -114060,9 +113516,6 @@ func (sw *Switch) activate() {
 	runtime.KeepAlive(sw)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (sw *Switch) stateSet(state bool) bool {
 	gclass := (*C.GtkSwitchClass)(coreglib.PeekParentClass(sw))
 	fnarg := gclass.state_set
@@ -114808,7 +114261,6 @@ type TextBufferOverrides struct {
 	//   - tag: TextTag.
 	//   - start: one bound of range to be tagged.
 	//   - end: other bound of range to be tagged.
-	//
 	ApplyTag func(tag *TextTag, start, end *TextIter)
 	// BeginUserAction: called to indicate that the buffer operations
 	// between here and a call to gtk_text_buffer_end_user_action() are
@@ -114832,7 +114284,6 @@ type TextBufferOverrides struct {
 	//
 	//   - start
 	//   - end
-	//
 	DeleteRange func(start, end *TextIter)
 	// EndUserAction: should be paired with a call to
 	// gtk_text_buffer_begin_user_action(). See that function for a full
@@ -114853,7 +114304,6 @@ type TextBufferOverrides struct {
 	//
 	//   - iter: location to insert the anchor.
 	//   - anchor: TextChildAnchor.
-	//
 	InsertChildAnchor func(iter *TextIter, anchor *TextChildAnchor)
 	// InsertPixbuf inserts an image into the text buffer at iter.
 	// The image will be counted as one character in character counts,
@@ -114867,28 +114317,21 @@ type TextBufferOverrides struct {
 	//
 	//   - iter: location to insert the pixbuf.
 	//   - pixbuf: Pixbuf.
-	//
 	InsertPixbuf func(iter *TextIter, pixbuf *gdkpixbuf.Pixbuf)
 	// The function takes the following parameters:
 	//
 	//   - pos
 	//   - newText
 	//   - newTextLength
-	//
-	InsertText func(pos *TextIter, newText string, newTextLength int)
-	// The function takes the following parameters:
-	//
+	InsertText  func(pos *TextIter, newText string, newTextLength int)
 	MarkDeleted func(mark *TextMark)
 	// The function takes the following parameters:
 	//
 	//   - location
 	//   - mark
-	//
 	MarkSet         func(location *TextIter, mark *TextMark)
 	ModifiedChanged func()
-	// The function takes the following parameters:
-	//
-	PasteDone func(clipboard *Clipboard)
+	PasteDone       func(clipboard *Clipboard)
 	// RemoveTag emits the “remove-tag” signal. The default handler for the
 	// signal removes all occurrences of tag from the given range. start and end
 	// don’t have to be in order.
@@ -114898,7 +114341,6 @@ type TextBufferOverrides struct {
 	//   - tag: TextTag.
 	//   - start: one bound of range to be untagged.
 	//   - end: other bound of range to be untagged.
-	//
 	RemoveTag func(tag *TextTag, start, end *TextIter)
 }
 
@@ -117079,7 +116521,6 @@ func (buffer *TextBuffer) insertText(pos *TextIter, newText string, newTextLengt
 	runtime.KeepAlive(newTextLength)
 }
 
-// The function takes the following parameters:
 func (buffer *TextBuffer) markDeleted(mark *TextMark) {
 	gclass := (*C.GtkTextBufferClass)(coreglib.PeekParentClass(buffer))
 	fnarg := gclass.mark_deleted
@@ -117129,7 +116570,6 @@ func (buffer *TextBuffer) modifiedChanged() {
 	runtime.KeepAlive(buffer)
 }
 
-// The function takes the following parameters:
 func (buffer *TextBuffer) pasteDone(clipboard *Clipboard) {
 	gclass := (*C.GtkTextBufferClass)(coreglib.PeekParentClass(buffer))
 	fnarg := gclass.paste_done
@@ -117653,7 +117093,6 @@ type TextTagOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: result of signal emission (whether the event was handled).
-	//
 	Event func(eventObject *coreglib.Object, event *gdk.Event, iter *TextIter) bool
 }
 
@@ -117904,17 +117343,12 @@ func (tag *TextTag) event(eventObject *coreglib.Object, event *gdk.Event, iter *
 
 // TextTagTableOverrides contains methods that are overridable.
 type TextTagTableOverrides struct {
-	// The function takes the following parameters:
-	//
 	TagAdded func(tag *TextTag)
 	// The function takes the following parameters:
 	//
 	//   - tag
 	//   - sizeChanged
-	//
 	TagChanged func(tag *TextTag, sizeChanged bool)
-	// The function takes the following parameters:
-	//
 	TagRemoved func(tag *TextTag)
 }
 
@@ -118153,7 +117587,6 @@ func (table *TextTagTable) Remove(tag *TextTag) {
 	runtime.KeepAlive(tag)
 }
 
-// The function takes the following parameters:
 func (table *TextTagTable) tagAdded(tag *TextTag) {
 	gclass := (*C.GtkTextTagTableClass)(coreglib.PeekParentClass(table))
 	fnarg := gclass.tag_added
@@ -118193,7 +117626,6 @@ func (table *TextTagTable) tagChanged(tag *TextTag, sizeChanged bool) {
 	runtime.KeepAlive(sizeChanged)
 }
 
-// The function takes the following parameters:
 func (table *TextTagTable) tagRemoved(tag *TextTag) {
 	gclass := (*C.GtkTextTagTableClass)(coreglib.PeekParentClass(table))
 	fnarg := gclass.tag_removed
@@ -118218,13 +117650,11 @@ type TextViewOverrides struct {
 	//
 	//   - typ
 	//   - count
-	//
 	DeleteFromCursor func(typ DeleteType, count int)
 	// The function takes the following parameters:
 	//
 	//   - layer
 	//   - cr
-	//
 	DrawLayer func(layer TextViewLayer, cr *cairo.Context)
 	// The function takes the following parameters:
 	//
@@ -118232,24 +117662,16 @@ type TextViewOverrides struct {
 	//   - location
 	//   - start
 	//   - end
-	//
-	// The function returns the following values:
-	//
 	ExtendSelection func(granularity TextExtendSelection, location, start, end *TextIter) bool
-	// The function takes the following parameters:
-	//
-	InsertAtCursor func(str string)
-	InsertEmoji    func()
+	InsertAtCursor  func(str string)
+	InsertEmoji     func()
 	// The function takes the following parameters:
 	//
 	//   - step
 	//   - count
 	//   - extendSelection
-	//
-	MoveCursor     func(step MovementStep, count int, extendSelection bool)
-	PasteClipboard func()
-	// The function takes the following parameters:
-	//
+	MoveCursor      func(step MovementStep, count int, extendSelection bool)
+	PasteClipboard  func()
 	PopulatePopup   func(popup Widgetter)
 	SetAnchor       func()
 	ToggleOverwrite func()
@@ -119141,8 +118563,6 @@ func (textView *TextView) Indent() int {
 }
 
 // InputHints gets the value of the TextView:input-hints property.
-//
-// The function returns the following values:
 func (textView *TextView) InputHints() InputHints {
 	var _arg0 *C.GtkTextView  // out
 	var _cret C.GtkInputHints // in
@@ -119160,8 +118580,6 @@ func (textView *TextView) InputHints() InputHints {
 }
 
 // InputPurpose gets the value of the TextView:input-purpose property.
-//
-// The function returns the following values:
 func (textView *TextView) InputPurpose() InputPurpose {
 	var _arg0 *C.GtkTextView    // out
 	var _cret C.GtkInputPurpose // in
@@ -120643,8 +120061,6 @@ func (textView *TextView) drawLayer(layer TextViewLayer, cr *cairo.Context) {
 //   - location
 //   - start
 //   - end
-//
-// The function returns the following values:
 func (textView *TextView) extendSelection(granularity TextExtendSelection, location, start, end *TextIter) bool {
 	gclass := (*C.GtkTextViewClass)(coreglib.PeekParentClass(textView))
 	fnarg := gclass.extend_selection
@@ -120678,7 +120094,6 @@ func (textView *TextView) extendSelection(granularity TextExtendSelection, locat
 	return _ok
 }
 
-// The function takes the following parameters:
 func (textView *TextView) insertAtCursor(str string) {
 	gclass := (*C.GtkTextViewClass)(coreglib.PeekParentClass(textView))
 	fnarg := gclass.insert_at_cursor
@@ -120747,7 +120162,6 @@ func (textView *TextView) pasteClipboard() {
 	runtime.KeepAlive(textView)
 }
 
-// The function takes the following parameters:
 func (textView *TextView) populatePopup(popup Widgetter) {
 	gclass := (*C.GtkTextViewClass)(coreglib.PeekParentClass(textView))
 	fnarg := gclass.populate_popup
@@ -120865,7 +120279,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderActivity func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120874,7 +120287,6 @@ type ThemingEngineOverrides struct {
 	//   - x
 	//   - y
 	//   - size
-	//
 	RenderArrow func(cr *cairo.Context, angle, x, y, size float64)
 	// The function takes the following parameters:
 	//
@@ -120883,7 +120295,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderBackground func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120892,7 +120303,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderCheck func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120901,7 +120311,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderExpander func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120911,7 +120320,6 @@ type ThemingEngineOverrides struct {
 	//   - width
 	//   - height
 	//   - gapSide
-	//
 	RenderExtension func(cr *cairo.Context, x, y, width, height float64, gapSide PositionType)
 	// The function takes the following parameters:
 	//
@@ -120920,7 +120328,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderFocus func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120929,7 +120336,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderFrame func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120941,7 +120347,6 @@ type ThemingEngineOverrides struct {
 	//   - gapSide
 	//   - xy0Gap
 	//   - xy1Gap
-	//
 	RenderFrameGap func(cr *cairo.Context, x, y, width, height float64, gapSide PositionType, xy0Gap, xy1Gap float64)
 	// The function takes the following parameters:
 	//
@@ -120950,7 +120355,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderHandle func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -120958,7 +120362,6 @@ type ThemingEngineOverrides struct {
 	//   - pixbuf
 	//   - x
 	//   - y
-	//
 	RenderIcon func(cr *cairo.Context, pixbuf *gdkpixbuf.Pixbuf, x, y float64)
 	// The function takes the following parameters:
 	//
@@ -120966,7 +120369,6 @@ type ThemingEngineOverrides struct {
 	//   - surface
 	//   - x
 	//   - y
-	//
 	RenderIconSurface func(cr *cairo.Context, surface *cairo.Surface, x, y float64)
 	// The function takes the following parameters:
 	//
@@ -120974,7 +120376,6 @@ type ThemingEngineOverrides struct {
 	//   - x
 	//   - y
 	//   - layout
-	//
 	RenderLayout func(cr *cairo.Context, x, y float64, layout *pango.Layout)
 	// The function takes the following parameters:
 	//
@@ -120983,7 +120384,6 @@ type ThemingEngineOverrides struct {
 	//   - y0
 	//   - x1
 	//   - y1
-	//
 	RenderLine func(cr *cairo.Context, x0, y0, x1, y1 float64)
 	// The function takes the following parameters:
 	//
@@ -120992,7 +120392,6 @@ type ThemingEngineOverrides struct {
 	//   - y
 	//   - width
 	//   - height
-	//
 	RenderOption func(cr *cairo.Context, x, y, width, height float64)
 	// The function takes the following parameters:
 	//
@@ -121002,7 +120401,6 @@ type ThemingEngineOverrides struct {
 	//   - width
 	//   - height
 	//   - orientation
-	//
 	RenderSlider func(cr *cairo.Context, x, y, width, height float64, orientation Orientation)
 }
 
@@ -123716,8 +123114,6 @@ func (toolItem *ToolButton) clicked() {
 
 // ToolItemOverrides contains methods that are overridable.
 type ToolItemOverrides struct {
-	// The function returns the following values:
-	//
 	CreateMenuProxy func() bool
 	// ToolbarReconfigured emits the signal ToolItem::toolbar_reconfigured on
 	// tool_item. Toolbar and other ToolShell implementations use this function
@@ -124522,7 +123918,6 @@ func (toolItem *ToolItem) ToolbarReconfigured() {
 	runtime.KeepAlive(toolItem)
 }
 
-// The function returns the following values:
 func (toolItem *ToolItem) createMenuProxy() bool {
 	gclass := (*C.GtkToolItemClass)(coreglib.PeekParentClass(toolItem))
 	fnarg := gclass.create_menu_proxy
@@ -125704,21 +125099,14 @@ func ToolPaletteGetDragTargetItem() *TargetEntry {
 
 // ToolbarOverrides contains methods that are overridable.
 type ToolbarOverrides struct {
-	// The function takes the following parameters:
-	//
 	OrientationChanged func(orientation Orientation)
 	// The function takes the following parameters:
 	//
 	//   - x
 	//   - y
 	//   - buttonNumber
-	//
-	// The function returns the following values:
-	//
 	PopupContextMenu func(x, y, buttonNumber int) bool
-	// The function takes the following parameters:
-	//
-	StyleChanged func(style ToolbarStyle)
+	StyleChanged     func(style ToolbarStyle)
 }
 
 func defaultToolbarOverrides(v *Toolbar) ToolbarOverrides {
@@ -126255,7 +125643,6 @@ func (toolbar *Toolbar) UnsetStyle() {
 	runtime.KeepAlive(toolbar)
 }
 
-// The function takes the following parameters:
 func (toolbar *Toolbar) orientationChanged(orientation Orientation) {
 	gclass := (*C.GtkToolbarClass)(coreglib.PeekParentClass(toolbar))
 	fnarg := gclass.orientation_changed
@@ -126276,8 +125663,6 @@ func (toolbar *Toolbar) orientationChanged(orientation Orientation) {
 //   - x
 //   - y
 //   - buttonNumber
-//
-// The function returns the following values:
 func (toolbar *Toolbar) popupContextMenu(x, y, buttonNumber int) bool {
 	gclass := (*C.GtkToolbarClass)(coreglib.PeekParentClass(toolbar))
 	fnarg := gclass.popup_context_menu
@@ -126308,7 +125693,6 @@ func (toolbar *Toolbar) popupContextMenu(x, y, buttonNumber int) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
 func (toolbar *Toolbar) styleChanged(style ToolbarStyle) {
 	gclass := (*C.GtkToolbarClass)(coreglib.PeekParentClass(toolbar))
 	fnarg := gclass.style_changed
@@ -126661,15 +126045,11 @@ type TreeModelFilterOverrides struct {
 	//   - iter
 	//   - value
 	//   - column
-	//
 	Modify func(childModel TreeModeller, iter *TreeIter, value *coreglib.Value, column int)
 	// The function takes the following parameters:
 	//
 	//   - childModel
 	//   - iter
-	//
-	// The function returns the following values:
-	//
 	Visible func(childModel TreeModeller, iter *TreeIter) bool
 }
 
@@ -127140,8 +126520,6 @@ func (self *TreeModelFilter) modify(childModel TreeModeller, iter *TreeIter, val
 //
 //   - childModel
 //   - iter
-//
-// The function returns the following values:
 func (self *TreeModelFilter) visible(childModel TreeModeller, iter *TreeIter) bool {
 	gclass := (*C.GtkTreeModelFilterClass)(coreglib.PeekParentClass(self))
 	fnarg := gclass.visible
@@ -128732,17 +128110,11 @@ type TreeViewOverrides struct {
 	//   - logical
 	//   - expand
 	//   - openAll
-	//
-	// The function returns the following values:
-	//
 	ExpandCollapseCursorRow func(logical, expand, openAll bool) bool
 	// The function takes the following parameters:
 	//
 	//   - step
 	//   - count
-	//
-	// The function returns the following values:
-	//
 	MoveCursor func(step MovementStep, count int) bool
 	// RowActivated activates the cell determined by path and column.
 	//
@@ -128750,56 +128122,33 @@ type TreeViewOverrides struct {
 	//
 	//   - path to be activated.
 	//   - column to be activated.
-	//
 	RowActivated func(path *TreePath, column *TreeViewColumn)
 	// The function takes the following parameters:
 	//
 	//   - iter
 	//   - path
-	//
 	RowCollapsed func(iter *TreeIter, path *TreePath)
 	// The function takes the following parameters:
 	//
 	//   - iter
 	//   - path
-	//
-	RowExpanded func(iter *TreeIter, path *TreePath)
-	// The function returns the following values:
-	//
-	SelectAll func() bool
-	// The function returns the following values:
-	//
-	SelectCursorParent func() bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	SelectCursorRow func(startEditing bool) bool
-	// The function returns the following values:
-	//
+	RowExpanded            func(iter *TreeIter, path *TreePath)
+	SelectAll              func() bool
+	SelectCursorParent     func() bool
+	SelectCursorRow        func(startEditing bool) bool
 	StartInteractiveSearch func() bool
 	// The function takes the following parameters:
 	//
 	//   - iter
 	//   - path
-	//
-	// The function returns the following values:
-	//
 	TestCollapseRow func(iter *TreeIter, path *TreePath) bool
 	// The function takes the following parameters:
 	//
 	//   - iter
 	//   - path
-	//
-	// The function returns the following values:
-	//
-	TestExpandRow func(iter *TreeIter, path *TreePath) bool
-	// The function returns the following values:
-	//
+	TestExpandRow   func(iter *TreeIter, path *TreePath) bool
 	ToggleCursorRow func() bool
-	// The function returns the following values:
-	//
-	UnselectAll func() bool
+	UnselectAll     func() bool
 }
 
 func defaultTreeViewOverrides(v *TreeView) TreeViewOverrides {
@@ -131839,8 +131188,6 @@ func (treeView *TreeView) cursorChanged() {
 //   - logical
 //   - expand
 //   - openAll
-//
-// The function returns the following values:
 func (treeView *TreeView) expandCollapseCursorRow(logical, expand, openAll bool) bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.expand_collapse_cursor_row
@@ -131881,8 +131228,6 @@ func (treeView *TreeView) expandCollapseCursorRow(logical, expand, openAll bool)
 //
 //   - step
 //   - count
-//
-// The function returns the following values:
 func (treeView *TreeView) moveCursor(step MovementStep, count int) bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.move_cursor
@@ -131978,7 +131323,6 @@ func (treeView *TreeView) rowExpanded(iter *TreeIter, path *TreePath) {
 	runtime.KeepAlive(path)
 }
 
-// The function returns the following values:
 func (treeView *TreeView) selectAll() bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.select_all
@@ -132000,7 +131344,6 @@ func (treeView *TreeView) selectAll() bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (treeView *TreeView) selectCursorParent() bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.select_cursor_parent
@@ -132022,9 +131365,6 @@ func (treeView *TreeView) selectCursorParent() bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (treeView *TreeView) selectCursorRow(startEditing bool) bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.select_cursor_row
@@ -132051,7 +131391,6 @@ func (treeView *TreeView) selectCursorRow(startEditing bool) bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (treeView *TreeView) startInteractiveSearch() bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.start_interactive_search
@@ -132077,8 +131416,6 @@ func (treeView *TreeView) startInteractiveSearch() bool {
 //
 //   - iter
 //   - path
-//
-// The function returns the following values:
 func (treeView *TreeView) testCollapseRow(iter *TreeIter, path *TreePath) bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.test_collapse_row
@@ -132110,8 +131447,6 @@ func (treeView *TreeView) testCollapseRow(iter *TreeIter, path *TreePath) bool {
 //
 //   - iter
 //   - path
-//
-// The function returns the following values:
 func (treeView *TreeView) testExpandRow(iter *TreeIter, path *TreePath) bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.test_expand_row
@@ -132139,7 +131474,6 @@ func (treeView *TreeView) testExpandRow(iter *TreeIter, path *TreePath) bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (treeView *TreeView) toggleCursorRow() bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.toggle_cursor_row
@@ -132161,7 +131495,6 @@ func (treeView *TreeView) toggleCursorRow() bool {
 	return _ok
 }
 
-// The function returns the following values:
 func (treeView *TreeView) unselectAll() bool {
 	gclass := (*C.GtkTreeViewClass)(coreglib.PeekParentClass(treeView))
 	fnarg := gclass.unselect_all
@@ -133542,20 +132875,16 @@ func (treeColumn *TreeViewColumn) clicked() {
 // UIManagerOverrides contains methods that are overridable.
 type UIManagerOverrides struct {
 	ActionsChanged func()
-	// The function takes the following parameters:
-	//
-	AddWidget func(widget Widgetter)
+	AddWidget      func(widget Widgetter)
 	// The function takes the following parameters:
 	//
 	//   - action
 	//   - proxy
-	//
 	ConnectProxy func(action *Action, proxy Widgetter)
 	// The function takes the following parameters:
 	//
 	//   - action
 	//   - proxy
-	//
 	DisconnectProxy func(action *Action, proxy Widgetter)
 	// Action looks up an action by following a path. See
 	// gtk_ui_manager_get_widget() for more information about paths.
@@ -133570,7 +132899,6 @@ type UIManagerOverrides struct {
 	//
 	//   - action whose proxy widget is found by following the path, or NULL if
 	//     no widget was found.
-	//
 	Action func(path string) *Action
 	// Widget looks up a widget by following a path. The path consists of the
 	// names specified in the XML description of the UI. separated by “/”.
@@ -133596,14 +132924,9 @@ type UIManagerOverrides struct {
 	// The function returns the following values:
 	//
 	//   - widget found by following the path, or NULL if no widget was found.
-	//
-	Widget func(path string) Widgetter
-	// The function takes the following parameters:
-	//
+	Widget       func(path string) Widgetter
 	PostActivate func(action *Action)
-	// The function takes the following parameters:
-	//
-	PreActivate func(action *Action)
+	PreActivate  func(action *Action)
 }
 
 func defaultUIManagerOverrides(v *UIManager) UIManagerOverrides {
@@ -134552,7 +133875,6 @@ func (manager *UIManager) actionsChanged() {
 	runtime.KeepAlive(manager)
 }
 
-// The function takes the following parameters:
 func (manager *UIManager) addWidget(widget Widgetter) {
 	gclass := (*C.GtkUIManagerClass)(coreglib.PeekParentClass(manager))
 	fnarg := gclass.add_widget
@@ -134710,7 +134032,6 @@ func (manager *UIManager) widget(path string) Widgetter {
 	return _widget
 }
 
-// The function takes the following parameters:
 func (manager *UIManager) postActivate(action *Action) {
 	gclass := (*C.GtkUIManagerClass)(coreglib.PeekParentClass(manager))
 	fnarg := gclass.post_activate
@@ -134726,7 +134047,6 @@ func (manager *UIManager) postActivate(action *Action) {
 	runtime.KeepAlive(action)
 }
 
-// The function takes the following parameters:
 func (manager *UIManager) preActivate(action *Action) {
 	gclass := (*C.GtkUIManagerClass)(coreglib.PeekParentClass(manager))
 	fnarg := gclass.pre_activate
@@ -135783,14 +135103,11 @@ func NewVolumeButton() *VolumeButton {
 
 // WidgetOverrides contains methods that are overridable.
 type WidgetOverrides struct {
-	// The function takes the following parameters:
-	//
 	AdjustBaselineAllocation func(baseline *int)
 	// The function takes the following parameters:
 	//
 	//   - minimumBaseline
 	//   - naturalBaseline
-	//
 	AdjustBaselineRequest func(minimumBaseline, naturalBaseline *int)
 	// The function takes the following parameters:
 	//
@@ -135799,24 +135116,14 @@ type WidgetOverrides struct {
 	//   - naturalSize
 	//   - allocatedPos
 	//   - allocatedSize
-	//
 	AdjustSizeAllocation func(orientation Orientation, minimumSize, naturalSize, allocatedPos, allocatedSize *int)
 	// The function takes the following parameters:
 	//
 	//   - orientation
 	//   - minimumSize
 	//   - naturalSize
-	//
-	AdjustSizeRequest func(orientation Orientation, minimumSize, naturalSize *int)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ButtonPressEvent func(event *gdk.EventButton) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	AdjustSizeRequest  func(orientation Orientation, minimumSize, naturalSize *int)
+	ButtonPressEvent   func(event *gdk.EventButton) bool
 	ButtonReleaseEvent func(event *gdk.EventButton) bool
 	// CanActivateAccel determines whether an accelerator that activates
 	// the signal identified by signal_id can currently be activated.
@@ -135832,24 +135139,11 @@ type WidgetOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if the accelerator can be activated.
-	//
 	CanActivateAccel  func(signalId uint) bool
 	CompositedChanged func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ConfigureEvent func(event *gdk.EventConfigure) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	DamageEvent func(event *gdk.EventExpose) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	DeleteEvent func(event *gdk.EventAny) bool
+	ConfigureEvent    func(event *gdk.EventConfigure) bool
+	DamageEvent       func(event *gdk.EventExpose) bool
+	DeleteEvent       func(event *gdk.EventAny) bool
 	// Destroy destroys a widget.
 	//
 	// When a widget is destroyed all references it holds on other objects will
@@ -135881,28 +135175,17 @@ type WidgetOverrides struct {
 	// on child widgets.
 	//
 	// See also: gtk_container_remove().
-	Destroy func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	DestroyEvent func(event *gdk.EventAny) bool
-	// The function takes the following parameters:
-	//
+	Destroy          func()
+	DestroyEvent     func(event *gdk.EventAny) bool
 	DirectionChanged func(previousDirection TextDirection)
-	// The function takes the following parameters:
-	//
-	DragBegin func(context *gdk.DragContext)
-	// The function takes the following parameters:
-	//
-	DragDataDelete func(context *gdk.DragContext)
+	DragBegin        func(context *gdk.DragContext)
+	DragDataDelete   func(context *gdk.DragContext)
 	// The function takes the following parameters:
 	//
 	//   - context
 	//   - selectionData
 	//   - info
 	//   - time_
-	//
 	DragDataGet func(context *gdk.DragContext, selectionData *SelectionData, info, time_ uint)
 	// The function takes the following parameters:
 	//
@@ -135912,7 +135195,6 @@ type WidgetOverrides struct {
 	//   - selectionData
 	//   - info
 	//   - time_
-	//
 	DragDataReceived func(context *gdk.DragContext, x, y int, selectionData *SelectionData, info, time_ uint)
 	// The function takes the following parameters:
 	//
@@ -135920,26 +135202,17 @@ type WidgetOverrides struct {
 	//   - x
 	//   - y
 	//   - time_
-	//
-	// The function returns the following values:
-	//
 	DragDrop func(context *gdk.DragContext, x, y int, time_ uint) bool
-	// The function takes the following parameters:
-	//
-	DragEnd func(context *gdk.DragContext)
+	DragEnd  func(context *gdk.DragContext)
 	// The function takes the following parameters:
 	//
 	//   - context
 	//   - result
-	//
-	// The function returns the following values:
-	//
 	DragFailed func(context *gdk.DragContext, result DragResult) bool
 	// The function takes the following parameters:
 	//
 	//   - context
 	//   - time_
-	//
 	DragLeave func(context *gdk.DragContext, time_ uint)
 	// The function takes the following parameters:
 	//
@@ -135947,19 +135220,8 @@ type WidgetOverrides struct {
 	//   - x
 	//   - y
 	//   - time_
-	//
-	// The function returns the following values:
-	//
-	DragMotion func(context *gdk.DragContext, x, y int, time_ uint) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	Draw func(cr *cairo.Context) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	DragMotion       func(context *gdk.DragContext, x, y int, time_ uint) bool
+	Draw             func(cr *cairo.Context) bool
 	EnterNotifyEvent func(event *gdk.EventCrossing) bool
 	// Event: rarely-used function. This function is used to emit the event
 	// signals on a widget (those signals should never be emitted without using
@@ -135977,22 +135239,9 @@ type WidgetOverrides struct {
 	//
 	//   - ok: return from the event signal emission (TRUE if the event was
 	//     handled).
-	//
-	Event func(event *gdk.Event) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	Focus func(direction DirectionType) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	FocusInEvent func(event *gdk.EventFocus) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Event         func(event *gdk.Event) bool
+	Focus         func(direction DirectionType) bool
+	FocusInEvent  func(event *gdk.EventFocus) bool
 	FocusOutEvent func(event *gdk.EventFocus) bool
 	// Accessible returns the accessible object that describes the widget to an
 	// assistive technology.
@@ -136010,7 +135259,6 @@ type WidgetOverrides struct {
 	// The function returns the following values:
 	//
 	//   - object associated with widget.
-	//
 	Accessible func() *atk.AtkObject
 	// PreferredHeight retrieves a widget’s initial minimum and natural height.
 	//
@@ -136028,7 +135276,6 @@ type WidgetOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location to store the natural height,
 	//     or NULL.
-	//
 	PreferredHeight func() (minimumHeight, naturalHeight int)
 	// PreferredHeightAndBaselineForWidth retrieves a widget’s minimum and
 	// natural height and the corresponding baselines if it would be given the
@@ -136056,7 +135303,6 @@ type WidgetOverrides struct {
 	//     minimum height, or NULL.
 	//   - naturalBaseline (optional): location for storing the baseline for the
 	//     natural height, or NULL.
-	//
 	PreferredHeightAndBaselineForWidth func(width int) (minimumHeight, naturalHeight, minimumBaseline, naturalBaseline int)
 	// PreferredHeightForWidth retrieves a widget’s minimum and natural height
 	// if it would be given the specified width.
@@ -136077,7 +135323,6 @@ type WidgetOverrides struct {
 	//     or NULL.
 	//   - naturalHeight (optional): location for storing the natural height,
 	//     or NULL.
-	//
 	PreferredHeightForWidth func(width int) (minimumHeight, naturalHeight int)
 	// PreferredWidth retrieves a widget’s initial minimum and natural width.
 	//
@@ -136095,7 +135340,6 @@ type WidgetOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location to store the natural width,
 	//     or NULL.
-	//
 	PreferredWidth func() (minimumWidth, naturalWidth int)
 	// PreferredWidthForHeight retrieves a widget’s minimum and natural width if
 	// it would be given the specified height.
@@ -136116,7 +135360,6 @@ type WidgetOverrides struct {
 	//     or NULL.
 	//   - naturalWidth (optional): location for storing the natural width,
 	//     or NULL.
-	//
 	PreferredWidthForHeight func(height int) (minimumWidth, naturalWidth int)
 	// RequestMode gets whether the widget prefers a height-for-width layout or
 	// a width-for-height layout.
@@ -136128,12 +135371,7 @@ type WidgetOverrides struct {
 	// The function returns the following values:
 	//
 	//   - sizeRequestMode preferred by widget.
-	//
-	RequestMode func() SizeRequestMode
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	RequestMode     func() SizeRequestMode
 	GrabBrokenEvent func(event *gdk.EventGrabBroken) bool
 	// GrabFocus causes widget to have the keyboard focus for the Window it's
 	// inside. widget must be a focusable widget, such as a Entry; something
@@ -136145,26 +135383,14 @@ type WidgetOverrides struct {
 	// The widget also needs to be realized and mapped. This is indicated by the
 	// related signals. Grabbing the focus immediately after creating the widget
 	// will likely fail and cause critical warnings.
-	GrabFocus func()
-	// The function takes the following parameters:
-	//
+	GrabFocus  func()
 	GrabNotify func(wasGrabbed bool)
 	// Hide reverses the effects of gtk_widget_show(), causing the widget to be
 	// hidden (invisible to the user).
-	Hide func()
-	// The function takes the following parameters:
-	//
+	Hide             func()
 	HierarchyChanged func(previousToplevel Widgetter)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	KeyPressEvent func(event *gdk.EventKey) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	KeyReleaseEvent func(event *gdk.EventKey) bool
+	KeyPressEvent    func(event *gdk.EventKey) bool
+	KeyReleaseEvent  func(event *gdk.EventKey) bool
 	// KeynavFailed: this function should be called whenever keyboard
 	// navigation within a single widget hits a boundary. The function
 	// emits the Widget::keynav-failed signal on the widget and its return
@@ -136201,20 +135427,11 @@ type WidgetOverrides struct {
 	//   - ok: TRUE if stopping keyboard navigation is fine, FALSE if the
 	//     emitting widget should try to handle the keyboard navigation attempt
 	//     in its parent container(s).
-	//
-	KeynavFailed func(direction DirectionType) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	KeynavFailed     func(direction DirectionType) bool
 	LeaveNotifyEvent func(event *gdk.EventCrossing) bool
 	// Map: this function is only for use in widget implementations. Causes a
 	// widget to be mapped if it isn’t already.
-	Map func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Map      func()
 	MapEvent func(event *gdk.EventAny) bool
 	// MnemonicActivate emits the Widget::mnemonic-activate signal.
 	//
@@ -136225,46 +135442,20 @@ type WidgetOverrides struct {
 	// The function returns the following values:
 	//
 	//   - ok: TRUE if the signal has been handled.
-	//
-	MnemonicActivate func(groupCycling bool) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	MotionNotifyEvent func(event *gdk.EventMotion) bool
-	// The function takes the following parameters:
-	//
-	MoveFocus func(direction DirectionType)
-	// The function takes the following parameters:
-	//
-	ParentSet func(previousParent Widgetter)
-	// The function returns the following values:
-	//
-	PopupMenu func() bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	MnemonicActivate    func(groupCycling bool) bool
+	MotionNotifyEvent   func(event *gdk.EventMotion) bool
+	MoveFocus           func(direction DirectionType)
+	ParentSet           func(previousParent Widgetter)
+	PopupMenu           func() bool
 	PropertyNotifyEvent func(event *gdk.EventProperty) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ProximityInEvent func(event *gdk.EventProximity) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ProximityOutEvent func(event *gdk.EventProximity) bool
+	ProximityInEvent    func(event *gdk.EventProximity) bool
+	ProximityOutEvent   func(event *gdk.EventProximity) bool
 	// The function takes the following parameters:
 	//
 	//   - x
 	//   - y
 	//   - keyboardTooltip
 	//   - tooltip
-	//
-	// The function returns the following values:
-	//
 	QueryTooltip func(x, y int, keyboardTooltip bool, tooltip *Tooltip) bool
 	// QueueDrawRegion invalidates the area of widget defined by region by
 	// calling gdk_window_invalidate_region() on the widget’s window and all its
@@ -136279,7 +135470,6 @@ type WidgetOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - region to draw.
-	//
 	QueueDrawRegion func(region *cairo.Region)
 	// Realize creates the GDK (windowing system) resources associated with
 	// a widget. For example, widget->window will be created when a widget is
@@ -136297,42 +135487,22 @@ type WidgetOverrides struct {
 	// a better approach is to connect to a signal that will be called after
 	// the widget is realized automatically, such as Widget::draw. Or simply
 	// g_signal_connect () to the Widget::realize signal.
-	Realize func()
-	// The function takes the following parameters:
-	//
-	ScreenChanged func(previousScreen *gdk.Screen)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	ScrollEvent func(event *gdk.EventScroll) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Realize             func()
+	ScreenChanged       func(previousScreen *gdk.Screen)
+	ScrollEvent         func(event *gdk.EventScroll) bool
 	SelectionClearEvent func(event *gdk.EventSelection) bool
 	// The function takes the following parameters:
 	//
 	//   - selectionData
 	//   - info
 	//   - time_
-	//
-	SelectionGet func(selectionData *SelectionData, info, time_ uint)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	SelectionGet         func(selectionData *SelectionData, info, time_ uint)
 	SelectionNotifyEvent func(event *gdk.EventSelection) bool
 	// The function takes the following parameters:
 	//
 	//   - selectionData
 	//   - time_
-	//
-	SelectionReceived func(selectionData *SelectionData, time_ uint)
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	SelectionReceived     func(selectionData *SelectionData, time_ uint)
 	SelectionRequestEvent func(event *gdk.EventSelection) bool
 	// Show flags a widget to be displayed. Any widget that isn’t shown will not
 	// appear on the screen. If you want to show all the widgets in a container,
@@ -136348,11 +135518,7 @@ type WidgetOverrides struct {
 	Show func()
 	// ShowAll: recursively shows a widget, and any child widgets (if the widget
 	// is a container).
-	ShowAll func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	ShowAll  func()
 	ShowHelp func(helpType WidgetHelpType) bool
 	// SizeAllocate: this function is only used by Container subclasses,
 	// to assign a size and position to their child widgets.
@@ -136369,45 +135535,22 @@ type WidgetOverrides struct {
 	// The function takes the following parameters:
 	//
 	//   - allocation: position and size to be allocated to widget.
-	//
-	SizeAllocate func(allocation *Allocation)
-	// The function takes the following parameters:
-	//
-	StateChanged func(previousState StateType)
-	// The function takes the following parameters:
-	//
+	SizeAllocate      func(allocation *Allocation)
+	StateChanged      func(previousState StateType)
 	StateFlagsChanged func(previousStateFlags StateFlags)
-	// The function takes the following parameters:
-	//
-	StyleSet     func(previousStyle *Style)
-	StyleUpdated func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	TouchEvent func(event *gdk.EventTouch) bool
+	StyleSet          func(previousStyle *Style)
+	StyleUpdated      func()
+	TouchEvent        func(event *gdk.EventTouch) bool
 	// Unmap: this function is only for use in widget implementations. Causes a
 	// widget to be unmapped if it’s currently mapped.
-	Unmap func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Unmap      func()
 	UnmapEvent func(event *gdk.EventAny) bool
 	// Unrealize: this function is only useful in widget implementations.
 	// Causes a widget to be unrealized (frees all GDK resources associated with
 	// the widget, such as widget->window).
-	Unrealize func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
+	Unrealize             func()
 	VisibilityNotifyEvent func(event *gdk.EventVisibility) bool
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
-	WindowStateEvent func(event *gdk.EventWindowState) bool
+	WindowStateEvent      func(event *gdk.EventWindowState) bool
 }
 
 func defaultWidgetOverrides(v *Widget) WidgetOverrides {
@@ -144773,7 +143916,6 @@ func (widget *Widget) UnsetStateFlags(flags StateFlags) {
 	runtime.KeepAlive(flags)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) adjustBaselineAllocation(baseline *int) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.adjust_baseline_allocation
@@ -144871,9 +144013,6 @@ func (widget *Widget) adjustSizeRequest(orientation Orientation, minimumSize, na
 	runtime.KeepAlive(naturalSize)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) buttonPressEvent(event *gdk.EventButton) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.button_press_event
@@ -144898,9 +144037,6 @@ func (widget *Widget) buttonPressEvent(event *gdk.EventButton) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) buttonReleaseEvent(event *gdk.EventButton) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.button_release_event
@@ -144975,9 +144111,6 @@ func (widget *Widget) compositedChanged() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) configureEvent(event *gdk.EventConfigure) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.configure_event
@@ -145002,9 +144135,6 @@ func (widget *Widget) configureEvent(event *gdk.EventConfigure) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) damageEvent(event *gdk.EventExpose) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.damage_event
@@ -145029,9 +144159,6 @@ func (widget *Widget) damageEvent(event *gdk.EventExpose) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) deleteEvent(event *gdk.EventAny) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.delete_event
@@ -145096,9 +144223,6 @@ func (widget *Widget) destroy() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) destroyEvent(event *gdk.EventAny) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.destroy_event
@@ -145123,7 +144247,6 @@ func (widget *Widget) destroyEvent(event *gdk.EventAny) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
 func (widget *Widget) directionChanged(previousDirection TextDirection) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.direction_changed
@@ -145139,7 +144262,6 @@ func (widget *Widget) directionChanged(previousDirection TextDirection) {
 	runtime.KeepAlive(previousDirection)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) dragBegin(context *gdk.DragContext) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_begin
@@ -145155,7 +144277,6 @@ func (widget *Widget) dragBegin(context *gdk.DragContext) {
 	runtime.KeepAlive(context)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) dragDataDelete(context *gdk.DragContext) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_data_delete
@@ -145245,8 +144366,6 @@ func (widget *Widget) dragDataReceived(context *gdk.DragContext, x, y int, selec
 //   - x
 //   - y
 //   - time_
-//
-// The function returns the following values:
 func (widget *Widget) dragDrop(context *gdk.DragContext, x, y int, time_ uint) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_drop
@@ -145280,7 +144399,6 @@ func (widget *Widget) dragDrop(context *gdk.DragContext, x, y int, time_ uint) b
 	return _ok
 }
 
-// The function takes the following parameters:
 func (widget *Widget) dragEnd(context *gdk.DragContext) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_end
@@ -145300,8 +144418,6 @@ func (widget *Widget) dragEnd(context *gdk.DragContext) {
 //
 //   - context
 //   - result
-//
-// The function returns the following values:
 func (widget *Widget) dragFailed(context *gdk.DragContext, result DragResult) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_failed
@@ -145357,8 +144473,6 @@ func (widget *Widget) dragLeave(context *gdk.DragContext, time_ uint) {
 //   - x
 //   - y
 //   - time_
-//
-// The function returns the following values:
 func (widget *Widget) dragMotion(context *gdk.DragContext, x, y int, time_ uint) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.drag_motion
@@ -145392,9 +144506,6 @@ func (widget *Widget) dragMotion(context *gdk.DragContext, x, y int, time_ uint)
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) draw(cr *cairo.Context) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.draw
@@ -145419,9 +144530,6 @@ func (widget *Widget) draw(cr *cairo.Context) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) enterNotifyEvent(event *gdk.EventCrossing) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.enter_notify_event
@@ -145485,9 +144593,6 @@ func (widget *Widget) event(event *gdk.Event) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) focus(direction DirectionType) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.focus
@@ -145512,9 +144617,6 @@ func (widget *Widget) focus(direction DirectionType) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) focusInEvent(event *gdk.EventFocus) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.focus_in_event
@@ -145539,9 +144641,6 @@ func (widget *Widget) focusInEvent(event *gdk.EventFocus) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) focusOutEvent(event *gdk.EventFocus) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.focus_out_event
@@ -145843,9 +144942,6 @@ func (widget *Widget) requestMode() SizeRequestMode {
 	return _sizeRequestMode
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) grabBrokenEvent(event *gdk.EventGrabBroken) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.grab_broken_event
@@ -145892,7 +144988,6 @@ func (widget *Widget) grabFocus() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) grabNotify(wasGrabbed bool) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.grab_notify
@@ -145924,7 +145019,6 @@ func (widget *Widget) hide() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) hierarchyChanged(previousToplevel Widgetter) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.hierarchy_changed
@@ -145940,9 +145034,6 @@ func (widget *Widget) hierarchyChanged(previousToplevel Widgetter) {
 	runtime.KeepAlive(previousToplevel)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) keyPressEvent(event *gdk.EventKey) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.key_press_event
@@ -145967,9 +145058,6 @@ func (widget *Widget) keyPressEvent(event *gdk.EventKey) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) keyReleaseEvent(event *gdk.EventKey) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.key_release_event
@@ -146050,9 +145138,6 @@ func (widget *Widget) keynavFailed(direction DirectionType) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) leaveNotifyEvent(event *gdk.EventCrossing) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.leave_notify_event
@@ -146091,9 +145176,6 @@ func (widget *Widget) _map() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) mapEvent(event *gdk.EventAny) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.map_event
@@ -146153,9 +145235,6 @@ func (widget *Widget) mnemonicActivate(groupCycling bool) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) motionNotifyEvent(event *gdk.EventMotion) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.motion_notify_event
@@ -146180,7 +145259,6 @@ func (widget *Widget) motionNotifyEvent(event *gdk.EventMotion) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
 func (widget *Widget) moveFocus(direction DirectionType) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.move_focus
@@ -146196,7 +145274,6 @@ func (widget *Widget) moveFocus(direction DirectionType) {
 	runtime.KeepAlive(direction)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) parentSet(previousParent Widgetter) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.parent_set
@@ -146212,7 +145289,6 @@ func (widget *Widget) parentSet(previousParent Widgetter) {
 	runtime.KeepAlive(previousParent)
 }
 
-// The function returns the following values:
 func (widget *Widget) popupMenu() bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.popup_menu
@@ -146234,9 +145310,6 @@ func (widget *Widget) popupMenu() bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) propertyNotifyEvent(event *gdk.EventProperty) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.property_notify_event
@@ -146261,9 +145334,6 @@ func (widget *Widget) propertyNotifyEvent(event *gdk.EventProperty) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) proximityInEvent(event *gdk.EventProximity) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.proximity_in_event
@@ -146288,9 +145358,6 @@ func (widget *Widget) proximityInEvent(event *gdk.EventProximity) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) proximityOutEvent(event *gdk.EventProximity) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.proximity_out_event
@@ -146321,8 +145388,6 @@ func (widget *Widget) proximityOutEvent(event *gdk.EventProximity) bool {
 //   - y
 //   - keyboardTooltip
 //   - tooltip
-//
-// The function returns the following values:
 func (widget *Widget) queryTooltip(x, y int, keyboardTooltip bool, tooltip *Tooltip) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.query_tooltip
@@ -146414,7 +145479,6 @@ func (widget *Widget) realize() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) screenChanged(previousScreen *gdk.Screen) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.screen_changed
@@ -146430,9 +145494,6 @@ func (widget *Widget) screenChanged(previousScreen *gdk.Screen) {
 	runtime.KeepAlive(previousScreen)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) scrollEvent(event *gdk.EventScroll) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.scroll_event
@@ -146457,9 +145518,6 @@ func (widget *Widget) scrollEvent(event *gdk.EventScroll) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) selectionClearEvent(event *gdk.EventSelection) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.selection_clear_event
@@ -146510,9 +145568,6 @@ func (widget *Widget) selectionGet(selectionData *SelectionData, info, time_ uin
 	runtime.KeepAlive(time_)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) selectionNotifyEvent(event *gdk.EventSelection) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.selection_notify_event
@@ -146559,9 +145614,6 @@ func (widget *Widget) selectionReceived(selectionData *SelectionData, time_ uint
 	runtime.KeepAlive(time_)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) selectionRequestEvent(event *gdk.EventSelection) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.selection_request_event
@@ -146623,9 +145675,6 @@ func (widget *Widget) showAll() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) showHelp(helpType WidgetHelpType) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.show_help
@@ -146682,7 +145731,6 @@ func (widget *Widget) sizeAllocate(allocation *Allocation) {
 	runtime.KeepAlive(allocation)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) stateChanged(previousState StateType) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.state_changed
@@ -146698,7 +145746,6 @@ func (widget *Widget) stateChanged(previousState StateType) {
 	runtime.KeepAlive(previousState)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) stateFlagsChanged(previousStateFlags StateFlags) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.state_flags_changed
@@ -146714,7 +145761,6 @@ func (widget *Widget) stateFlagsChanged(previousStateFlags StateFlags) {
 	runtime.KeepAlive(previousStateFlags)
 }
 
-// The function takes the following parameters:
 func (widget *Widget) styleSet(previousStyle *Style) {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.style_set
@@ -146742,9 +145788,6 @@ func (widget *Widget) styleUpdated() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) touchEvent(event *gdk.EventTouch) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.touch_event
@@ -146783,9 +145826,6 @@ func (widget *Widget) unmap() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) unmapEvent(event *gdk.EventAny) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.unmap_event
@@ -146825,9 +145865,6 @@ func (widget *Widget) unrealize() {
 	runtime.KeepAlive(widget)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) visibilityNotifyEvent(event *gdk.EventVisibility) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.visibility_notify_event
@@ -146852,9 +145889,6 @@ func (widget *Widget) visibilityNotifyEvent(event *gdk.EventVisibility) bool {
 	return _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (widget *Widget) windowStateEvent(event *gdk.EventWindowState) bool {
 	gclass := (*C.GtkWidgetClass)(coreglib.PeekParentClass(widget))
 	fnarg := gclass.window_state_event
@@ -147016,10 +146050,6 @@ func marshalWidgetAccessible(p uintptr) (interface{}, error) {
 type WindowOverrides struct {
 	ActivateDefault func()
 	ActivateFocus   func()
-	// The function takes the following parameters:
-	//
-	// The function returns the following values:
-	//
 	EnableDebugging func(toggle bool) bool
 	KeysChanged     func()
 	// SetFocus: if focus is not the current focus widget, and is focusable,
@@ -147032,7 +146062,6 @@ type WindowOverrides struct {
 	//
 	//   - focus (optional): widget to be the new focus widget, or NULL to unset
 	//     any focus widget for the toplevel window.
-	//
 	SetFocus func(focus Widgetter)
 }
 
@@ -150252,9 +149281,6 @@ func (window *Window) activateFocus() {
 	runtime.KeepAlive(window)
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (window *Window) enableDebugging(toggle bool) bool {
 	gclass := (*C.GtkWindowClass)(coreglib.PeekParentClass(window))
 	fnarg := gclass.enable_debugging
@@ -153452,9 +152478,6 @@ func (gradient *Gradient) Resolve(props *StyleProperties) (*cairo.Pattern, bool)
 	return _resolvedGradient, _ok
 }
 
-// The function takes the following parameters:
-//
-// The function returns the following values:
 func (gradient *Gradient) ResolveForContext(context *StyleContext) *cairo.Pattern {
 	var _arg0 *C.GtkGradient     // out
 	var _arg1 *C.GtkStyleContext // out
