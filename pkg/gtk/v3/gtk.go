@@ -3,6 +3,7 @@
 package gtk
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	_ "runtime/cgo"
@@ -12,6 +13,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/atk"
 	"github.com/diamondburned/gotk4/pkg/cairo"
 	"github.com/diamondburned/gotk4/pkg/core/gbox"
+	"github.com/diamondburned/gotk4/pkg/core/gcancel"
 	"github.com/diamondburned/gotk4/pkg/core/gerror"
 	"github.com/diamondburned/gotk4/pkg/core/gextras"
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
@@ -682,6 +684,7 @@ import (
 // extern void _gotk4_gtk3_ButtonClass_enter(GtkButton*);
 // extern void _gotk4_gtk3_ButtonClass_clicked(GtkButton*);
 // extern void _gotk4_gtk3_ButtonClass_activate(GtkButton*);
+// extern void _gotk4_gtk3_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
 // extern void _gotk4_gtk3_Assistant_ConnectPrepare(gpointer, GtkWidget*, guintptr);
 // extern void _gotk4_gtk3_Assistant_ConnectEscape(gpointer, guintptr);
 // extern void _gotk4_gtk3_Assistant_ConnectClose(gpointer, guintptr);
@@ -720,6 +723,7 @@ import (
 // extern void _gotk4_gtk3_AccessibleClass_widget_set(GtkAccessible*);
 // extern void _gotk4_gtk3_AccessibleClass_connect_widget_destroyed(GtkAccessible*);
 // extern void _gotk4_gtk3_AccelMap_ConnectChanged(gpointer, gchar*, guint, GdkModifierType, guintptr);
+// extern void _gotk4_gio2_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
 // extern guint _gotk4_gtk3_RcStyleClass_parse(GtkRcStyle*, GtkSettings*, GScanner*);
 // extern guint _gotk4_gtk3_EntryBufferClass_insert_text(GtkEntryBuffer*, guint, gchar*, guint);
 // extern guint _gotk4_gtk3_EntryBufferClass_get_length(GtkEntryBuffer*);
@@ -70879,6 +70883,39 @@ func (iconInfo *IconInfo) LoadIcon() (*gdkpixbuf.Pixbuf, error) {
 	return _pixbuf, _goerr
 }
 
+// LoadIconAsync: asynchronously load, render and scale an icon previously
+// looked up from the icon theme using gtk_icon_theme_lookup_icon().
+//
+// For more details, see gtk_icon_info_load_icon() which is the synchronous
+// version of this call.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): optional #GCancellable object, NULL to ignore.
+//   - callback (optional) to call when the request is satisfied.
+func (iconInfo *IconInfo) LoadIconAsync(ctx context.Context, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkIconInfo        // out
+	var _arg1 *C.GCancellable       // out
+	var _arg2 C.GAsyncReadyCallback // out
+	var _arg3 C.gpointer
+
+	_arg0 = (*C.GtkIconInfo)(unsafe.Pointer(coreglib.InternObject(iconInfo).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg1 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if callback != nil {
+		_arg2 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg3 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_icon_info_load_icon_async(_arg0, _arg1, _arg2, _arg3)
+	runtime.KeepAlive(iconInfo)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(callback)
+}
+
 // LoadIconFinish finishes an async icon load, see
 // gtk_icon_info_load_icon_async().
 //
@@ -71061,6 +71098,64 @@ func (iconInfo *IconInfo) LoadSymbolic(fg, successColor, warningColor, errorColo
 	return _wasSymbolic, _pixbuf, _goerr
 }
 
+// LoadSymbolicAsync: asynchronously load, render and scale a symbolic icon
+// previously looked up from the icon theme using gtk_icon_theme_lookup_icon().
+//
+// For more details, see gtk_icon_info_load_symbolic() which is the synchronous
+// version of this call.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): optional #GCancellable object, NULL to ignore.
+//   - fg representing the foreground color of the icon.
+//   - successColor (optional) representing the warning color of the icon or
+//     NULL to use the default color.
+//   - warningColor (optional) representing the warning color of the icon or
+//     NULL to use the default color.
+//   - errorColor (optional) representing the error color of the icon or NULL to
+//     use the default color (allow-none).
+//   - callback (optional) to call when the request is satisfied.
+func (iconInfo *IconInfo) LoadSymbolicAsync(ctx context.Context, fg, successColor, warningColor, errorColor *gdk.RGBA, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkIconInfo        // out
+	var _arg5 *C.GCancellable       // out
+	var _arg1 *C.GdkRGBA            // out
+	var _arg2 *C.GdkRGBA            // out
+	var _arg3 *C.GdkRGBA            // out
+	var _arg4 *C.GdkRGBA            // out
+	var _arg6 C.GAsyncReadyCallback // out
+	var _arg7 C.gpointer
+
+	_arg0 = (*C.GtkIconInfo)(unsafe.Pointer(coreglib.InternObject(iconInfo).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg5 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	_arg1 = (*C.GdkRGBA)(gextras.StructNative(unsafe.Pointer(fg)))
+	if successColor != nil {
+		_arg2 = (*C.GdkRGBA)(gextras.StructNative(unsafe.Pointer(successColor)))
+	}
+	if warningColor != nil {
+		_arg3 = (*C.GdkRGBA)(gextras.StructNative(unsafe.Pointer(warningColor)))
+	}
+	if errorColor != nil {
+		_arg4 = (*C.GdkRGBA)(gextras.StructNative(unsafe.Pointer(errorColor)))
+	}
+	if callback != nil {
+		_arg6 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg7 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_icon_info_load_symbolic_async(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7)
+	runtime.KeepAlive(iconInfo)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(fg)
+	runtime.KeepAlive(successColor)
+	runtime.KeepAlive(warningColor)
+	runtime.KeepAlive(errorColor)
+	runtime.KeepAlive(callback)
+}
+
 // LoadSymbolicFinish finishes an async icon load, see
 // gtk_icon_info_load_symbolic_async().
 //
@@ -71171,6 +71266,44 @@ func (iconInfo *IconInfo) LoadSymbolicForContext(context *StyleContext) (bool, *
 	}
 
 	return _wasSymbolic, _pixbuf, _goerr
+}
+
+// LoadSymbolicForContextAsync: asynchronously load, render and scale
+// a symbolic icon previously looked up from the icon theme using
+// gtk_icon_theme_lookup_icon().
+//
+// For more details, see gtk_icon_info_load_symbolic_for_context() which is the
+// synchronous version of this call.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): optional #GCancellable object, NULL to ignore.
+//   - context: StyleContext.
+//   - callback (optional) to call when the request is satisfied.
+func (iconInfo *IconInfo) LoadSymbolicForContextAsync(ctx context.Context, context *StyleContext, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkIconInfo        // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkStyleContext    // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkIconInfo)(unsafe.Pointer(coreglib.InternObject(iconInfo).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	_arg1 = (*C.GtkStyleContext)(unsafe.Pointer(coreglib.InternObject(context).Native()))
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_icon_info_load_symbolic_for_context_async(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(iconInfo)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(context)
+	runtime.KeepAlive(callback)
 }
 
 // LoadSymbolicForContextFinish finishes an async icon load, see

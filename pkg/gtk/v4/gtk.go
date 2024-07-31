@@ -3,6 +3,7 @@
 package gtk
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"runtime"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/diamondburned/gotk4/pkg/cairo"
 	"github.com/diamondburned/gotk4/pkg/core/gbox"
+	"github.com/diamondburned/gotk4/pkg/core/gcancel"
 	"github.com/diamondburned/gotk4/pkg/core/gerror"
 	"github.com/diamondburned/gotk4/pkg/core/gextras"
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
@@ -441,6 +443,7 @@ import (
 // extern void _gotk4_gtk4_Button_ConnectActivate(gpointer, guintptr);
 // extern void _gotk4_gtk4_ButtonClass_clicked(GtkButton*);
 // extern void _gotk4_gtk4_ButtonClass_activate(GtkButton*);
+// extern void _gotk4_gtk4_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
 // extern void _gotk4_gtk4_Assistant_ConnectPrepare(gpointer, GtkWidget*, guintptr);
 // extern void _gotk4_gtk4_Assistant_ConnectEscape(gpointer, guintptr);
 // extern void _gotk4_gtk4_Assistant_ConnectClose(gpointer, guintptr);
@@ -461,6 +464,7 @@ import (
 // extern void _gotk4_gtk4_AdjustmentClass_value_changed(GtkAdjustment*);
 // extern void _gotk4_gtk4_AdjustmentClass_changed(GtkAdjustment*);
 // extern void _gotk4_gtk4_ATContext_ConnectStateChange(gpointer, guintptr);
+// extern void _gotk4_gio2_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
 // extern int _gotk4_gtk4_TreeIterCompareFunc(GtkTreeModel*, GtkTreeIter*, GtkTreeIter*, gpointer);
 // extern int _gotk4_gtk4_ListBoxSortFunc(GtkListBoxRow*, GtkListBoxRow*, gpointer);
 // extern int _gotk4_gtk4_FlowBoxSortFunc(GtkFlowBoxChild*, GtkFlowBoxChild*, gpointer);
@@ -10572,6 +10576,57 @@ func ShowURI(parent *Window, uri string, timestamp uint32) {
 	runtime.KeepAlive(parent)
 	runtime.KeepAlive(uri)
 	runtime.KeepAlive(timestamp)
+}
+
+// ShowURIFull: this function launches the default application for showing a
+// given uri.
+//
+// The callback will be called when the launch is completed. It should call
+// gtk_show_uri_full_finish() to obtain the result.
+//
+// This is the recommended call to be used as it passes information necessary
+// for sandbox helpers to parent their dialogs properly.
+//
+// Deprecated: Use gtk.FileLauncher.Launch() or gtk.URILauncher.Launch()
+// instead.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the launch.
+//   - parent (optional) window.
+//   - uri to show.
+//   - timestamp from the event that triggered this call, or GDK_CURRENT_TIME.
+//   - callback (optional) to call when the action is complete.
+func ShowURIFull(ctx context.Context, parent *Window, uri string, timestamp uint32, callback gio.AsyncReadyCallback) {
+	var _arg4 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.char               // out
+	var _arg3 C.guint32             // out
+	var _arg5 C.GAsyncReadyCallback // out
+	var _arg6 C.gpointer
+
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg4 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	_arg2 = (*C.char)(unsafe.Pointer(C.CString(uri)))
+	defer C.free(unsafe.Pointer(_arg2))
+	_arg3 = C.guint32(timestamp)
+	if callback != nil {
+		_arg5 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg6 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_show_uri_full(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(uri)
+	runtime.KeepAlive(timestamp)
+	runtime.KeepAlive(callback)
 }
 
 // ShowURIFullFinish finishes the gtk_show_uri() call and returns the result of
@@ -24353,6 +24408,47 @@ func wrapAlertDialog(obj *coreglib.Object) *AlertDialog {
 
 func marshalAlertDialog(p uintptr) (interface{}, error) {
 	return wrapAlertDialog(coreglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
+}
+
+// Choose: this function shows the alert to the user.
+//
+// The callback will be called when the alert is dismissed. It should call
+// gtk.AlertDialog.ChooseFinish() to obtain the result.
+//
+// It is ok to pass NULL for the callback if the alert does not have more than
+// one button. A simpler API for this case is gtk.AlertDialog.Show().
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *AlertDialog) Choose(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkAlertDialog     // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkAlertDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_alert_dialog_choose(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // ChooseFinish finishes the gtk.AlertDialog.Choose() call and returns the index
@@ -40008,6 +40104,51 @@ func NewColorDialog() *ColorDialog {
 	return _colorDialog
 }
 
+// ChooseRGBA: this function initiates a color choice operation by presenting a
+// color chooser dialog to the user.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.ColorDialog.ChooseRGBAFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - initialColor (optional): color to select initially.
+//   - callback (optional) to call when the operation is complete.
+func (self *ColorDialog) ChooseRGBA(ctx context.Context, parent *Window, initialColor *gdk.RGBA, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkColorDialog     // out
+	var _arg3 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.GdkRGBA            // out
+	var _arg4 C.GAsyncReadyCallback // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkColorDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if initialColor != nil {
+		_arg2 = (*C.GdkRGBA)(gextras.StructNative(unsafe.Pointer(initialColor)))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_color_dialog_choose_rgba(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(initialColor)
+	runtime.KeepAlive(callback)
+}
+
 // ChooseRGBAFinish finishes the gtk.ColorDialog.ChooseRGBA() call and returns
 // the resulting color.
 //
@@ -55408,6 +55549,45 @@ func (self *FileDialog) Title() string {
 	return _utf8
 }
 
+// Open: this function initiates a file selection operation by presenting a file
+// chooser dialog to the user.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FileDialog.OpenFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileDialog) Open(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileDialog      // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_dialog_open(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
+}
+
 // OpenFinish finishes the gtk.FileDialog.Open() call and returns the resulting
 // file.
 //
@@ -55448,6 +55628,48 @@ func (self *FileDialog) OpenFinish(result gio.AsyncResulter) (*gio.File, error) 
 	}
 
 	return _file, _goerr
+}
+
+// OpenMultiple: this function initiates a multi-file selection operation by
+// presenting a file chooser dialog to the user.
+//
+// The file chooser will initially be opened in the directory
+// gtk.FileDialog:initial-folder.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FileDialog.OpenMultipleFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileDialog) OpenMultiple(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileDialog      // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_dialog_open_multiple(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // OpenMultipleFinish finishes the gtk.FileDialog.Open() call and returns the
@@ -55492,6 +55714,45 @@ func (self *FileDialog) OpenMultipleFinish(result gio.AsyncResulter) (*gio.ListM
 	return _listModel, _goerr
 }
 
+// Save: this function initiates a file save operation by presenting a file
+// chooser dialog to the user.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FileDialog.SaveFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileDialog) Save(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileDialog      // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_dialog_save(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
+}
+
 // SaveFinish finishes the gtk.FileDialog.Save() call and returns the resulting
 // file.
 //
@@ -55534,6 +55795,49 @@ func (self *FileDialog) SaveFinish(result gio.AsyncResulter) (*gio.File, error) 
 	return _file, _goerr
 }
 
+// SelectFolder: this function initiates a directory selection operation by
+// presenting a file chooser dialog to the user.
+//
+// If you pass initial_folder, the file chooser will initially be opened in
+// the parent directory of that folder, otherwise, it will be in the directory
+// gtk.FileDialog:initial-folder.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FileDialog.SelectFolderFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileDialog) SelectFolder(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileDialog      // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_dialog_select_folder(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
+}
+
 // SelectFolderFinish finishes the gtk.FileDialog.SelectFolder() call and
 // returns the resulting file.
 //
@@ -55574,6 +55878,48 @@ func (self *FileDialog) SelectFolderFinish(result gio.AsyncResulter) (*gio.File,
 	}
 
 	return _file, _goerr
+}
+
+// SelectMultipleFolders: this function initiates a multi-directory selection
+// operation by presenting a file chooser dialog to the user.
+//
+// The file chooser will initially be opened in the directory
+// gtk.FileDialog:initial-folder.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FileDialog.SelectMultipleFoldersFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileDialog) SelectMultipleFolders(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileDialog      // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_dialog_select_multiple_folders(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // SelectMultipleFoldersFinish finishes the
@@ -56257,6 +56603,46 @@ func (self *FileLauncher) Writable() bool {
 	return _ok
 }
 
+// Launch an application to open the file.
+//
+// This may present an app chooser dialog to the user.
+//
+// The callback will be called when the operation is completed. It should call
+// gtk.FileLauncher.LaunchFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileLauncher) Launch(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileLauncher    // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileLauncher)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_launcher_launch(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
+}
+
 // LaunchFinish finishes the gtk.FileLauncher.Launch() call and returns the
 // result.
 //
@@ -56282,6 +56668,48 @@ func (self *FileLauncher) LaunchFinish(result gio.AsyncResulter) error {
 	}
 
 	return _goerr
+}
+
+// OpenContainingFolder: launch a file manager to show the file in its parent
+// directory.
+//
+// This is only supported native files. It will fail if file is e.g. a http://
+// uri.
+//
+// The callback will be called when the operation is completed. It should call
+// gtk.FileLauncher.OpenContainingFolderFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *FileLauncher) OpenContainingFolder(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFileLauncher    // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkFileLauncher)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_file_launcher_open_containing_folder(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // OpenContainingFolderFinish finishes the
@@ -59277,6 +59705,52 @@ func NewFontDialog() *FontDialog {
 	return _fontDialog
 }
 
+// ChooseFace: this function initiates a font selection operation by presenting
+// a dialog to the user for selecting a font face (i.e. a font family and style,
+// but not a specific font size).
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FontDialog.ChooseFaceFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - initialValue (optional): initial value.
+//   - callback (optional) to call when the operation is complete.
+func (self *FontDialog) ChooseFace(ctx context.Context, parent *Window, initialValue pango.FontFacer, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFontDialog      // out
+	var _arg3 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.PangoFontFace      // out
+	var _arg4 C.GAsyncReadyCallback // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkFontDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if initialValue != nil {
+		_arg2 = (*C.PangoFontFace)(unsafe.Pointer(coreglib.InternObject(initialValue).Native()))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_font_dialog_choose_face(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(initialValue)
+	runtime.KeepAlive(callback)
+}
+
 // ChooseFaceFinish finishes the gtk.FontDialog.ChooseFace() call and returns
 // the resulting font face.
 //
@@ -59324,6 +59798,51 @@ func (self *FontDialog) ChooseFaceFinish(result gio.AsyncResulter) (pango.FontFa
 	}
 
 	return _fontFace, _goerr
+}
+
+// ChooseFamily: this function initiates a font selection operation by
+// presenting a dialog to the user for selecting a font family.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FontDialog.ChooseFamilyFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - initialValue (optional): initial value.
+//   - callback (optional) to call when the operation is complete.
+func (self *FontDialog) ChooseFamily(ctx context.Context, parent *Window, initialValue pango.FontFamilier, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFontDialog      // out
+	var _arg3 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.PangoFontFamily    // out
+	var _arg4 C.GAsyncReadyCallback // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkFontDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if initialValue != nil {
+		_arg2 = (*C.PangoFontFamily)(unsafe.Pointer(coreglib.InternObject(initialValue).Native()))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_font_dialog_choose_family(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(initialValue)
+	runtime.KeepAlive(callback)
 }
 
 // ChooseFamilyFinish finishes the gtk.FontDialog.ChooseFamily() call and
@@ -59377,6 +59896,102 @@ func (self *FontDialog) ChooseFamilyFinish(result gio.AsyncResulter) (pango.Font
 	}
 
 	return _fontFamily, _goerr
+}
+
+// ChooseFont: this function initiates a font selection operation by presenting
+// a dialog to the user for selecting a font.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FontDialog.ChooseFontFinish() to obtain the result.
+//
+// If you want to let the user select font features as well, use
+// gtk.FontDialog.ChooseFontAndFeatures() instead.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - initialValue (optional): font to select initially.
+//   - callback (optional) to call when the operation is complete.
+func (self *FontDialog) ChooseFont(ctx context.Context, parent *Window, initialValue *pango.FontDescription, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFontDialog        // out
+	var _arg3 *C.GCancellable         // out
+	var _arg1 *C.GtkWindow            // out
+	var _arg2 *C.PangoFontDescription // out
+	var _arg4 C.GAsyncReadyCallback   // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkFontDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if initialValue != nil {
+		_arg2 = (*C.PangoFontDescription)(gextras.StructNative(unsafe.Pointer(initialValue)))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_font_dialog_choose_font(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(initialValue)
+	runtime.KeepAlive(callback)
+}
+
+// ChooseFontAndFeatures: this function initiates a font selection operation by
+// presenting a dialog to the user for selecting a font and font features.
+//
+// Font features affect how the font is rendered, for example enabling glyph
+// variants or ligatures.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.FontDialog.ChooseFontAndFeaturesFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - initialValue (optional): font to select initially.
+//   - callback (optional) to call when the operation is complete.
+func (self *FontDialog) ChooseFontAndFeatures(ctx context.Context, parent *Window, initialValue *pango.FontDescription, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkFontDialog        // out
+	var _arg3 *C.GCancellable         // out
+	var _arg1 *C.GtkWindow            // out
+	var _arg2 *C.PangoFontDescription // out
+	var _arg4 C.GAsyncReadyCallback   // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkFontDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if initialValue != nil {
+		_arg2 = (*C.PangoFontDescription)(gextras.StructNative(unsafe.Pointer(initialValue)))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_font_dialog_choose_font_and_features(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(initialValue)
+	runtime.KeepAlive(callback)
 }
 
 // ChooseFontAndFeaturesFinish finishes the
@@ -88761,6 +89376,104 @@ func (self *PrintDialog) Title() string {
 	return _utf8
 }
 
+// Print: this function prints content from a stream.
+//
+// If you pass NULL as setup, then this method will present a print dialog.
+// Otherwise, it will attempt to print directly, without user interaction.
+//
+// The callback will be called when the printing is done. It should call
+// gtk.PrintDialog.PrintFinish() to obtain the results.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - setup (optional): GtkPrintSetup to use.
+//   - callback (optional) to call when the operation is complete.
+func (self *PrintDialog) Print(ctx context.Context, parent *Window, setup *PrintSetup, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkPrintDialog     // out
+	var _arg3 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.GtkPrintSetup      // out
+	var _arg4 C.GAsyncReadyCallback // out
+	var _arg5 C.gpointer
+
+	_arg0 = (*C.GtkPrintDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg3 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if setup != nil {
+		_arg2 = (*C.GtkPrintSetup)(gextras.StructNative(unsafe.Pointer(setup)))
+	}
+	if callback != nil {
+		_arg4 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg5 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_print_dialog_print(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(setup)
+	runtime.KeepAlive(callback)
+}
+
+// PrintFile: this function prints a file.
+//
+// If you pass NULL as setup, then this method will present a print dialog.
+// Otherwise, it will attempt to print directly, without user interaction.
+//
+// The callback will be called when the printing is done. It should call
+// gtk.PrintDialog.PrintFileFinish() to obtain the results.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - setup (optional): GtkPrintSetup to use.
+//   - file: GFile to print.
+//   - callback (optional) to call when the operation is complete.
+func (self *PrintDialog) PrintFile(ctx context.Context, parent *Window, setup *PrintSetup, file gio.Filer, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkPrintDialog     // out
+	var _arg4 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg2 *C.GtkPrintSetup      // out
+	var _arg3 *C.GFile              // out
+	var _arg5 C.GAsyncReadyCallback // out
+	var _arg6 C.gpointer
+
+	_arg0 = (*C.GtkPrintDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg4 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if setup != nil {
+		_arg2 = (*C.GtkPrintSetup)(gextras.StructNative(unsafe.Pointer(setup)))
+	}
+	_arg3 = (*C.GFile)(unsafe.Pointer(coreglib.InternObject(file).Native()))
+	if callback != nil {
+		_arg5 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg6 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_print_dialog_print_file(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(setup)
+	runtime.KeepAlive(file)
+	runtime.KeepAlive(callback)
+}
+
 // PrintFileFinish finishes the gtk.PrintDialog.PrintFile() call and returns the
 // results.
 //
@@ -88935,6 +89648,52 @@ func (self *PrintDialog) SetTitle(title string) {
 	C.gtk_print_dialog_set_title(_arg0, _arg1)
 	runtime.KeepAlive(self)
 	runtime.KeepAlive(title)
+}
+
+// Setup: this function presents a print dialog to let the user select a
+// printer, and set up print settings and page setup.
+//
+// The callback will be called when the dialog is dismissed. It should call
+// gtk.PrintDialog.SetupFinish() to obtain the results in the form of a
+// gtk.PrintSetup, that can then be passed to gtk.PrintDialog.Print() or
+// gtk.PrintDialog.PrintFile().
+//
+// One possible use for this method is to have the user select a printer, then
+// show a page setup UI in the application (e.g. to arrange images on a page),
+// then call gtk.PrintDialog.Print() on self to do the printing without further
+// user interaction.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *PrintDialog) Setup(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkPrintDialog     // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkPrintDialog)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_print_dialog_setup(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // SetupFinish finishes the gtk.PrintDialog.Setup() call.
@@ -122092,6 +122851,46 @@ func (self *URILauncher) URI() string {
 	}
 
 	return _utf8
+}
+
+// Launch an application to open the uri.
+//
+// This may present an app chooser dialog to the user.
+//
+// The callback will be called when the operation is completed. It should call
+// gtk.URILauncher.LaunchFinish() to obtain the result.
+//
+// The function takes the following parameters:
+//
+//   - ctx (optional): GCancellable to cancel the operation.
+//   - parent (optional) GtkWindow.
+//   - callback (optional) to call when the operation is complete.
+func (self *URILauncher) Launch(ctx context.Context, parent *Window, callback gio.AsyncReadyCallback) {
+	var _arg0 *C.GtkUriLauncher     // out
+	var _arg2 *C.GCancellable       // out
+	var _arg1 *C.GtkWindow          // out
+	var _arg3 C.GAsyncReadyCallback // out
+	var _arg4 C.gpointer
+
+	_arg0 = (*C.GtkUriLauncher)(unsafe.Pointer(coreglib.InternObject(self).Native()))
+	{
+		cancellable := gcancel.GCancellableFromContext(ctx)
+		defer runtime.KeepAlive(cancellable)
+		_arg2 = (*C.GCancellable)(unsafe.Pointer(cancellable.Native()))
+	}
+	if parent != nil {
+		_arg1 = (*C.GtkWindow)(unsafe.Pointer(coreglib.InternObject(parent).Native()))
+	}
+	if callback != nil {
+		_arg3 = (*[0]byte)(C._gotk4_gio2_AsyncReadyCallback)
+		_arg4 = C.gpointer(gbox.AssignOnce(callback))
+	}
+
+	C.gtk_uri_launcher_launch(_arg0, _arg1, _arg2, _arg3, _arg4)
+	runtime.KeepAlive(self)
+	runtime.KeepAlive(ctx)
+	runtime.KeepAlive(parent)
+	runtime.KeepAlive(callback)
 }
 
 // LaunchFinish finishes the gtk.URILauncher.Launch() call and returns the
