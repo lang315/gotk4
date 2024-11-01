@@ -255,7 +255,7 @@ func goDoc(v interface{}, indentLvl int, opts []Option) string {
 
 	synopsize := searchOptsBool(opts, synopsize{})
 
-	docStr := preprocessMarkdown(self, docBuilder.String(), append(opts, originalTypeName(orig)))
+	docStr := FixGrammar(self, docBuilder.String(), append(opts, originalTypeName(orig))...)
 	if synopsize && docStr == "" {
 		return ""
 	}
@@ -335,9 +335,7 @@ func writeParamDocs(tail *strings.Builder, label string, params []ParamDoc) {
 
 		var doc string
 		if param.InfoElements.Doc != nil {
-			doc = preprocessMarkdown(name, param.InfoElements.Doc.String, []Option{
-				originalTypeName(param.Name),
-			})
+			doc = FixGrammar(name, param.InfoElements.Doc.String, originalTypeName(param.Name))
 			// Insert a dash space into the lines.
 			doc = transformLines(doc, func(i, _ int, line string) string {
 				if i == 0 {
@@ -387,10 +385,9 @@ func trimFirstWord(paragraph string) string {
 	return parts[1]
 }
 
-// preprocessMarkdown takes a (GTK-Doc-flavored / GI-DocGen-flavored)
-// markdown string makes some stylistic changes to it.  The return
-// value is still markdown.
-func preprocessMarkdown(self, cmt string, opts []Option) string {
+// FixGrammar takes a comment and fixes its grammar by adding the [self] name
+// where appropriate to make it more idiomatic.
+func FixGrammar(self, cmt string, opts ...Option) string {
 	if cmt == "" {
 		return ""
 	}
