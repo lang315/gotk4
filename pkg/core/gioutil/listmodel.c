@@ -1,7 +1,7 @@
-#include "listmodel.h"
+#define G_LOG_USE_STRUCTURED
+#define G_LOG_DOMAIN "Gotk4GboxObject"
 
-// defined in gbox.
-extern void callbackDelete(guintptr id);
+#include "listmodel.h"
 
 #define GDK_ARRAY_ELEMENT_TYPE Gotk4GboxObject *
 #define GDK_ARRAY_NAME objects
@@ -20,9 +20,11 @@ static void gotk4_gbox_object_init(Gotk4GboxObject *self) { self->id = 0; }
 
 static void gotk4_gbox_object_finalize(GObject *object) {
   Gotk4GboxObject *self = GOTK4_GBOX_OBJECT(object);
-  if (self->id != 0) {
-    callbackDelete(self->id);
-  }
+
+  g_warn_if_fail(self->id != 0);
+  callbackDelete(self->id);
+  g_debug("Freed gbox object %p in gotk4_gbox_object_finalize", (void *)self->id);
+
   G_OBJECT_CLASS(gotk4_gbox_object_parent_class)->finalize(object);
 }
 
@@ -34,6 +36,7 @@ static void gotk4_gbox_object_class_init(Gotk4GboxObjectClass *klass) {
 Gotk4GboxObject *gotk4_gbox_object_new(guintptr id) {
   Gotk4GboxObject *self = g_object_new(GOTK4_TYPE_GBOX_OBJECT, NULL);
   self->id = id;
+  g_debug("Created gbox object %p in gotk4_gbox_object_new", (void *)id);
   return self;
 }
 
@@ -48,9 +51,7 @@ struct _Gotk4GboxClass {
   GObjectClass parent_class;
 };
 
-static GType gotk4_gbox_list_get_item_type(GListModel *list) {
-  return G_TYPE_OBJECT;
-}
+static GType gotk4_gbox_list_get_item_type(GListModel *list) { return G_TYPE_OBJECT; }
 
 static guint gotk4_gbox_list_get_n_items(GListModel *list) {
   Gotk4GboxList *self = GOTK4_GBOX_LIST(list);
@@ -62,7 +63,15 @@ static gpointer gotk4_gbox_list_get_item(GListModel *list, guint index) {
   if (index >= objects_get_size(&self->items)) {
     return NULL;
   }
-  return g_object_ref(objects_get(&self->items, index));
+
+  Gotk4GboxObject *item = objects_get(&self->items, index);
+  guint old_ref_count = item->parent_instance.ref_count;
+  item = g_object_ref(item);
+
+  g_debug("Adding new reference onto object %p, ref=%d->%d", (void *)item->id, old_ref_count,
+          item->parent_instance.ref_count);
+
+  return item;
 }
 
 static void gotk4_gbox_list_list_model_init(GListModelInterface *iface) {
@@ -72,8 +81,7 @@ static void gotk4_gbox_list_list_model_init(GListModelInterface *iface) {
 }
 
 G_DEFINE_TYPE_WITH_CODE(Gotk4GboxList, gotk4_gbox_list, G_TYPE_OBJECT,
-                        G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL,
-                                              gotk4_gbox_list_list_model_init))
+                        G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL, gotk4_gbox_list_list_model_init))
 
 static void gotk4_gbox_list_dispose(GObject *object) {
   Gotk4GboxList *self = GOTK4_GBOX_LIST(object);
@@ -86,18 +94,16 @@ static void gotk4_gbox_list_class_init(Gotk4GboxListClass *klass) {
   object_class->dispose = gotk4_gbox_list_dispose;
 }
 
-static void gotk4_gbox_list_init(Gotk4GboxList *self) {
-  objects_init(&self->items);
-}
+static void gotk4_gbox_list_init(Gotk4GboxList *self) { objects_init(&self->items); }
 
 Gotk4GboxList *gotk4_gbox_list_new() {
   return GOTK4_GBOX_LIST(g_object_new(GOTK4_TYPE_GBOX_LIST, NULL));
 }
 
-void gotk4_gbox_list_splice(Gotk4GboxList *self, guint position,
-                            guint n_removals, const guintptr *additions) {
+void gotk4_gbox_list_splice(Gotk4GboxList *self, guint position, guint n_removals,
+                            guintptr *additions) {
   g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
-  g_return_if_fail(position + n_removals >= position); // overflow
+  g_return_if_fail(position + n_removals >= position);  // overflow
   g_return_if_fail(position + n_removals <= objects_get_size(&self->items));
 
   guint n_additions = 0;
@@ -108,21 +114,22 @@ void gotk4_gbox_list_splice(Gotk4GboxList *self, guint position,
 
   objects_splice(&self->items, position, n_removals, FALSE, NULL, n_additions);
   for (guint i = 0; i < n_additions; i++) {
-    *objects_index(&self->items, position + i) =
-        gotk4_gbox_object_new(additions[i]);
+    *objects_index(&self->items, position + i) = gotk4_gbox_object_new(additions[i]);
   }
+  g_debug("Added %d objects using splice()", n_additions);
 
   if (n_removals || n_additions) {
-    g_list_model_items_changed(G_LIST_MODEL(self), position, n_removals,
-                               n_additions);
+    g_list_model_items_changed(G_LIST_MODEL(self), position, n_removals, n_additions);
   }
 }
 
 void gotk4_gbox_list_append(Gotk4GboxList *self, guintptr id) {
   g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
+
   objects_append(&self->items, gotk4_gbox_object_new(id));
-  g_list_model_items_changed(G_LIST_MODEL(self),
-                             objects_get_size(&self->items) - 1, 0, 1);
+  g_debug("Added 1 object using append()");
+
+  g_list_model_items_changed(G_LIST_MODEL(self), objects_get_size(&self->items) - 1, 0, 1);
 }
 
 guintptr gotk4_gbox_list_get_id(Gotk4GboxList *self, guint position) {
