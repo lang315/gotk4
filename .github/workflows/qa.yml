@@ -5,17 +5,17 @@ on:
 - pull_request
 
 jobs:
-
   generate:
     name: "${{ github.event_name }} / generate"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: diamondburned/cache-install@main
-      with:
-        shell-file: shell.nix
+    - uses: actions/checkout@v4
+
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
 
     - run: go generate
+      shell: nix develop -c bash -e {0}
 
     - name: Git dirty check
       run: |
@@ -29,14 +29,17 @@ jobs:
     name: "${{ github.event_name }} / lint"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: diamondburned/cache-install@main
-      with:
-        shell-file: shell.nix
+    - uses: actions/checkout@v4
+
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
 
     - name: Run goimports
+      run: goimports -w .
+      shell: nix develop -c bash -e {0}
+
+    - name: Git dirty check
       run: |
-        goimports -w .
         git add .
         if [[ -n "$(git status --porcelain)" ]]; then
           PAGER= git diff --cached
@@ -47,10 +50,10 @@ jobs:
     name: "${{ github.event_name }} / test"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: diamondburned/cache-install@main
-      with:
-        shell-file: shell.nix
+    - uses: actions/checkout@v4
+
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
 
     - name: Setup Go build cache
       uses: actions/cache@v3
@@ -64,14 +67,17 @@ jobs:
           go-build-
 
     - run: go test ./...
+      shell: nix develop -c bash -e {0}
 
     - run: cd pkg && go test ./...
+      shell: nix develop -c bash -e {0}
 
   docker:
     name: "${{ github.event_name }} / docker"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
     - uses: docker/setup-buildx-action@v2
 
     - name: Setup Go build cache
