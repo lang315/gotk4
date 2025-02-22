@@ -80,11 +80,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1717480988,
-        "narHash": "sha256-GuSLkmXM/dTAwgzTgLJB5pnqahKmxfV9OE1OJLnbTuw=",
+        "lastModified": 1740199671,
+        "narHash": "sha256-neJPrjxi9ptp4kxA1b460zbjoe6h7ZPTVEm2NSwyKxQ=",
         "owner": "diamondburned",
         "repo": "gotk4-nix",
-        "rev": "f3400ba3ba38eaa6f572941637948005f96ce2f2",
+        "rev": "6364463814bf9040f3c8df73858d7aa08e0f2eec",
         "type": "github"
       },
       "original": {
@@ -127,11 +127,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1723637854,
-        "narHash": "sha256-med8+5DSWa2UnOqtdICndjDAEjxr5D7zaIiK4pn0Q7c=",
+        "lastModified": 1739866667,
+        "narHash": "sha256-EO1ygNKZlsAC9avfcwHkKGMsmipUk1Uc0TbrEZpkn64=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "c3aa7b8938b17aebd2deecf7be0636000d62a2b9",
+        "rev": "73cf49b8ad837ade2de76f87eb53fc85ed5d4680",
         "type": "github"
       },
       "original": {
