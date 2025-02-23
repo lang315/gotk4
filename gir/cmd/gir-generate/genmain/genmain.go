@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"slices"
 
 	"github.com/diamondburned/gotk4/gir"
 	"github.com/diamondburned/gotk4/gir/girgen"
@@ -136,6 +137,11 @@ func Overlay(data ...Data) Data {
 		last.ProcessConverters = append(last.ProcessConverters, datum.ProcessConverters...)
 		last.DynamicLinkNamespaces = append(last.DynamicLinkNamespaces, datum.DynamicLinkNamespaces...)
 	}
+
+	last.KnownPackages = slices.CompactFunc(last.KnownPackages, func(a, b Package) bool {
+		return a.Name == b.Name && slices.Equal(a.Namespaces, b.Namespaces)
+	})
+	last.DynamicLinkNamespaces = slices.Compact(last.DynamicLinkNamespaces)
 
 	return last
 }
