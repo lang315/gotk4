@@ -157,7 +157,7 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 		// so we can loop over it easily.
 		value.p.Linef("src := &%s", value.In.Name)
 		value.p.Linef("for i := 0; i < %d; i++ {", array.FixedSize)
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
