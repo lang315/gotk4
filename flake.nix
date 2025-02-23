@@ -38,6 +38,7 @@
             ];
           };
           go = pkgs.go_1_24;
+          inherit (pkgs) gopls gotools;
         };
         packages.dockerEnv = pkgs.buildEnv {
           name = "gotk4-docker-env";
