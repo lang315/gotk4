@@ -122,20 +122,18 @@ type Data struct {
 // Overlay joins the given list of data into a single Data. The last Data in the
 // list will be used for generation.
 func Overlay(data ...Data) Data {
-	overlay := data[:len(data)-1]
 	last := data[len(data)-1]
+	if last.ExternOverrides == nil {
+		last.ExternOverrides = make(map[string]gir.Repositories)
+	}
 
-	for _, datum := range overlay {
-		if last.ExternOverrides == nil {
-			last.ExternOverrides = make(map[string]gir.Repositories)
-		}
-
-		last.KnownPackages = append(last.KnownPackages, datum.Packages...)
+	for _, datum := range slices.Backward(data[:len(data)-1]) {
+		last.KnownPackages = slices.Concat(datum.Packages, last.KnownPackages)
 		last.ExternOverrides[datum.Module] = MustLoadPackages(datum.Packages)
-		last.Preprocessors = append(last.Preprocessors, datum.Preprocessors...)
-		last.Filters = append(last.Filters, datum.Filters...)
-		last.ProcessConverters = append(last.ProcessConverters, datum.ProcessConverters...)
-		last.DynamicLinkNamespaces = append(last.DynamicLinkNamespaces, datum.DynamicLinkNamespaces...)
+		last.Preprocessors = slices.Concat(datum.Preprocessors, last.Preprocessors)
+		last.Filters = slices.Concat(datum.Filters, last.Filters)
+		last.ProcessConverters = slices.Concat(datum.ProcessConverters, last.ProcessConverters)
+		last.DynamicLinkNamespaces = slices.Concat(datum.DynamicLinkNamespaces, last.DynamicLinkNamespaces)
 	}
 
 	last.KnownPackages = slices.CompactFunc(last.KnownPackages, func(a, b Package) bool {
