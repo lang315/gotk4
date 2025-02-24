@@ -94,7 +94,7 @@ func Stdlog(logger *log.Logger, minlevel, level Level, v ...interface{}) {
 
 	prefix := level.prefix()
 	if prefix != "" {
-		prefix = level.colorf(prefix)
+		prefix = level.colorf("%s", prefix)
 		v = Prefix(v, prefix)
 	}
 

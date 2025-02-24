@@ -190,8 +190,8 @@ func (ug *UnionGenerator) Use(union *gir.Union) bool {
 		p.Linef("runtime.SetFinalizer(")
 		p.Linef("  gextras.StructIntern(unsafe.Pointer(dst)),")
 		p.Linef("  func(intern *struct{ C unsafe.Pointer }) {")
-		p.Linef(types.RecordPrintFree(ug.gen, &typRecord, "intern.C"))
-		p.Linef("},")
+		p.Linef("    %s", types.RecordPrintFree(ug.gen, &typRecord, "intern.C"))
+		p.Linef("  },")
 		p.Linef(")")
 		p.Linef("return dst")
 
@@ -256,7 +256,7 @@ func (ug *UnionGenerator) Use(union *gir.Union) bool {
 		}
 
 		p.Linef("var dst %s", srcRes.Out.Type)
-		p.Linef(srcRes.Conversion)
+		p.Linef("%s", srcRes.Conversion)
 
 		// We should free the copy when we're done if this is a record, since we
 		// copied it earlier.
@@ -268,8 +268,8 @@ func (ug *UnionGenerator) Use(union *gir.Union) bool {
 			// dst is ASSUMED TO BE A POINTER.
 			p.Linef("  gextras.StructIntern(unsafe.Pointer(dst)),")
 			p.Linef("  func(intern *struct{ C unsafe.Pointer }) {")
-			p.Linef(types.RecordPrintFree(ug.gen, &typRecord, "intern.C"))
-			p.Linef("},")
+			p.Linef("    %s", types.RecordPrintFree(ug.gen, &typRecord, "intern.C"))
+			p.Linef("  },")
 			p.Linef(")")
 		}
 
