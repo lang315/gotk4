@@ -190,7 +190,7 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 		value.p.Linef("src := unsafe.Slice((*%s)(%s), %s)", inner.In.Type, value.In.Name, length.In.Name)
 		value.p.Linef("%s = make(%s, %s)", value.Out.Set, value.Out.Type, length.In.Name)
 		value.p.Linef("for i := 0; i < int(%s); i++ {", length.In.Name)
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 		value.p.Ascend()
 		return true
@@ -206,7 +206,7 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 		value.p.Linef("src := unsafe.Slice((*%s)(p), len)", inner.In.Type)
 		value.p.Linef("%s = make(%s, len)", value.Out.Set, value.Out.Type)
 		value.p.Linef("for i := 0; i < len; i++ {")
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -261,7 +261,7 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 		value.p.Linef("src := unsafe.Slice(%s, i)", value.In.Name)
 		value.p.Linef("%s = make(%s, i)", value.Out.Set, value.Out.Type)
 		value.p.Linef("for i := range src {")
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -345,10 +345,10 @@ func (conv *Converter) cgoConvertNested(value *ValueConverted) bool {
 			value.InNamePtr(1), value.ShouldFree())
 		value.p.Linef("ksrc := *(*%s)(k)", kt.In.Type)
 		value.p.Linef("vsrc := *(*%s)(v)", vt.In.Type)
-		value.p.Linef(kt.Out.Declare)
-		value.p.Linef(vt.Out.Declare)
-		value.p.Linef(kt.Conversion)
-		value.p.Linef(vt.Conversion)
+		value.p.Linef("%s", kt.Out.Declare)
+		value.p.Linef("%s", vt.Out.Declare)
+		value.p.Linef("%s", kt.Conversion)
+		value.p.Linef("%s", vt.Conversion)
 		value.p.Linef("%s[kdst] = vdst", value.Out.Set)
 		value.p.Linef("})")
 
@@ -651,8 +651,8 @@ func (conv *Converter) cgoConverter(value *ValueConverted) bool {
 				value.Logln(logger.Debug, "SetFinalizer set fail")
 			}
 
-			value.p.Linef(types.RecordPrintFree(value.conv.fgen, value.Resolved.Extern, "intern.C"))
-			value.p.Linef("},")
+			value.p.Linef("    %s", types.RecordPrintFree(value.conv.fgen, value.Resolved.Extern, "intern.C"))
+			value.p.Linef("  },")
 			value.p.Linef(")")
 		}
 

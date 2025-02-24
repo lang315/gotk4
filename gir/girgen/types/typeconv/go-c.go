@@ -190,7 +190,7 @@ func (conv *Converter) gocArrayConverter(value *ValueConverted) bool {
 		}
 
 		value.p.Linef("for i := 0; i < %d; i++ {", array.FixedSize)
-		value.p.Linef("  " + inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -239,12 +239,10 @@ func (conv *Converter) gocArrayConverter(value *ValueConverted) bool {
 		)
 
 		value.p.Linef("for i := range %s {", value.In.Name)
-
 		// TODO: this generates *out because of value's inheritance, which is bad.
 		// Do something. We can maybe use a hack and trim the star off.
 		// Or maybe not? Maybe the converter should manually insert the star.
-
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -270,7 +268,7 @@ func (conv *Converter) gocArrayConverter(value *ValueConverted) bool {
 
 		value.p.Linef("out := unsafe.Slice(%s.data, len(%s))", value.OutName, value.In.Name)
 		value.p.Linef("for i := range %s {", value.In.Name)
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -327,7 +325,7 @@ func (conv *Converter) gocArrayConverter(value *ValueConverted) bool {
 		value.p.Linef("var zero %s", inner.Out.Type)
 		value.p.Linef("out[len(%s)] = zero", value.In.Name)
 		value.p.Linef("for i := range %s {", value.In.Name)
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")
 
 		value.p.Ascend()
@@ -375,8 +373,8 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 		// faster than appending.
 		value.p.Linef("for i := len(%s)-1; i >= 0; i-- {", value.InNamePtr(0))
 		value.p.Linef("  src := %s[i]", value.InNamePtr(0))
-		value.p.Linef(inner.Out.Declare)
-		value.p.Linef(inner.Conversion)
+		value.p.Linef("  %s", inner.Out.Declare)
+		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef(
 			"%s = C.%s(%[1]s, C.gpointer(unsafe.Pointer(dst)))",
 			value.Out.Set, prependFn)
@@ -419,10 +417,10 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 			"%s = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))",
 			value.Out.Set)
 		value.p.Linef("for ksrc, vsrc := range %s {", value.In.Set)
-		value.p.Linef(kt.Out.Declare)
-		value.p.Linef(vt.Out.Declare)
-		value.p.Linef(kt.Conversion)
-		value.p.Linef(vt.Conversion)
+		value.p.Linef("  %s", kt.Out.Declare)
+		value.p.Linef("  %s", vt.Out.Declare)
+		value.p.Linef("  %s", kt.Conversion)
+		value.p.Linef("  %s", vt.Conversion)
 		value.p.Linef("  C.g_hash_table_insert(%s, %s, %s)", value.Out.Set, kptr, vptr)
 		value.p.Linef("}")
 

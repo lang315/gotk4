@@ -73,7 +73,7 @@ func (p *Pen) Lines(lines []string) {
 }
 
 // Line writes a single line.
-func (p *Pen) Line(line string) { p.Linef(line) }
+func (p *Pen) Line(line string) { p.Linef("%s", line) }
 
 // Linef writes a Sprintf-formatted line.
 func (p *Pen) Linef(f string, v ...interface{}) {

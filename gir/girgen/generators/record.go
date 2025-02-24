@@ -411,8 +411,8 @@ func (rg *RecordGenerator) getters() {
 
 		switch converted.Direction {
 		case typeconv.ConvertCToGo: // getter
-			b.Linef(converted.Out.Declare)
-			b.Linef(converted.Conversion)
+			b.Linef("%s", converted.Out.Declare)
+			b.Linef("%s", converted.Conversion)
 			b.Linef("return _v")
 
 			rg.Getters = append(rg.Getters, recordGetter{
@@ -422,7 +422,7 @@ func (rg *RecordGenerator) getters() {
 				InfoElements: info,
 			})
 		case typeconv.ConvertGoToC: // setter
-			b.Linef(converted.Conversion)
+			b.Line(converted.Conversion)
 
 			rg.Setters = append(rg.Setters, recordSetter{
 				Name:         strcases.SnakeToGo(true, converted.Name),

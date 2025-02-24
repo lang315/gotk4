@@ -63,7 +63,7 @@ func (sects *BlockSections) Linef(sect int, f string, v ...interface{}) {
 }
 
 // Line writes a single line into the given section.
-func (sects *BlockSections) Line(sect int, line string) { sects.Linef(sect, line) }
+func (sects *BlockSections) Line(sect int, line string) { sects.Linef(sect, "%s", line) }
 
 // EmptyLine writes an empty line into the given section.
 func (sects *BlockSections) EmptyLine(sect int) {
