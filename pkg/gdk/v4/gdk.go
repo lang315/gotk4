@@ -4178,10 +4178,10 @@ func (f FrameClockPhase) Has(other FrameClockPhase) bool {
 type GLAPI C.guint
 
 const (
-	// GLApiGL: openGL API.
-	GLApiGL GLAPI = 0b1
-	// GLApiGles: openGL ES API.
-	GLApiGles GLAPI = 0b10
+	// GLAPIGL: openGL API.
+	GLAPIGL GLAPI = 0b1
+	// GLAPIGles: openGL ES API.
+	GLAPIGles GLAPI = 0b10
 )
 
 func marshalGLAPI(p uintptr) (interface{}, error) {
@@ -4202,9 +4202,9 @@ func (g GLAPI) String() string {
 		bit := g - next
 
 		switch bit {
-		case GLApiGL:
+		case GLAPIGL:
 			builder.WriteString("GL|")
-		case GLApiGles:
+		case GLAPIGles:
 			builder.WriteString("Gles|")
 		default:
 			builder.WriteString(fmt.Sprintf("GLAPI(0b%b)|", bit))
@@ -14528,14 +14528,14 @@ func (self *GLContext) AllowedApis() GLAPI {
 	return _glapI
 }
 
-// Api gets the API currently in use.
+// API gets the API currently in use.
 //
 // If the renderer has not been realized yet, 0 is returned.
 //
 // The function returns the following values:
 //
 //   - glapI: currently used API.
-func (self *GLContext) Api() GLAPI {
+func (self *GLContext) API() GLAPI {
 	var _arg0 *C.GdkGLContext // out
 	var _cret C.GdkGLAPI      // in
 

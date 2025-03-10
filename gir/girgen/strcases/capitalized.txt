@@ -11,6 +11,7 @@ Fs
 Rc
 Ft
 Ps
+Api
 Pdf
 Png
 Jpg
