@@ -61377,14 +61377,14 @@ func (area *GLArea) AllowedApis() gdk.GLAPI {
 	return _glapI
 }
 
-// Api gets the API that is currently in use.
+// API gets the API that is currently in use.
 //
 // If the GL area has not been realized yet, 0 is returned.
 //
 // The function returns the following values:
 //
 //   - glapI: currently used API.
-func (area *GLArea) Api() gdk.GLAPI {
+func (area *GLArea) API() gdk.GLAPI {
 	var _arg0 *C.GtkGLArea // out
 	var _cret C.GdkGLAPI   // in
 
@@ -61559,7 +61559,7 @@ func (area *GLArea) RequiredVersion() (major, minor int) {
 //
 // See gtk.GLArea.SetUseES().
 //
-// Deprecated: Use gtk.GLArea.GetApi().
+// Deprecated: Use gtk.GLArea.GetAPI().
 //
 // The function returns the following values:
 //
