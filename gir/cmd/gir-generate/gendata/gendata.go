@@ -503,6 +503,7 @@ func GLibObjectComparer(nsgen *girgen.NamespaceGenerator) error {
 	}
 
 	h := fg.Header()
+	h.Import("unsafe")
 	h.NeedsExternGLib()
 
 	p := fg.Pen()
