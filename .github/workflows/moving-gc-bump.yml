@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '0 0 * * *' # daily
 
+defaults:
+  run:
+    shell: nix develop -c bash -e {0}
+
 jobs:
   bump:
     name: 
@@ -14,10 +18,8 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Install Nix shell
-        uses: diamondburned/cache-install@main
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Tidy up Go modules
         run: go mod tidy
