@@ -17355,45 +17355,6 @@ func (iter *HashTableIter) HashTable() map[unsafe.Pointer]unsafe.Pointer {
 	return _hashTable
 }
 
-// Init initializes a key/value pair iterator and associates it with hash_table.
-// Modifying the hash table after calling this function invalidates the returned
-// iterator.
-//
-// The iteration order of a TableIter over the keys/values in a hash table is
-// not defined.
-//
-//	GHashTableIter iter;
-//	gpointer key, value;
-//
-//	g_hash_table_iter_init (&iter, hash_table);
-//	while (g_hash_table_iter_next (&iter, &key, &value))
-//	  {
-//	    // do something with key and value
-//	  }.
-//
-// The function takes the following parameters:
-//
-//   - hashTable: Table.
-func (iter *HashTableIter) Init(hashTable map[unsafe.Pointer]unsafe.Pointer) {
-	var _arg0 *C.GHashTableIter // out
-	var _arg1 *C.GHashTable     // out
-
-	_arg0 = (*C.GHashTableIter)(gextras.StructNative(unsafe.Pointer(iter)))
-	_arg1 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
-	for ksrc, vsrc := range hashTable {
-		var kdst C.gpointer // out
-		var vdst C.gpointer // out
-		kdst = (C.gpointer)(unsafe.Pointer(ksrc))
-		vdst = (C.gpointer)(unsafe.Pointer(vsrc))
-		C.g_hash_table_insert(_arg1, C.gpointer(unsafe.Pointer(kdst)), C.gpointer(unsafe.Pointer(vdst)))
-	}
-	defer C.g_hash_table_unref(_arg1)
-
-	C.g_hash_table_iter_init(_arg0, _arg1)
-	runtime.KeepAlive(iter)
-	runtime.KeepAlive(hashTable)
-}
-
 // Next advances iter and retrieves the key and/or value that are now pointed to
 // as a result of this advancement. If FALSE is returned, key and value are not
 // set, and the iterator becomes invalid.

@@ -3943,33 +3943,6 @@ func _gotk4_gio2_MenuModelClass_get_item_attribute_value(arg0 *C.GMenuModel, arg
 	return cret
 }
 
-//export _gotk4_gio2_MenuModelClass_get_item_attributes
-func _gotk4_gio2_MenuModelClass_get_item_attributes(arg0 *C.GMenuModel, arg1 C.gint, arg2 **C.GHashTable) {
-	instance0 := coreglib.Take(unsafe.Pointer(arg0))
-	overrides := coreglib.OverridesFromObj[MenuModelOverrides](instance0)
-	if overrides.ItemAttributes == nil {
-		panic("gotk4: " + instance0.TypeFromInstance().String() + ": expected MenuModelOverrides.ItemAttributes, got none")
-	}
-
-	var _itemIndex int // out
-
-	_itemIndex = int(arg1)
-
-	attributes := overrides.ItemAttributes(_itemIndex)
-
-	var _ map[string]*glib.Variant
-
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
-	for ksrc, vsrc := range attributes {
-		var kdst *C.gchar    // out
-		var vdst *C.GVariant // out
-		kdst = (*C.gchar)(unsafe.Pointer(C.CString(ksrc)))
-		defer C.free(unsafe.Pointer(kdst))
-		vdst = (*C.GVariant)(gextras.StructNative(unsafe.Pointer(vsrc)))
-		C.g_hash_table_insert(*arg2, C.gpointer(unsafe.Pointer(kdst)), C.gpointer(unsafe.Pointer(vdst)))
-	}
-}
-
 //export _gotk4_gio2_MenuModelClass_get_item_link
 func _gotk4_gio2_MenuModelClass_get_item_link(arg0 *C.GMenuModel, arg1 C.gint, arg2 *C.gchar) (cret *C.GMenuModel) {
 	instance0 := coreglib.Take(unsafe.Pointer(arg0))
@@ -3994,33 +3967,6 @@ func _gotk4_gio2_MenuModelClass_get_item_link(arg0 *C.GMenuModel, arg1 C.gint, a
 	}
 
 	return cret
-}
-
-//export _gotk4_gio2_MenuModelClass_get_item_links
-func _gotk4_gio2_MenuModelClass_get_item_links(arg0 *C.GMenuModel, arg1 C.gint, arg2 **C.GHashTable) {
-	instance0 := coreglib.Take(unsafe.Pointer(arg0))
-	overrides := coreglib.OverridesFromObj[MenuModelOverrides](instance0)
-	if overrides.ItemLinks == nil {
-		panic("gotk4: " + instance0.TypeFromInstance().String() + ": expected MenuModelOverrides.ItemLinks, got none")
-	}
-
-	var _itemIndex int // out
-
-	_itemIndex = int(arg1)
-
-	links := overrides.ItemLinks(_itemIndex)
-
-	var _ map[string]MenuModeller
-
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
-	for ksrc, vsrc := range links {
-		var kdst *C.gchar      // out
-		var vdst *C.GMenuModel // out
-		kdst = (*C.gchar)(unsafe.Pointer(C.CString(ksrc)))
-		defer C.free(unsafe.Pointer(kdst))
-		vdst = (*C.GMenuModel)(unsafe.Pointer(coreglib.InternObject(vsrc).Native()))
-		C.g_hash_table_insert(*arg2, C.gpointer(unsafe.Pointer(kdst)), C.gpointer(unsafe.Pointer(vdst)))
-	}
 }
 
 //export _gotk4_gio2_MenuModelClass_get_n_items

@@ -402,6 +402,7 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 		}
 		if kt.Type.Name != "utf8" || vt.Type.Name != "utf8" {
 			value.Logln(logger.Debug, "unsupported k/v type", kt.Type.Name, ":", vt.Type.Name)
+			return false
 		}
 
 		value.header.Import("unsafe")
