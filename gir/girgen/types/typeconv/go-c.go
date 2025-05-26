@@ -392,18 +392,20 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 		// - This requires generating a function just to free the type, which
 		//   might be a lot of work involved.
 		//
-		// For now, map[string]string is only supported.
+		// So far, we're getting away fine with generating more than just
+		// map[string]string.
 
-		kt := conv.convertType(value, "ksrc", "kdst", &value.Type.Types[0])
-		vt := conv.convertType(value, "vsrc", "vdst", &value.Type.Types[1])
+		kt := conv.convertType(value, "ksrc", "kdst", &value.Type.Types[0], "full")
+		vt := conv.convertType(value, "vsrc", "vdst", &value.Type.Types[1], "full")
 		if kt == nil || vt == nil {
 			value.Logln(logger.Debug, "no key/value-type")
 			return false
 		}
-		if kt.Type.Name != "utf8" || vt.Type.Name != "utf8" {
-			value.Logln(logger.Debug, "unsupported k/v type", kt.Type.Name, ":", vt.Type.Name)
-			return false
-		}
+
+		// if kt.Type.Name != "utf8" || vt.Type.Name != "utf8" {
+		// 	value.Logln(logger.Debug, "unsupported k/v type", kt.Type.Name, ":", vt.Type.Name)
+		// 	return false
+		// }
 
 		value.header.Import("unsafe")
 		value.header.ApplyFrom(kt.Header())
@@ -761,7 +763,7 @@ func (conv *Converter) gocConverter(value *ValueConverted) bool {
 	case *gir.Alias:
 		typ := types.MoveTypePtr(*value.Type, v.Type)
 
-		result := conv.convertType(value, value.In.Name, value.OutName, typ)
+		result := conv.convertType(value, value.In.Name, value.OutName, typ, "")
 		if result == nil {
 			return false
 		}

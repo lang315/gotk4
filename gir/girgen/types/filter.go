@@ -328,6 +328,12 @@ func (m modifyCallable) Preprocess(repos gir.Repositories) {
 				return
 			}
 		}
+		for i, fn := range v.Functions {
+			if fn.Name == threeParts[2] {
+				m.modFunc(&v.Functions[i].CallableAttrs)
+				return
+			}
+		}
 	case *gir.Interface:
 		for i, method := range v.Methods {
 			if method.Name == threeParts[2] {

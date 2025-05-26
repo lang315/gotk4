@@ -275,7 +275,7 @@ func (conv *Converter) convertInner(of *ValueConverted, in, out string) *ValueCo
 		existing = &of.Inner[0]
 	}
 
-	value := conv.convertTypeExisting(of, in, out, inner, existing)
+	value := conv.convertTypeExisting(of, in, out, inner, existing, "")
 	if value == nil {
 		switch {
 		case of.Array != nil:
@@ -290,25 +290,29 @@ func (conv *Converter) convertInner(of *ValueConverted, in, out string) *ValueCo
 
 // convertType converts a manually-crafted value with the given type.
 func (conv *Converter) convertType(
-	of *ValueConverted, in, out string, typ *gir.Type) *ValueConverted {
+	of *ValueConverted, in, out string, typ *gir.Type, ownership string) *ValueConverted {
 
-	return conv.convertTypeExisting(of, in, out, typ, nil)
+	return conv.convertTypeExisting(of, in, out, typ, nil, ownership)
 }
 
 func (conv *Converter) convertTypeExisting(
-	of *ValueConverted, in, out string, typ *gir.Type, existing *ValueType) *ValueConverted {
-	// If the array's ownership is ONLY container, then we must not take over
-	// the inner values. Therefore, we only generate the appropriate code.
-	owner := of.TransferOwnership.TransferOwnership
-	if owner == "container" {
-		owner = "none"
+	of *ValueConverted, in, out string, typ *gir.Type, existing *ValueType, ownership string) *ValueConverted {
+
+	if ownership == "" {
+		ownership = of.TransferOwnership.TransferOwnership
+
+		if ownership == "container" {
+			// If the array's ownership is ONLY container, then we must not take over
+			// the inner values. Therefore, we only generate the appropriate code.
+			ownership = "none"
+		}
 	}
 
 	attrs := of.ParameterAttrs
 	attrs.Nullable = false
 	attrs.Optional = false
 	attrs.AnyType = gir.AnyType{Type: typ}
-	attrs.TransferOwnership.TransferOwnership = owner
+	attrs.TransferOwnership.TransferOwnership = ownership
 
 	result := newValueConverted(conv, &ConversionValue{
 		InName:         in,
