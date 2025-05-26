@@ -364,6 +364,10 @@ var Filters = []FilterMatcher{
 
 	// Already handled in GLibAliases.
 	AbsoluteFilter("C.g_source_remove"),
+
+	// Hash tables are handled as a special-case in the code generator, so
+	// g_hash_table_* functions are useless when called directly.
+	RegexFilter(`GLib.HashTable\..*`),
 }
 
 // ImportGError ensures that gerror is imported.
