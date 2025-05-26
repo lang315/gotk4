@@ -324,8 +324,8 @@ func (conv *Converter) cgoConvertNested(value *ValueConverted) bool {
 		return true
 
 	case "GLib.HashTable":
-		kt := conv.convertType(value, "ksrc", "kdst", &value.Type.Types[0])
-		vt := conv.convertType(value, "vsrc", "vdst", &value.Type.Types[1])
+		kt := conv.convertType(value, "ksrc", "kdst", &value.Type.Types[0], "")
+		vt := conv.convertType(value, "vsrc", "vdst", &value.Type.Types[1], "")
 		if kt == nil || vt == nil {
 			value.Logln(logger.Debug, "no key/value-type")
 			return false
@@ -695,7 +695,7 @@ func (conv *Converter) cgoConverter(value *ValueConverted) bool {
 	case *gir.Alias:
 		typ := types.MoveTypePtr(*value.Type, v.Type)
 
-		result := conv.convertType(value, value.In.Name, value.OutName, typ)
+		result := conv.convertType(value, value.In.Name, value.OutName, typ, "")
 		if result == nil {
 			return false
 		}

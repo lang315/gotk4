@@ -44908,6 +44908,153 @@ func (layout *ConstraintLayout) AddConstraint(constraint *Constraint) {
 	runtime.KeepAlive(constraint)
 }
 
+// AddConstraintsFromDescription creates a list of constraints from a VFL
+// description.
+//
+// The Visual Format Language, VFL, is based on Apple's AutoLayout VFL
+// (https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/AutolayoutPG/VisualFormatLanguage.html).
+//
+// The views dictionary is used to match gtk.ConstraintTarget instances to the
+// symbolic view name inside the VFL.
+//
+// The VFL grammar is:
+//
+//	     <visualFormatString> = (<orientation>)?
+//	                            (<superview><connection>)?
+//	                            <view>(<connection><view>)*
+//	                            (<connection><superview>)?
+//	            <orientation> = 'H' | 'V'
+//	              <superview> = '|'
+//	             <connection> = '' | '-' <predicateList> '-' | '-'
+//	          <predicateList> = <simplePredicate> | <predicateListWithParens>
+//	        <simplePredicate> = <metricName> | <positiveNumber>
+//	<predicateListWithParens> = '(' <predicate> (',' <predicate>)* ')'
+//	              <predicate> = (<relation>)? <objectOfPredicate> (<operatorList>)? ('@' <priority>)?
+//	               <relation> = '==' | '<=' | '>='
+//	      <objectOfPredicate> = <constant> | <viewName> | ('.' <attributeName>)?
+//	               <priority> = <positiveNumber> | 'required' | 'strong' | 'medium' | 'weak'
+//	               <constant> = <number>
+//	           <operatorList> = (<multiplyOperator>)? (<addOperator>)?
+//	       <multiplyOperator> = [ '*' | '/' ] <positiveNumber>
+//	            <addOperator> = [ '+' | '-' ] <positiveNumber>
+//	               <viewName> = A-Za-z_ ([A-Za-z0-9_]*) // A C identifier
+//	             <metricName> = A-Za-z_ ([A-Za-z0-9_]*) // A C identifier
+//	          <attributeName> = 'top' | 'bottom' | 'left' | 'right' | 'width' | 'height' |
+//	                            'start' | 'end' | 'centerX' | 'centerY' | 'baseline'
+//	         <positiveNumber> // A positive real number parseable by g_ascii_strtod()
+//	                 <number> // A real number parseable by g_ascii_strtod()
+//
+// **Note**: The VFL grammar used by GTK is slightly different than the one
+// defined by Apple, as it can use symbolic values for the constraint's strength
+// instead of numeric values; additionally, GTK allows adding simple arithmetic
+// operations inside predicates.
+//
+// Examples of VFL descriptions are:
+//
+//	// Default spacing
+//	[button]-[textField]
+//
+//	// Width constraint
+//	[button(>=50)]
+//
+//	// Connection to super view
+//	|-50-[purpleBox]-50-|
+//
+//	// Vertical layout
+//	V:[topField]-10-[bottomField]
+//
+//	// Flush views
+//	[maroonView][blueView]
+//
+//	// Priority
+//	[button(100strong)]
+//
+//	// Equal widths
+//	[button1(==button2)]
+//
+//	// Multiple predicates
+//	[flexibleButton(>=70,<=100)]
+//
+//	// A complete line of layout
+//	|-[find]-[findNext]-[findField(>=20)]-|
+//
+//	// Operators
+//	[button1(button2 / 3 + 50)]
+//
+//	// Named attributes
+//	[button1(==button2.height)].
+//
+// The function takes the following parameters:
+//
+//   - lines: array of Visual Format Language lines defining a set of
+//     constraints.
+//   - hspacing: default horizontal spacing value, or -1 for the fallback value.
+//   - vspacing: default vertical spacing value, or -1 for the fallback value.
+//   - views: dictionary of [ name, target ] pairs; the name keys map to the
+//     view names in the VFL lines, while the target values map to children of
+//     the widget using a GtkConstraintLayout, or guides.
+//
+// The function returns the following values:
+//
+//   - list of gtk.Constraint instances that were added to the layout.
+func (layout *ConstraintLayout) AddConstraintsFromDescription(lines []string, hspacing, vspacing int, views map[string]ConstraintTargetter) ([]*Constraint, error) {
+	var _arg0 *C.GtkConstraintLayout // out
+	var _arg1 **C.char               // out
+	var _arg2 C.gsize
+	var _arg3 C.int         // out
+	var _arg4 C.int         // out
+	var _arg5 *C.GHashTable // out
+	var _cret *C.GList      // in
+	var _cerr *C.GError     // in
+
+	_arg0 = (*C.GtkConstraintLayout)(unsafe.Pointer(coreglib.InternObject(layout).Native()))
+	_arg2 = (C.gsize)(len(lines))
+	_arg1 = (**C.char)(C.calloc(C.size_t(len(lines)), C.size_t(unsafe.Sizeof(uint(0)))))
+	defer C.free(unsafe.Pointer(_arg1))
+	{
+		out := unsafe.Slice((**C.char)(_arg1), len(lines))
+		for i := range lines {
+			out[i] = (*C.char)(unsafe.Pointer(C.CString(lines[i])))
+			defer C.free(unsafe.Pointer(out[i]))
+		}
+	}
+	_arg3 = C.int(hspacing)
+	_arg4 = C.int(vspacing)
+	_arg5 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
+	for ksrc, vsrc := range views {
+		var kdst *C.gchar               // out
+		var vdst *C.GtkConstraintTarget // out
+		kdst = (*C.gchar)(unsafe.Pointer(C.CString(ksrc)))
+		vdst = (*C.GtkConstraintTarget)(unsafe.Pointer(coreglib.InternObject(vsrc).Native()))
+		C.g_object_ref(C.gpointer(coreglib.InternObject(vsrc).Native()))
+		C.g_hash_table_insert(_arg5, C.gpointer(unsafe.Pointer(kdst)), C.gpointer(unsafe.Pointer(vdst)))
+	}
+	defer C.g_hash_table_unref(_arg5)
+
+	_cret = C.gtk_constraint_layout_add_constraints_from_descriptionv(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, &_cerr)
+	runtime.KeepAlive(layout)
+	runtime.KeepAlive(lines)
+	runtime.KeepAlive(hspacing)
+	runtime.KeepAlive(vspacing)
+	runtime.KeepAlive(views)
+
+	var _list []*Constraint // out
+	var _goerr error        // out
+
+	_list = make([]*Constraint, 0, gextras.ListSize(unsafe.Pointer(_cret)))
+	gextras.MoveList(unsafe.Pointer(_cret), true, func(v unsafe.Pointer) {
+		src := (*C.GtkConstraint)(v)
+		var dst *Constraint // out
+		dst = wrapConstraint(coreglib.Take(unsafe.Pointer(src)))
+		_list = append(_list, dst)
+	})
+	if _cerr != nil {
+		_goerr = gerror.Take(unsafe.Pointer(_cerr))
+	}
+
+	return _list, _goerr
+}
+
 // AddGuide adds a guide to layout.
 //
 // A guide can be used as the source or target of constraints, like a widget,
