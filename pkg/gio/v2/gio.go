@@ -82,8 +82,6 @@ import (
 // extern void _gotk4_gio2_MountOperationClass_ask_password(GMountOperation*, char*, char*, char*, GAskPasswordFlags);
 // extern void _gotk4_gio2_MountOperationClass_aborted(GMountOperation*);
 // extern void _gotk4_gio2_MenuModel_ConnectItemsChanged(gpointer, gint, gint, gint, guintptr);
-// extern void _gotk4_gio2_MenuModelClass_get_item_links(GMenuModel*, gint, GHashTable**);
-// extern void _gotk4_gio2_MenuModelClass_get_item_attributes(GMenuModel*, gint, GHashTable**);
 // extern void _gotk4_gio2_MemoryMonitor_ConnectLowMemoryWarning(gpointer, GMemoryMonitorWarningLevel, guintptr);
 // extern void _gotk4_gio2_ListModel_ConnectItemsChanged(gpointer, guint, guint, guint, guintptr);
 // extern void _gotk4_gio2_FilenameCompleter_ConnectGotCompletionData(gpointer, guintptr);
@@ -65333,17 +65331,6 @@ type MenuModelOverrides struct {
 	//
 	//   - variant (optional): value of the attribute.
 	ItemAttributeValue func(itemIndex int, attribute string, expectedType *glib.VariantType) *glib.Variant
-	// ItemAttributes gets all the attributes associated with the item in the
-	// menu model.
-	//
-	// The function takes the following parameters:
-	//
-	//   - itemIndex to query.
-	//
-	// The function returns the following values:
-	//
-	//   - attributes attributes on the item.
-	ItemAttributes func(itemIndex int) map[string]*glib.Variant
 	// ItemLink queries the item at position item_index in model for the link
 	// specified by link.
 	//
@@ -65359,16 +65346,6 @@ type MenuModelOverrides struct {
 	//
 	//   - menuModel (optional): linked Model, or NULL.
 	ItemLink func(itemIndex int, link string) MenuModeller
-	// ItemLinks gets all the links associated with the item in the menu model.
-	//
-	// The function takes the following parameters:
-	//
-	//   - itemIndex to query.
-	//
-	// The function returns the following values:
-	//
-	//   - links links from the item.
-	ItemLinks func(itemIndex int) map[string]MenuModeller
 	// NItems: query the number of items in model.
 	//
 	// The function returns the following values:
@@ -65416,9 +65393,7 @@ type MenuModelOverrides struct {
 func defaultMenuModelOverrides(v *MenuModel) MenuModelOverrides {
 	return MenuModelOverrides{
 		ItemAttributeValue:    v.itemAttributeValue,
-		ItemAttributes:        v.itemAttributes,
 		ItemLink:              v.itemLink,
-		ItemLinks:             v.itemLinks,
 		NItems:                v.nItems,
 		IsMutable:             v.isMutable,
 		IterateItemAttributes: v.iterateItemAttributes,
@@ -65581,16 +65556,8 @@ func initMenuModelClass(gclass unsafe.Pointer, overrides MenuModelOverrides, cla
 		pclass.get_item_attribute_value = (*[0]byte)(C._gotk4_gio2_MenuModelClass_get_item_attribute_value)
 	}
 
-	if overrides.ItemAttributes != nil {
-		pclass.get_item_attributes = (*[0]byte)(C._gotk4_gio2_MenuModelClass_get_item_attributes)
-	}
-
 	if overrides.ItemLink != nil {
 		pclass.get_item_link = (*[0]byte)(C._gotk4_gio2_MenuModelClass_get_item_link)
-	}
-
-	if overrides.ItemLinks != nil {
-		pclass.get_item_links = (*[0]byte)(C._gotk4_gio2_MenuModelClass_get_item_links)
 	}
 
 	if overrides.NItems != nil {
