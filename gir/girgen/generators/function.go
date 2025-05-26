@@ -24,7 +24,15 @@ func GenerateFunction(gen FileGeneratorWriter, fn *gir.Function) bool {
 // GeneratePrefixedFunction generates the given GIR function with the prefix
 // prepended into the name.
 func GeneratePrefixedFunction(gen FileGeneratorWriter, fn *gir.Function, prefix string) bool {
-	if fn.CIdentifier == "" || types.Filter(gen, fn.Name, fn.CIdentifier) {
+	if fn.CIdentifier == "" {
+		return false
+	}
+
+	if types.Filter(gen, fn.Name, fn.CIdentifier) {
+		return false
+	}
+
+	if prefix != "" && types.Filter(gen, prefix+"."+fn.Name, fn.CIdentifier) {
 		return false
 	}
 

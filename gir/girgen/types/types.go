@@ -7,6 +7,7 @@ import (
 
 	"github.com/diamondburned/gotk4/gir"
 	"github.com/diamondburned/gotk4/gir/girgen/pen"
+	"github.com/diamondburned/gotk4/gir/girgen/strcases"
 )
 
 // LinkMode describes the mode that determines how the generator generates
@@ -199,14 +200,26 @@ func EnsureNamespace(nsp *gir.NamespaceFindResult, girType string) string {
 		return girType
 	}
 
-	if strings.Contains(girType, ".") {
-		return girType
+	_, name, hasDot := strings.Cut(girType, ".")
+
+	if hasDot {
+		// In some cases, we might be getting something like "HashTable.name"
+		// which is a type plus a member name. In this case, our best heuristic
+		// is to ensure that the second word is capitalized. If it's not, then
+		// we still don't have a namespace.
+		if strcases.GuessSnake(name) && strings.Count(name, ".") == 0 {
+			hasDot = false
+		}
 	}
 
-	return nsp.Namespace.Name + "." + girType
+	if !hasDot {
+		return nsp.Namespace.Name + "." + girType
+	}
+
+	return girType
 }
 
-func countPtrs(typ gir.Type, result *gir.TypeFindResult) uint8 {
+func countPtrs(typ gir.Type, _ *gir.TypeFindResult) uint8 {
 	return uint8(strings.Count(typ.CType, "*"))
 }
 

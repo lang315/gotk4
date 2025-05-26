@@ -297,9 +297,8 @@ func (n *NamespaceGenerator) Generate() (map[string][]byte, error) {
 
 	generateFunctions := func(parent string, fns []gir.Function) {
 		for _, f := range fns {
-			if !generators.GeneratePrefixedFunction(n, &f, parent) {
-				n.logIfSkipped(false, "parent "+parent+" function "+f.Name)
-			}
+			ok := generators.GeneratePrefixedFunction(n, &f, parent)
+			n.logIfSkipped(ok, parent+"."+f.Name)
 		}
 	}
 
@@ -344,8 +343,7 @@ func (n *NamespaceGenerator) Generate() (map[string][]byte, error) {
 		generateFunctions(v.Name, v.Functions)
 	}
 	for _, v := range n.current.Namespace.Records {
-		if !generators.GenerateRecord(n, &v) {
-			n.logIfSkipped(false, "record "+v.Name)
+		if !n.logIfSkipped(generators.GenerateRecord(n, &v), "record "+v.Name) {
 			continue
 		}
 		generateFunctions(v.Name, v.Functions)
@@ -409,8 +407,12 @@ func (n *NamespaceGenerator) Generate() (map[string][]byte, error) {
 	return files, firstErr
 }
 
-func (n *NamespaceGenerator) logIfSkipped(generated bool, what string) {
-	if !generated {
-		n.Logln(logger.Skip, what)
+func (n *NamespaceGenerator) logIfSkipped(generated bool, what string) bool {
+	prefix := "namespace " + n.Namespace().Namespace.Name + ": "
+	if generated {
+		n.Logln(logger.Debug, prefix+what+" generated")
+	} else {
+		n.Logln(logger.Skip, prefix+what+" skipped")
 	}
+	return generated
 }
