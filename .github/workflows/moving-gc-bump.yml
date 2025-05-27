@@ -19,7 +19,6 @@ jobs:
           ref: ${{ github.ref_name }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Tidy up Go modules
         run: go mod tidy
