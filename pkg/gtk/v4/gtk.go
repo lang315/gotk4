@@ -45029,6 +45029,7 @@ func (layout *ConstraintLayout) AddConstraintsFromDescription(lines []string, hs
 		C.g_object_ref(C.gpointer(coreglib.InternObject(vsrc).Native()))
 		C.g_hash_table_insert(_arg5, C.gpointer(unsafe.Pointer(kdst)), C.gpointer(unsafe.Pointer(vdst)))
 	}
+	defer C.g_hash_table_unref(_arg5)
 
 	_cret = C.gtk_constraint_layout_add_constraints_from_descriptionv(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, &_cerr)
 	runtime.KeepAlive(layout)
