@@ -227,6 +227,15 @@ var Preprocessors = []Preprocessor{
 		userData := &callback.Parameters.Parameters[userDataIx]
 		userData.Closure = ptr.To(userDataIx)
 	}),
+
+	/*
+		// Fix the hash table being freed due to GIR saying transfer=none but it
+		// shouldn't actually be freed, so it's actually transfer=full.
+		ModifyCallable("Gtk-4.ConstraintLayout.add_constraints_from_descriptionv", func(c *gir.CallableAttrs) {
+			views := FindParameter(c, "views")
+			views.TransferOwnership.TransferOwnership = "full"
+		}),
+	*/
 }
 
 var ConversionProcessors = []ConversionProcessor{

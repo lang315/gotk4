@@ -3959,7 +3959,7 @@ func _gotk4_gio2_MenuModelClass_get_item_attributes(arg0 *C.GMenuModel, arg1 C.g
 
 	var _ map[string]*glib.Variant
 
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
+	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.g_variant_unref))
 	for ksrc, vsrc := range attributes {
 		var kdst *C.gchar    // out
 		var vdst *C.GVariant // out
@@ -4012,7 +4012,7 @@ func _gotk4_gio2_MenuModelClass_get_item_links(arg0 *C.GMenuModel, arg1 C.gint, 
 
 	var _ map[string]MenuModeller
 
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
+	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.g_object_unref))
 	for ksrc, vsrc := range links {
 		var kdst *C.gchar      // out
 		var vdst *C.GMenuModel // out
