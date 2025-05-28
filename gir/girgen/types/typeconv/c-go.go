@@ -358,41 +358,36 @@ func (conv *Converter) cgoConvertNested(value *ValueConverted) bool {
 	return false
 }
 
-/*
-// cFree calls the free function of the given value on the given string
-// variable. v should be of type unsafe.Pointer. If value is nil, then a generic
-// C.free is returned.
-func (conv *Converter) cFree(value *ValueConverted, v string) string {
+// cFreeFn returns the name of the free function of the given value on the given string
+// variable.
+func (conv *Converter) cFreeFn(value *ValueConverted) string {
 	switch {
 	case value == nil:
 		fallthrough
 	case value.Resolved.IsBuiltin("string"):
-		return fmt.Sprintf("C.free(%s)", v)
+		return "free"
 	}
-
-	ptr := v
-	v = fmt.Sprintf("(%s)(%s)", value.In.Type, v)
 
 	switch value.Resolved.GType {
 	case "GObject.Value": // *coreglib.Value
-		return fmt.Sprintf("C.g_value_unset(%s)", v)
+		return "g_value_unset"
 	case "cairo.Context":
-		return fmt.Sprintf("C.cairo_destroy(%s)", v)
+		return "cairo_destroy"
 	case "cairo.Surface":
-		return fmt.Sprintf("C.cairo_surface_destroy(%s)", v)
+		return "cairo_surface_destroy"
 	case "cairo.Pattern":
-		return fmt.Sprintf("C.cairo_pattern_destroy(%s)", v)
+		return "cairo_pattern_destroy"
 	case "cairo.Region":
-		return fmt.Sprintf("C.cairo_region_destroy(%s)", v)
+		return "cairo_region_destroy"
 	}
 
 	if value.Resolved.Extern == nil {
-		return fmt.Sprintf("C.free(%s)", v)
+		return "free" // fallback
 	}
 
 	switch typ := value.Resolved.Extern.Type.(type) {
 	case *gir.Class, *gir.Interface: // GObject
-		return fmt.Sprintf("C.g_object_unref(C.gpointer(uintptr(%s)))", ptr)
+		return "g_object_unref"
 
 	case *gir.Record:
 		free := types.RecordHasUnref(typ)
@@ -400,20 +395,19 @@ func (conv *Converter) cFree(value *ValueConverted, v string) string {
 			free = types.RecordHasFree(typ)
 		}
 		if free != nil {
-			return fmt.Sprintf("C.%s(%s)", free.CIdentifier, v)
+			return free.CIdentifier
 		}
-		return fmt.Sprintf("C.free(unsafe.Pointer(%s))", v)
+		return "free"
 
 	case *gir.Alias:
-		result := conv.convertType(value, value.In.Name, value.OutName, &typ.Type)
+		result := conv.convertType(value, value.In.Name, value.OutName, &typ.Type, "")
 		if result != nil {
-			return conv.cFree(result, v)
+			return conv.cFreeFn(result)
 		}
 	}
 
-	return fmt.Sprintf("C.free(%s)", v)
+	return "free" // fallback
 }
-*/
 
 func (conv *Converter) cgoConverter(value *ValueConverted) bool {
 	// TODO: make the freeing use cFree().

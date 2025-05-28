@@ -402,11 +402,6 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 			return false
 		}
 
-		// if kt.Type.Name != "utf8" || vt.Type.Name != "utf8" {
-		// 	value.Logln(logger.Debug, "unsupported k/v type", kt.Type.Name, ":", vt.Type.Name)
-		// 	return false
-		// }
-
 		value.header.Import("unsafe")
 		value.header.ApplyFrom(kt.Header())
 		value.header.ApplyFrom(vt.Header())
@@ -417,8 +412,9 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 
 		// Since we're using strings, we can use C.free directly.
 		value.p.Linef(
-			"%s = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))",
-			value.Out.Set)
+			"%s = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.%s), (*[0]byte)(C.%s))",
+			value.Out.Set, conv.cFreeFn(kt), conv.cFreeFn(vt),
+		)
 		value.p.Linef("for ksrc, vsrc := range %s {", value.In.Set)
 		value.p.Linef("  %s", kt.Out.Declare)
 		value.p.Linef("  %s", vt.Out.Declare)
