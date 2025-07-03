@@ -27,6 +27,13 @@ are ready to be used for most purposes. However, memory leaks and sometimes
 crashes may occur in certain parts of the API, while other parts might be
 completely missing. In that case, an issue should be opened.
 
+## Versions
+
+| GTK Versions | Branch |
+| ------------ | ------ |
+| 4.14         | 4      |
+| 4.16         | 4.16   |
+
 ## Contributing to gotk4
 
 For contributing guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
