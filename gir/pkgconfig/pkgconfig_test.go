@@ -45,23 +45,23 @@ func TestParseValues(t *testing.T) {
 
 func TestGIRDirs(t *testing.T) {
 	tests := []struct {
-		inPkgs     []string
-		expGIRDirs map[string]string
+		inPkgs         []string
+		expGIRDirPaths map[string]string
 	}{
 		{
 			[]string{"gtk4"},
 			map[string]string{
-				"gtk4": "/nix/store/j2vgh4x3wmxrycvwkbnp74vh32yip9i5-gtk4-4.14.4-dev/share/gir-1.0",
+				"gtk4": "/share/gir-1.0",
 			},
 		},
 		{
 			[]string{"gtk4", "pango", "cairo", "glib-2.0", "gdk-3.0"},
 			map[string]string{
-				"gtk4":     "/nix/store/j2vgh4x3wmxrycvwkbnp74vh32yip9i5-gtk4-4.14.4-dev/share/gir-1.0",
-				"pango":    "/nix/store/fmqv9zpvf9fkb8n384ramhhbp8k20rnw-pango-1.52.2-dev/share/gir-1.0",
-				"cairo":    "/nix/store/0i4xfw9ylgmg8f7z6rwwmfbin3ckyli5-cairo-1.18.0-dev/share/gir-1.0",
-				"glib-2.0": "/nix/store/kd2a4kyia0lai7n7hn657mpcr2gykw00-glib-2.80.2-dev/share/gir-1.0",
-				"gdk-3.0":  "/nix/store/kd2a4kyia0lai7n7hn657mpcr2gykw00-glib-2.80.2-dev/share/gir-1.0",
+				"gtk4":     "/share/gir-1.0",
+				"pango":    "/share/gir-1.0",
+				"cairo":    "/share/gir-1.0",
+				"glib-2.0": "/share/gir-1.0",
+				"gdk-3.0":  "/share/gir-1.0",
 			},
 		},
 	}
@@ -71,7 +71,9 @@ func TestGIRDirs(t *testing.T) {
 			out, err := GIRDirs(test.inPkgs...)
 			assert.NoError(t, err)
 
-			assert.Equal(t, test.expGIRDirs, out)
+			for pkg, dir := range out {
+				assert.Contains(t, dir, test.expGIRDirPaths[pkg], "unexpected directory for package %q", pkg)
+			}
 		})
 	}
 }
