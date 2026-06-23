@@ -21,6 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Full history so the pre-push rebase has something to rebase onto.
+        fetch-depth: 0
 
     - uses: DeterminateSystems/nix-installer-action@main
     - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -33,6 +36,13 @@ jobs:
       run: goimports -w .
       shell: nix develop -c bash -e {0}
 
+    # Verify the regenerated output here: a commit pushed with the default
+    # GITHUB_TOKEN does not trigger qa.yml, so this job is the only thing that
+    # checks the output before it lands.
+    - name: Test the generator
+      run: go test ./...
+      shell: nix develop -c bash -e {0}
+
     - name: Build the generated packages
       run: cd pkg && go build ./...
       shell: nix develop -c bash -e {0}
@@ -42,10 +52,13 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add -A
+        # Stage only what regeneration produces, never stray build artifacts.
+        git add pkg
         if git diff --cached --quiet; then
           echo "Nothing to regenerate."
         else
           git commit -m "pkg: regenerate bindings"
-          git push
+          # Land on top of anything that arrived since checkout, then push.
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
         fi
