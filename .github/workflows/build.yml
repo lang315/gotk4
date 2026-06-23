@@ -6,10 +6,20 @@ name: Build
 # The bindings are pinned to a specific GTK version (see flake.nix), so Linux
 # builds through Nix to get that exact GTK. macOS (brew) and Windows (msys2)
 # track rolling GTK, which is API-compatible with the pinned version.
+#
+# Linux builds everything. macOS and Windows build only the portable GTK4
+# stack: the GTK3 bindings and the gdkx11/gdkwayland backends reference X11/
+# Wayland-only symbols that don't exist outside Linux.
 
 on:
 - push
 - pull_request
+
+env:
+  PORTABLE: >-
+    ./core/... ./cairo/... ./graphene/... ./pango/...
+    ./gdkpixbuf/... ./glib/... ./gobject/... ./gio/...
+    ./gdk/v4/... ./gsk/... ./gtk/v4/...
 
 jobs:
   build:
@@ -22,7 +32,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # --- Linux: Nix provides the exact pinned GTK ---
+    # --- Linux: Nix provides the exact pinned GTK; build everything ---
     - if: runner.os == 'Linux'
       uses: DeterminateSystems/nix-installer-action@main
     - if: runner.os == 'Linux'
@@ -32,21 +42,21 @@ jobs:
       run: cd pkg && go build ./...
       shell: nix develop -c bash -e {0}
 
-    # --- macOS: Homebrew GTK ---
+    # --- macOS: Homebrew GTK4; portable subset ---
     - if: runner.os == 'macOS'
       uses: actions/setup-go@v5
       with:
         go-version: "1.24"
     - name: Install GTK (macOS)
       if: runner.os == 'macOS'
-      run: brew install gtk4 gtk+3 graphene gobject-introspection gdk-pixbuf
+      run: brew install gtk4 graphene gobject-introspection gdk-pixbuf
     - name: Build (macOS)
       if: runner.os == 'macOS'
-      run: cd pkg && go build ./...
+      run: cd pkg && go build $PORTABLE
       env:
         PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig:/opt/homebrew/share/pkgconfig
 
-    # --- Windows: MSYS2 / MINGW64 toolchain + GTK ---
+    # --- Windows: MSYS2 / MINGW64 toolchain + GTK4; portable subset ---
     - name: Setup MSYS2 (Windows)
       if: runner.os == 'Windows'
       uses: msys2/setup-msys2@v2
@@ -58,11 +68,10 @@ jobs:
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-pkgconf
           mingw-w64-x86_64-gtk4
-          mingw-w64-x86_64-gtk3
           mingw-w64-x86_64-graphene
           mingw-w64-x86_64-gobject-introspection
           mingw-w64-x86_64-gdk-pixbuf2
     - name: Build (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
-      run: cd pkg && go build ./...
+      run: cd pkg && go build $PORTABLE
