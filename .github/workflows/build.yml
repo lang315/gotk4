@@ -1,0 +1,68 @@
+name: Build
+
+# Build the generated bindings against system GTK on Linux, macOS and Windows
+# so the committed pkg/ tree is verified across platforms on every push/PR.
+#
+# The bindings are pinned to a specific GTK version (see flake.nix), so Linux
+# builds through Nix to get that exact GTK. macOS (brew) and Windows (msys2)
+# track rolling GTK, which is API-compatible with the pinned version.
+
+on:
+- push
+- pull_request
+
+jobs:
+  build:
+    name: "build / ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v4
+
+    # --- Linux: Nix provides the exact pinned GTK ---
+    - if: runner.os == 'Linux'
+      uses: DeterminateSystems/nix-installer-action@main
+    - if: runner.os == 'Linux'
+      uses: DeterminateSystems/magic-nix-cache-action@main
+    - name: Build (Linux)
+      if: runner.os == 'Linux'
+      run: cd pkg && go build ./...
+      shell: nix develop -c bash -e {0}
+
+    # --- macOS: Homebrew GTK ---
+    - if: runner.os == 'macOS'
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24"
+    - name: Install GTK (macOS)
+      if: runner.os == 'macOS'
+      run: brew install gtk4 gtk+3 graphene gobject-introspection gdk-pixbuf
+    - name: Build (macOS)
+      if: runner.os == 'macOS'
+      run: cd pkg && go build ./...
+      env:
+        PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig:/opt/homebrew/share/pkgconfig
+
+    # --- Windows: MSYS2 / MINGW64 toolchain + GTK ---
+    - name: Setup MSYS2 (Windows)
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-go
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-pkgconf
+          mingw-w64-x86_64-gtk4
+          mingw-w64-x86_64-gtk3
+          mingw-w64-x86_64-graphene
+          mingw-w64-x86_64-gobject-introspection
+          mingw-w64-x86_64-gdk-pixbuf2
+    - name: Build (Windows)
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: cd pkg && go build ./...

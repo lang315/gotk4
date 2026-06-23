@@ -22,7 +22,7 @@ static void gotk4_gbox_object_finalize(GObject *object) {
   Gotk4GboxObject *self = GOTK4_GBOX_OBJECT(object);
 
   g_warn_if_fail(self->id != 0);
-  callbackDelete(self->id);
+  callbackDelete((uintptr_t)self->id);
   g_debug("Freed gbox object %p in gotk4_gbox_object_finalize", (void *)self->id);
 
   G_OBJECT_CLASS(gotk4_gbox_object_parent_class)->finalize(object);
