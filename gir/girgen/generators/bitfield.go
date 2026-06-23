@@ -14,7 +14,7 @@ var bitfieldTmpl = gotmpl.NewGoTemplate(`
 	type {{ .GoName }} C.guint
 
 	const (
-		{{ range .Members -}}
+		{{ range .ConstMembers -}}
 		{{- $name := ($.FormatMember .) -}}
 		{{- GoDoc . 1 TrailingNewLine (OverrideSelfName $name) -}}
 		{{- $name }} {{ $.GoName }} = {{ $.Bits .Value }}
@@ -85,6 +85,12 @@ func (b *bitfieldData) FormatMember(member gir.Member) string {
 
 func (b *bitfieldData) UniqueMembers() []gir.Member {
 	return UniqueEnumMembers(b.Members)
+}
+
+// ConstMembers returns the bitfield members with unique Go names, suitable for
+// the constant declaration block.
+func (b *bitfieldData) ConstMembers() []gir.Member {
+	return DedupeEnumMembersByName(b.Members)
 }
 
 // CanGenerateBitfield returns false if the bitfield cannot be generated.
