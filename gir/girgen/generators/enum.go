@@ -30,7 +30,7 @@ var enumTmpl = gotmpl.NewGoTemplate(`
 	)
 	{{ else }}
 	const (
-		{{ range .Members -}}
+		{{ range .ConstMembers -}}
 		{{- $name := $.FormatMember . -}}
 		{{- GoDoc . 1 TrailingNewLine (OverrideSelfName $name) -}}
 		{{- $name }} {{ $.GoName }} = {{ .Value }}
@@ -84,6 +84,12 @@ func (eg *enumData) UniqueMembers() []gir.Member {
 	return UniqueEnumMembers(eg.Members)
 }
 
+// ConstMembers returns the enum members with unique Go names, suitable for the
+// constant declaration block.
+func (eg *enumData) ConstMembers() []gir.Member {
+	return DedupeEnumMembersByName(eg.Members)
+}
+
 // FormatEnumMember returns the enum member's Go name.
 func FormatEnumMember(member gir.Member) string {
 	// Pop the namespace off. Probably works most of the time.
@@ -102,19 +108,49 @@ func FormatEnumMember(member gir.Member) string {
 	return memberName
 }
 
-// UniqueEnumMembers returns the enum members with unique values only.
+// UniqueEnumMembers returns the enum members with unique values and unique Go
+// names only. This is suitable for generating switch cases: two members with
+// the same value collide on case value, and two members with the same Go name
+// (GTK 4.20+ aliases) collide on case identifier.
 func UniqueEnumMembers(members []gir.Member) []gir.Member {
 	uniques := make([]gir.Member, 0, len(members))
-	known := make(map[string]struct{}, len(members))
+	knownValues := make(map[string]struct{}, len(members))
+	knownNames := make(map[string]struct{}, len(members))
 
 	for _, member := range members {
-		_, isKnown := known[member.Value]
-		if isKnown {
+		name := FormatEnumMember(member)
+		if _, ok := knownValues[member.Value]; ok {
+			continue
+		}
+		if _, ok := knownNames[name]; ok {
 			continue
 		}
 
 		uniques = append(uniques, member)
-		known[member.Value] = struct{}{}
+		knownValues[member.Value] = struct{}{}
+		knownNames[name] = struct{}{}
+	}
+
+	return uniques
+}
+
+// DedupeEnumMembersByName returns the enum members with unique Go names only,
+// keeping the first occurrence. GTK 4.20+ introduces aliased members whose C
+// identifiers normalize to the same Go name (e.g. GDK_MEMORY_G8B8R8_420 and
+// GDK_MEMORY_G8_B8R8_420 both become MemoryG8B8R8420); emitting both produces a
+// "redeclared in this block" compile error.
+func DedupeEnumMembersByName(members []gir.Member) []gir.Member {
+	uniques := make([]gir.Member, 0, len(members))
+	known := make(map[string]struct{}, len(members))
+
+	for _, member := range members {
+		name := FormatEnumMember(member)
+		if _, ok := known[name]; ok {
+			continue
+		}
+
+		uniques = append(uniques, member)
+		known[name] = struct{}{}
 	}
 
 	return uniques
@@ -154,6 +190,16 @@ func GenerateEnum(gen FileGeneratorWriter, enum *gir.Enum) bool {
 			data.IsIota = false
 			break
 		}
+	}
+
+	// GTK 4.20+ enums (e.g. GdkMemoryFormat) contain members whose C
+	// identifiers normalize to the same Go name despite having distinct values.
+	// Such a collision cannot be emitted as iota: the duplicate name would be
+	// redeclared, and the deduplicated members would no longer line up with
+	// their iota positions. Fall back to explicit values so ConstMembers can
+	// drop the duplicates while every surviving member keeps its real value.
+	if data.IsIota && len(DedupeEnumMembersByName(enum.Members)) != len(enum.Members) {
+		data.IsIota = false
 	}
 
 	writer.Header().Import("fmt")
