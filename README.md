@@ -31,7 +31,7 @@ completely missing. In that case, an issue should be opened.
 
 | GTK Versions | Branch |
 | ------------ | ------ |
-| 4.14         | 4      |
+| 4.22         | 4, main |
 | 4.16         | 4.16   |
 
 ## Contributing to gotk4

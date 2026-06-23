@@ -1,0 +1,51 @@
+name: Regenerate
+
+# Manually re-generate the bindings on GitHub's runners (x86_64) and commit the
+# result. Use this after bumping the GTK version pin (the `nixpkgs-gotk4` input
+# in flake.nix) instead of regenerating on a local machine.
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit the regenerated output back to the branch"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    name: "regenerate"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Regenerate bindings
+      run: go generate
+      shell: nix develop -c bash -e {0}
+
+    - name: Format
+      run: goimports -w .
+      shell: nix develop -c bash -e {0}
+
+    - name: Build the generated packages
+      run: cd pkg && go build ./...
+      shell: nix develop -c bash -e {0}
+
+    - name: Commit regenerated output
+      if: ${{ inputs.commit }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add -A
+        if git diff --cached --quiet; then
+          echo "Nothing to regenerate."
+        else
+          git commit -m "pkg: regenerate bindings"
+          git push
+        fi
