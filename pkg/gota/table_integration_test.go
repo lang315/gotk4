@@ -152,6 +152,38 @@ func TestTableSetReusesIdentity(t *testing.T) {
 	}
 }
 
+// TestTableBatchInPlace checks Batch updates many rows in place (values change,
+// backing objects reused) and emits a single coalesced change.
+func TestTableBatchInPlace(t *testing.T) {
+	gtkReady(t)
+
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		Items([]person{{"a", 1}, {"b", 2}, {"c", 3}})
+
+	before0 := tbl.model.Item(0).Native()
+	before2 := tbl.model.Item(2).Native()
+
+	tbl.Batch(func(set func(i int, v person)) {
+		set(0, person{"a2", 10})
+		set(2, person{"c2", 30})
+		set(99, person{"oob", 0}) // out of range: ignored
+	})
+
+	if tbl.model.Item(0).Native() != before0 || tbl.model.Item(2).Native() != before2 {
+		t.Error("Batch replaced backing objects; want in-place (no churn)")
+	}
+	if got := tbl.model.At(0); got != (person{"a2", 10}) {
+		t.Errorf("At(0) = %+v, want {a2 10}", got)
+	}
+	if got := tbl.model.At(2); got != (person{"c2", 30}) {
+		t.Errorf("At(2) = %+v, want {c2 30}", got)
+	}
+	if got := tbl.model.At(1); got != (person{"b", 2}) {
+		t.Errorf("At(1) = %+v, want {b 2} (untouched)", got)
+	}
+}
+
 // BenchmarkTableSet measures the model-layer throughput of per-row updates
 // (the data path the live perf demo exercises). The view is not realized, so
 // this is the floor cost — boxing + items-changed — without cell re-render.

@@ -146,6 +146,25 @@ void gotk4_gbox_list_set(Gotk4GboxList *self, guint position, guintptr id) {
   g_list_model_items_changed(G_LIST_MODEL(self), position, 1, 1);
 }
 
+// gotk4_gbox_list_set_silent repoints the value at position WITHOUT emitting
+// items-changed. Use it to update many rows, then emit a single change with
+// gotk4_gbox_list_emit_changed — far cheaper for a realized view than one
+// signal per row. The caller owns freeing the previous id.
+void gotk4_gbox_list_set_silent(Gotk4GboxList *self, guint position, guintptr id) {
+  g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
+  g_return_if_fail(position < objects_get_size(&self->items));
+
+  (*objects_index(&self->items, position))->id = id;
+}
+
+// gotk4_gbox_list_emit_changed emits a single items-changed signal, used to
+// coalesce a batch of set_silent updates into one notification.
+void gotk4_gbox_list_emit_changed(Gotk4GboxList *self, guint position, guint removed,
+                                  guint added) {
+  g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
+  g_list_model_items_changed(G_LIST_MODEL(self), position, removed, added);
+}
+
 guintptr gotk4_gbox_list_get_id(Gotk4GboxList *self, guint position) {
   g_return_val_if_fail(GOTK4_IS_GBOX_LIST(self), 0);
   g_return_val_if_fail(position < objects_get_size(&self->items), 0);

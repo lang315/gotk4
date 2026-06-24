@@ -95,6 +95,33 @@ func (t *TableWidget[T]) Set(i int, v T) *TableWidget[T] {
 // Len returns the current row count.
 func (t *TableWidget[T]) Len() int { return t.model.Len() }
 
+// Batch applies many row updates and emits a SINGLE change notification
+// covering the affected span, instead of one per row. Updating a realized
+// ColumnView with one items-changed per row at high frequency floods the view
+// faster than it can redraw, so the changes back up; coalescing keeps it flat.
+// Call set(i, v) for each row inside apply; out-of-range indices are ignored.
+func (t *TableWidget[T]) Batch(apply func(set func(i int, v T))) *TableWidget[T] {
+	n := t.model.Len()
+	lo, hi := -1, -1
+	apply(func(i int, v T) {
+		if i < 0 || i >= n {
+			return
+		}
+		t.model.SetSilent(i, v)
+		if lo == -1 || i < lo {
+			lo = i
+		}
+		if i > hi {
+			hi = i
+		}
+	})
+	if lo != -1 {
+		span := hi - lo + 1
+		t.model.EmitChanged(lo, span, span)
+	}
+	return t
+}
+
 // Selected returns the currently selected rows in view (sorted) order.
 func (t *TableWidget[T]) Selected() []T {
 	bitset := t.sel.Selection()

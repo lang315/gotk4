@@ -99,6 +99,25 @@ func (l *ListModel[T]) Set(index int, v T) {
 	gbox.Delete(old)
 }
 
+// SetSilent replaces the value at index in place like Set, but does NOT emit
+// items-changed. Use it to update many rows, then call EmitChanged once to
+// coalesce them into a single notification — far cheaper for a realized view
+// than one signal per row. Out-of-range index is a no-op.
+func (l *ListModel[T]) SetSilent(index int, v T) {
+	if index < 0 || index >= l.Len() {
+		return
+	}
+	old := uintptr(C.gotk4_gbox_list_get_id(l.native(), C.guint(index)))
+	C.gotk4_gbox_list_set_silent(l.native(), C.guint(index), C.guintptr(gbox.Assign(v)))
+	gbox.Delete(old)
+}
+
+// EmitChanged emits a single items-changed signal spanning the given range,
+// used to coalesce a batch of SetSilent updates.
+func (l *ListModel[T]) EmitChanged(position, removed, added int) {
+	C.gotk4_gbox_list_emit_changed(l.native(), C.guint(position), C.guint(removed), C.guint(added))
+}
+
 // At returns the value at the given index.
 func (l *ListModel[T]) At(index int) T {
 	id := uintptr(C.gotk4_gbox_list_get_id(l.native(), C.guint(index)))
