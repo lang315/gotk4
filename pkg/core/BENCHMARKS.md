@@ -55,9 +55,12 @@ Captured with `-benchtime=200ms`. Microbenchmark numbers jitter run-to-run
   linear scaling. `Put` and `Delete` both take the exclusive write lock, so all
   goroutines serialize on it.
 - **The once path allocates more than the non-once path.** Non-once `Put` costs
-  1 alloc/op (the `atomic.Value` first-store of the entry); the once path costs
-  3 allocs/op because the value is boxed into a non-pointer `atomicContainer`
-  struct on store and again on the `Swap` during `Get`.
+  1 alloc/op: the local `slabEntry` escapes to the heap (escape analysis:
+  `moved to heap: slabEntry`) because its `atomic.Value` field's address is taken
+  for `Store` — the `Store` itself does not allocate. The once path costs 3
+  allocs/op: that same `slabEntry` escape, plus the value boxed into a non-pointer
+  `atomicContainer` on `Store` and again into an empty `atomicContainer` on the
+  `Swap` during `Get`.
 - **`gbox` adds essentially nothing over `slab`** (53.4 vs 53.2 ns/op, etc.) —
   its cost *is* the slab's cost plus the `minLegalPointer` offset arithmetic.
 - **`C.CString` does no Go-heap allocation** (0 allocs/op): the copy is into
