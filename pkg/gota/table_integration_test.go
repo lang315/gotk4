@@ -127,3 +127,27 @@ func TestTableLargeRandom(t *testing.T) {
 		t.Fatalf("SelectAll -> %d rows, want %d", got, n)
 	}
 }
+
+// BenchmarkTableSet measures the model-layer throughput of per-row updates
+// (the data path the live perf demo exercises). The view is not realized, so
+// this is the floor cost — boxing + items-changed — without cell re-render.
+func BenchmarkTableSet(b *testing.B) {
+	if !gtk.InitCheck() {
+		b.Skip("no GTK display available")
+	}
+	const n = 5321
+	rows := randomPeople(n)
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		Column("Age", func(p person) string { return strconv.Itoa(p.age) }).
+		Items(rows)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		idx := i % n
+		r := rows[idx]
+		r.age = i & 0xff
+		tbl.Set(idx, r)
+	}
+}

@@ -83,6 +83,19 @@ func (t *TableWidget[T]) Append(items ...T) *TableWidget[T] {
 	return t
 }
 
+// Set replaces the row at index i with v, firing a change so any realized cell
+// for that row re-binds. Out-of-range i is a no-op.
+func (t *TableWidget[T]) Set(i int, v T) *TableWidget[T] {
+	if i < 0 || i >= t.model.Len() {
+		return t
+	}
+	t.model.Splice(i, 1, v)
+	return t
+}
+
+// Len returns the current row count.
+func (t *TableWidget[T]) Len() int { return t.model.Len() }
+
 // Selected returns the currently selected rows in view (sorted) order.
 func (t *TableWidget[T]) Selected() []T {
 	bitset := t.sel.Selection()
