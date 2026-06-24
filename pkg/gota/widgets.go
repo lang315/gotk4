@@ -13,15 +13,12 @@ type ButtonWidget struct {
 // plain label.
 func Button(text string) *ButtonWidget {
 	var btn *gtk.Button
-	switch {
-	case text == "":
+	if text == "" {
 		btn = gtk.NewButton()
-	default:
-		if m, ok := parseMnemonic(text); ok {
-			btn = gtk.NewButtonWithMnemonic(m)
-		} else {
-			btn = gtk.NewButtonWithLabel(text)
-		}
+	} else if m, ok := parseMnemonic(text); ok {
+		btn = gtk.NewButtonWithMnemonic(m)
+	} else {
+		btn = gtk.NewButtonWithLabel(text)
 	}
 	w := &ButtonWidget{obj: btn}
 	w.init(w, &btn.Widget)

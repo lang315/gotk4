@@ -19,7 +19,6 @@ type TableWidget[T any] struct {
 	base[TableWidget[T]]
 	obj   *gtk.ColumnView
 	model *gioutil.ListModel[T]
-	sort  *gtk.SortListModel
 	sel   *gtk.MultiSelection
 }
 
@@ -32,7 +31,7 @@ func NewTable[T any]() *TableWidget[T] {
 	// Drive sorting from the column headers the user clicks.
 	sortModel.SetSorter(cv.Sorter())
 
-	t := &TableWidget[T]{obj: cv, model: model, sort: sortModel, sel: sel}
+	t := &TableWidget[T]{obj: cv, model: model, sel: sel}
 	t.init(t, &cv.Widget)
 	return t
 }
