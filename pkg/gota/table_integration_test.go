@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
@@ -181,6 +182,63 @@ func TestTableBatchInPlace(t *testing.T) {
 	}
 	if got := tbl.model.At(1); got != (person{"b", 2}) {
 		t.Errorf("At(1) = %+v, want {b 2} (untouched)", got)
+	}
+}
+
+// TestTableColumnCmpSorts checks ColumnCmp sorts by the typed comparator
+// (numeric), not by the rendered string (which would order "10" before "2"),
+// and that the sorted order is readable through the selection model.
+func TestTableColumnCmpSorts(t *testing.T) {
+	gtkReady(t)
+
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		ColumnCmp("Age", func(p person) string { return strconv.Itoa(p.age) },
+			func(a, b person) int { return a.age - b.age }).
+		Items([]person{{"a", 2}, {"b", 10}, {"c", 1}, {"d", 21}, {"e", 3}})
+
+	tbl.SortByColumn(1, true) // Age ascending
+
+	got := make([]int, tbl.Len())
+	for i := range got {
+		got[i] = gioutil.ObjectValue[person](tbl.sel.Item(uint(i))).age
+	}
+	want := []int{1, 2, 3, 10, 21}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("sorted ages = %v, want %v (numeric, not lexicographic)", got, want)
+		}
+	}
+}
+
+// TestTableBatchUnderSort checks Batch still updates values correctly when a
+// sort is active (it takes the per-row path in that case), and the result
+// stays sorted by the active column.
+func TestTableBatchUnderSort(t *testing.T) {
+	gtkReady(t)
+
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		ColumnCmp("Age", func(p person) string { return strconv.Itoa(p.age) },
+			func(a, b person) int { return a.age - b.age }).
+		Items([]person{{"a", 5}, {"b", 3}, {"c", 9}, {"d", 1}})
+	tbl.SortByColumn(1, true)
+
+	// Push everyone's age into a new order via Batch.
+	tbl.Batch(func(set func(i int, v person)) {
+		set(0, person{"a", 40})
+		set(2, person{"c", 2})
+	})
+
+	got := make([]int, tbl.Len())
+	for i := range got {
+		got[i] = gioutil.ObjectValue[person](tbl.sel.Item(uint(i))).age
+	}
+	want := []int{1, 2, 3, 40} // d=1, c=2, b=3, a=40
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("ages after Batch under sort = %v, want %v", got, want)
+		}
 	}
 }
 

@@ -17,9 +17,12 @@ import (
 // Pipeline: gioutil.ListModel[T] -> SortListModel -> MultiSelection -> ColumnView.
 type TableWidget[T any] struct {
 	base[TableWidget[T]]
-	obj   *gtk.ColumnView
-	model *gioutil.ListModel[T]
-	sel   *gtk.MultiSelection
+	obj    *gtk.ColumnView
+	model  *gioutil.ListModel[T]
+	sort   *gtk.SortListModel
+	sel    *gtk.MultiSelection
+	cols   []*gtk.ColumnViewColumn
+	sorter *gtk.ColumnViewSorter // cv.Sorter(); used to detect an active sort
 }
 
 // NewTable creates an empty table. Add columns with Column, rows with Items.
@@ -31,14 +34,33 @@ func NewTable[T any]() *TableWidget[T] {
 	// Drive sorting from the column headers the user clicks.
 	sortModel.SetSorter(cv.Sorter())
 
-	t := &TableWidget[T]{obj: cv, model: model, sel: sel}
+	t := &TableWidget[T]{obj: cv, model: model, sort: sortModel, sel: sel}
+	t.sorter, _ = cv.Sorter().Cast().(*gtk.ColumnViewSorter)
 	t.init(t, &cv.Widget)
 	return t
 }
 
+// sortActive reports whether a column sort is currently applied.
+func (t *TableWidget[T]) sortActive() bool {
+	return t.sorter != nil && t.sorter.NSortColumns() > 0
+}
+
 // Column appends a text column. cell maps a row to the string shown in that
-// column; the column is also sortable by that string (header click).
+// column; the column is sortable by that string (header click). For numeric or
+// otherwise non-lexicographic ordering use ColumnCmp — sorting by the rendered
+// string orders "10" before "2".
 func (t *TableWidget[T]) Column(title string, cell func(T) string) *TableWidget[T] {
+	return t.addColumn(title, cell, func(a, b T) int { return strings.Compare(cell(a), cell(b)) })
+}
+
+// ColumnCmp appends a column rendered by cell but sorted by cmp, a comparator
+// over the row type (negative if a<b, 0 if equal, positive if a>b). Use it for
+// numeric columns, e.g. cmp = func(a, b Row) int { return a.Age - b.Age }.
+func (t *TableWidget[T]) ColumnCmp(title string, cell func(T) string, cmp func(a, b T) int) *TableWidget[T] {
+	return t.addColumn(title, cell, cmp)
+}
+
+func (t *TableWidget[T]) addColumn(title string, cell func(T) string, cmp func(a, b T) int) *TableWidget[T] {
 	factory := gtk.NewSignalListItemFactory()
 	// ColumnView hands the factory a *gtk.ColumnViewCell (ListView/GridView use
 	// *gtk.ListItem instead).
@@ -52,13 +74,13 @@ func (t *TableWidget[T]) Column(title string, cell func(T) string) *TableWidget[
 		label.SetText(cell(gioutil.ObjectValue[T](cv.Item())))
 	})
 
-	// Sort by comparing the two rows' cell text. The compare callback receives
-	// borrowed item pointers, so wrap with Take (ref + finalizer), not
-	// AssumeOwnership (which would steal a ref and free too early).
+	// The compare callback receives borrowed item pointers, so wrap with Take
+	// (ref + finalizer), not AssumeOwnership (which would steal a ref and free
+	// too early).
 	sorter := gtk.NewCustomSorter(func(a, b unsafe.Pointer) int {
 		va := gioutil.ObjectValue[T](coreglib.Take(a))
 		vb := gioutil.ObjectValue[T](coreglib.Take(b))
-		return strings.Compare(cell(va), cell(vb))
+		return cmp(va, vb)
 	})
 
 	col := gtk.NewColumnViewColumn(title, &factory.ListItemFactory)
@@ -66,6 +88,31 @@ func (t *TableWidget[T]) Column(title string, cell func(T) string) *TableWidget[
 	col.SetResizable(true)
 	col.SetSorter(&sorter.Sorter)
 	t.obj.AppendColumn(col)
+	t.cols = append(t.cols, col)
+	return t
+}
+
+// SortByColumn activates sorting by the i-th column (as if its header was
+// clicked). Out-of-range i is a no-op.
+func (t *TableWidget[T]) SortByColumn(i int, ascending bool) *TableWidget[T] {
+	if i < 0 || i >= len(t.cols) {
+		return t
+	}
+	dir := gtk.SortDescending
+	if ascending {
+		dir = gtk.SortAscending
+	}
+	t.obj.SortByColumn(t.cols[i], dir)
+	return t
+}
+
+// IncrementalSort spreads sorting across multiple frames instead of sorting in
+// one blocking pass. Enable it when rows change while a sort is active on a
+// large model: a blocking re-sort on every change freezes the UI, whereas an
+// incremental sort keeps the main loop responsive (the order catches up over a
+// few frames). See SortListModel.SetIncremental.
+func (t *TableWidget[T]) IncrementalSort(v bool) *TableWidget[T] {
+	t.sort.SetIncremental(v)
 	return t
 }
 
@@ -102,6 +149,21 @@ func (t *TableWidget[T]) Len() int { return t.model.Len() }
 // Call set(i, v) for each row inside apply; out-of-range indices are ignored.
 func (t *TableWidget[T]) Batch(apply func(set func(i int, v T))) *TableWidget[T] {
 	n := t.model.Len()
+
+	// With an active sort, a single wide-span change forces the SortListModel to
+	// re-sort the whole span on every batch, which stalls the UI. Per-row changes
+	// instead let it do cheap targeted reinserts, so emit them individually.
+	if t.sortActive() {
+		apply(func(i int, v T) {
+			if i >= 0 && i < n {
+				t.model.Set(i, v)
+			}
+		})
+		return t
+	}
+
+	// No sort: coalesce into one change spanning the touched range — far cheaper
+	// for a realized view than one signal per row.
 	lo, hi := -1, -1
 	apply(func(i int, v T) {
 		if i < 0 || i >= n {
