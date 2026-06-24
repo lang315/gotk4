@@ -242,6 +242,32 @@ func TestTableBatchUnderSort(t *testing.T) {
 	}
 }
 
+// TestTableAutoIncremental checks incremental sort auto-enables for large
+// models and stays off for small ones, and that an explicit IncrementalSort
+// pins the choice.
+func TestTableAutoIncremental(t *testing.T) {
+	gtkReady(t)
+
+	small := NewTable[person]().Column("Name", func(p person) string { return p.name }).
+		Items(randomPeople(100))
+	if small.sort.Incremental() {
+		t.Error("small model: incremental should be off")
+	}
+
+	large := NewTable[person]().Column("Name", func(p person) string { return p.name }).
+		Items(randomPeople(autoIncrementalSortRows))
+	if !large.sort.Incremental() {
+		t.Errorf("large model (>=%d rows): incremental should auto-enable", autoIncrementalSortRows)
+	}
+
+	pinned := NewTable[person]().Column("Name", func(p person) string { return p.name }).
+		IncrementalSort(false).
+		Items(randomPeople(autoIncrementalSortRows))
+	if pinned.sort.Incremental() {
+		t.Error("explicit IncrementalSort(false) must override auto-enable")
+	}
+}
+
 // BenchmarkTableSet measures the model-layer throughput of per-row updates
 // (the data path the live perf demo exercises). The view is not realized, so
 // this is the floor cost — boxing + items-changed — without cell re-render.

@@ -23,7 +23,15 @@ type TableWidget[T any] struct {
 	sel    *gtk.MultiSelection
 	cols   []*gtk.ColumnViewColumn
 	sorter *gtk.ColumnViewSorter // cv.Sorter(); used to detect an active sort
+
+	incrementalSet bool // true once IncrementalSort was called explicitly
 }
+
+// autoIncrementalSortRows is the row count at or above which sorting switches to
+// incremental automatically (unless IncrementalSort was set explicitly). Beyond
+// a few thousand rows a one-shot sort (e.g. a header click) blocks the main loop
+// long enough to stutter; incremental spreads it across frames.
+const autoIncrementalSortRows = 10000
 
 // NewTable creates an empty table. Add columns with Column, rows with Items.
 func NewTable[T any]() *TableWidget[T] {
@@ -107,11 +115,11 @@ func (t *TableWidget[T]) SortByColumn(i int, ascending bool) *TableWidget[T] {
 }
 
 // IncrementalSort spreads sorting across multiple frames instead of sorting in
-// one blocking pass. Enable it when rows change while a sort is active on a
-// large model: a blocking re-sort on every change freezes the UI, whereas an
-// incremental sort keeps the main loop responsive (the order catches up over a
-// few frames). See SortListModel.SetIncremental.
+// one blocking pass, keeping the main loop responsive on large models. Calling
+// it pins the setting and disables the automatic large-model behavior (see
+// autoIncrementalSortRows). See SortListModel.SetIncremental.
 func (t *TableWidget[T]) IncrementalSort(v bool) *TableWidget[T] {
+	t.incrementalSet = true
 	t.sort.SetIncremental(v)
 	return t
 }
@@ -119,6 +127,7 @@ func (t *TableWidget[T]) IncrementalSort(v bool) *TableWidget[T] {
 // Items replaces all rows.
 func (t *TableWidget[T]) Items(items []T) *TableWidget[T] {
 	t.model.Splice(0, t.model.Len(), items...)
+	t.autoIncremental()
 	return t
 }
 
@@ -127,7 +136,17 @@ func (t *TableWidget[T]) Append(items ...T) *TableWidget[T] {
 	for _, it := range items {
 		t.model.Append(it)
 	}
+	t.autoIncremental()
 	return t
+}
+
+// autoIncremental turns incremental sorting on for large models and off for
+// small ones, unless the caller pinned it with IncrementalSort.
+func (t *TableWidget[T]) autoIncremental() {
+	if t.incrementalSet {
+		return
+	}
+	t.sort.SetIncremental(t.model.Len() >= autoIncrementalSortRows)
 }
 
 // Set replaces the row at index i with v in place, firing a change so any
