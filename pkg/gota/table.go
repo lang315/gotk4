@@ -40,14 +40,16 @@ func NewTable[T any]() *TableWidget[T] {
 // column; the column is also sortable by that string (header click).
 func (t *TableWidget[T]) Column(title string, cell func(T) string) *TableWidget[T] {
 	factory := gtk.NewSignalListItemFactory()
+	// ColumnView hands the factory a *gtk.ColumnViewCell (ListView/GridView use
+	// *gtk.ListItem instead).
 	factory.ConnectSetup(func(obj *coreglib.Object) {
-		item := obj.Cast().(*gtk.ListItem)
-		item.SetChild(gtk.NewLabel(""))
+		cv := obj.Cast().(*gtk.ColumnViewCell)
+		cv.SetChild(gtk.NewLabel(""))
 	})
 	factory.ConnectBind(func(obj *coreglib.Object) {
-		item := obj.Cast().(*gtk.ListItem)
-		label := item.Child().(*gtk.Label)
-		label.SetText(cell(gioutil.ObjectValue[T](item.Item())))
+		cv := obj.Cast().(*gtk.ColumnViewCell)
+		label := cv.Child().(*gtk.Label)
+		label.SetText(cell(gioutil.ObjectValue[T](cv.Item())))
 	})
 
 	// Sort by comparing the two rows' cell text. The compare callback receives
