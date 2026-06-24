@@ -268,6 +268,33 @@ func TestTableAutoIncremental(t *testing.T) {
 	}
 }
 
+// TestTableBatchPreservesSelection guards the coalesced Batch path: a value
+// refresh must not clear selection on untouched rows that fall inside the
+// changed span.
+func TestTableBatchPreservesSelection(t *testing.T) {
+	gtkReady(t)
+
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		Items([]person{{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}, {"e", 5}})
+	tbl.sel.SelectItem(2, false) // "c" — untouched, but inside the batch span
+	tbl.sel.SelectItem(4, false) // "e"
+
+	// Touch rows 0 and 4 → coalesced span [0,4] covers untouched row 2.
+	tbl.Batch(func(set func(i int, v person)) {
+		set(0, person{"a2", 10})
+		set(4, person{"e2", 50})
+	})
+
+	selected := map[string]bool{}
+	for _, p := range tbl.Selected() {
+		selected[p.name] = true
+	}
+	if !selected["c"] {
+		t.Errorf("Batch cleared selection on untouched in-span row; selected=%v", selected)
+	}
+}
+
 // BenchmarkTableSet measures the model-layer throughput of per-row updates
 // (the data path the live perf demo exercises). The view is not realized, so
 // this is the floor cost — boxing + items-changed — without cell re-render.

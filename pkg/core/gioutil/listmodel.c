@@ -162,6 +162,8 @@ void gotk4_gbox_list_set_silent(Gotk4GboxList *self, guint position, guintptr id
 void gotk4_gbox_list_emit_changed(Gotk4GboxList *self, guint position, guint removed,
                                   guint added) {
   g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
+  g_return_if_fail(position + removed >= position);                    // overflow
+  g_return_if_fail(position + removed <= objects_get_size(&self->items));
   g_list_model_items_changed(G_LIST_MODEL(self), position, removed, added);
 }
 

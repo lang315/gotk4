@@ -40,10 +40,11 @@ func NewTable[T any]() *TableWidget[T] {
 	sel := gtk.NewMultiSelection(sortModel)
 	cv := gtk.NewColumnView(sel)
 	// Drive sorting from the column headers the user clicks.
-	sortModel.SetSorter(cv.Sorter())
+	cvSorter := cv.Sorter()
+	sortModel.SetSorter(cvSorter)
 
 	t := &TableWidget[T]{obj: cv, model: model, sort: sortModel, sel: sel}
-	t.sorter, _ = cv.Sorter().Cast().(*gtk.ColumnViewSorter)
+	t.sorter, _ = cvSorter.Cast().(*gtk.ColumnViewSorter)
 	t.init(t, &cv.Widget)
 	return t
 }
@@ -131,11 +132,13 @@ func (t *TableWidget[T]) Items(items []T) *TableWidget[T] {
 	return t
 }
 
-// Append adds rows to the end.
+// Append adds rows to the end in a single change (one items-changed signal,
+// not one per row).
 func (t *TableWidget[T]) Append(items ...T) *TableWidget[T] {
-	for _, it := range items {
-		t.model.Append(it)
+	if len(items) == 0 {
+		return t
 	}
+	t.model.Splice(t.model.Len(), 0, items...)
 	t.autoIncremental()
 	return t
 }
@@ -172,12 +175,9 @@ func (t *TableWidget[T]) Batch(apply func(set func(i int, v T))) *TableWidget[T]
 	// With an active sort, a single wide-span change forces the SortListModel to
 	// re-sort the whole span on every batch, which stalls the UI. Per-row changes
 	// instead let it do cheap targeted reinserts, so emit them individually.
+	// (model.Set ignores out-of-range indices.)
 	if t.sortActive() {
-		apply(func(i int, v T) {
-			if i >= 0 && i < n {
-				t.model.Set(i, v)
-			}
-		})
+		apply(t.model.Set)
 		return t
 	}
 
@@ -198,7 +198,16 @@ func (t *TableWidget[T]) Batch(apply func(set func(i int, v T))) *TableWidget[T]
 	})
 	if lo != -1 {
 		span := hi - lo + 1
+		// items-changed(lo, span, span) tells the selection model that the whole
+		// span was replaced, which would clear selection on untouched rows inside
+		// it. Snapshot and restore any selection so a value refresh doesn't drop
+		// the user's selection. Skip when nothing is selected (the common case).
+		selection := t.sel.Selection()
+		restore := !selection.IsEmpty()
 		t.model.EmitChanged(lo, span, span)
+		if restore {
+			t.sel.SetSelection(selection, selection)
+		}
 	}
 	return t
 }
