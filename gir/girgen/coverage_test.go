@@ -67,7 +67,9 @@ var intentionalSkips = map[string]string{
 	"Gdk.ContentSerializeFunc":     "closure-less callback (use ContentSerializer)",
 	"Gdk.ContentDeserializeFunc":   "closure-less callback (use ContentDeserializer)",
 	"Gdk.CursorGetTextureCallback": "closure-less callback",
-	// gendata.go FileFilter: gskglrenderer/gsknglrenderer/gskvulkanrenderer
+	// gendata.go FileFilter: gskglrenderer/gsknglrenderer/gskvulkanrenderer/
+	// gskbroadwayrenderer (Broadway is Linux-only, absent from the macOS GIR).
+	"Gsk.BroadwayRenderer":          "FileFilter gsk/broadway/gskbroadwayrenderer.h",
 	"Gsk.GLRenderer":                "FileFilter gskglrenderer",
 	"Gsk.NglRenderer":               "FileFilter gsknglrenderer",
 	"Gsk.VulkanRenderer":            "FileFilter gskvulkanrenderer",
