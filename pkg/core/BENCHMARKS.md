@@ -103,3 +103,29 @@ libraries reconstruct pointers from stored bits, which `checkptr` (enabled by
 `-race`) flags even though it is sound under this module's `assume-no-moving-gc`.
 Until that is resolved upstream, race coverage is scoped to the `weak`-free
 primitives.
+
+## Perf decision: no registry sharding (yet)
+
+The contention above is real but does **not** warrant sharding the slab today:
+
+- The hot path is callback *invocation*, which is `gbox.Get` on a non-once entry
+  — an `RLock` (shared). Concurrent signal emissions read in parallel and scale;
+  they do not serialize.
+- The exclusive `Lock` is taken only by `Put`/`Delete` (register / unregister).
+  The parallel benchmark's slowdown comes from hammering those in a tight loop —
+  i.e. heavy concurrent registration, which is not GTK's dominant pattern. GTK
+  has main-loop thread affinity (see `pkg/core/glib`), so signal connect/disconnect
+  and dispatch overwhelmingly happen on one thread.
+- The single-threaded path is already lean: ~53 ns/op, 1 alloc.
+
+Adding per-shard locking (or a lock-free free-list) would add real complexity to
+relieve contention the dominant usage never hits. Deferred until a profile of a
+real workload shows registration contention. Upgrade path: shard the free-list
+by `id` and route `Put`/`Get`/`Delete` to `shards[id % N]`, each with its own
+lock.
+
+Other observed costs were likewise judged not worth optimizing now: the once-path
+3-alloc boxing (the `async`-scope path, not the hot path) and the per-string
+`C.CString` malloc (unavoidable for NUL-terminated args; an empty-string
+fast-path via `gextras.ZeroString` would be a generator change with marginal
+payoff).
