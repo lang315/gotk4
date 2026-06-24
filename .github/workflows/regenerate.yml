@@ -20,7 +20,7 @@ jobs:
     name: "regenerate"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         # Full history so the pre-push rebase has something to rebase onto.
         fetch-depth: 0
