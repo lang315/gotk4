@@ -128,6 +128,30 @@ func TestTableLargeRandom(t *testing.T) {
 	}
 }
 
+// TestTableSetReusesIdentity is the regression guard for the live-update leak:
+// updating a row must reuse the SAME backing GObject (and only change its value),
+// not remove+insert a fresh one. Object churn is what made high-frequency updates
+// pile up un-finalized GObjects (Go heap + RSS climb, GC thrash). Identity stable
+// + value updated == no churn.
+func TestTableSetReusesIdentity(t *testing.T) {
+	gtkReady(t)
+
+	tbl := NewTable[person]().
+		Column("Name", func(p person) string { return p.name }).
+		Items([]person{{"alice", 1}, {"bob", 2}, {"carol", 3}})
+
+	before := tbl.model.Item(1).Native()
+	tbl.Set(1, person{"bob2", 22})
+	after := tbl.model.Item(1).Native()
+
+	if before != after {
+		t.Errorf("Set replaced the backing object (0x%x -> 0x%x); want same object (no churn)", before, after)
+	}
+	if got := tbl.model.At(1); got != (person{"bob2", 22}) {
+		t.Errorf("At(1) = %+v, want {bob2 22}", got)
+	}
+}
+
 // BenchmarkTableSet measures the model-layer throughput of per-row updates
 // (the data path the live perf demo exercises). The view is not realized, so
 // this is the floor cost — boxing + items-changed — without cell re-render.

@@ -132,6 +132,20 @@ void gotk4_gbox_list_append(Gotk4GboxList *self, guintptr id) {
   g_list_model_items_changed(G_LIST_MODEL(self), objects_get_size(&self->items) - 1, 0, 1);
 }
 
+// gotk4_gbox_list_set replaces the value at position in place: the existing
+// Gotk4GboxObject is kept (only its id is repointed at the new boxed value), so
+// no GObject is created or destroyed. It then emits items-changed(pos, 1, 1) so
+// views re-render that row. The caller owns freeing the previous id.
+void gotk4_gbox_list_set(Gotk4GboxList *self, guint position, guintptr id) {
+  g_return_if_fail(GOTK4_IS_GBOX_LIST(self));
+  g_return_if_fail(position < objects_get_size(&self->items));
+
+  Gotk4GboxObject *item = *objects_index(&self->items, position);
+  item->id = id;
+
+  g_list_model_items_changed(G_LIST_MODEL(self), position, 1, 1);
+}
+
 guintptr gotk4_gbox_list_get_id(Gotk4GboxList *self, guint position) {
   g_return_val_if_fail(GOTK4_IS_GBOX_LIST(self), 0);
   g_return_val_if_fail(position < objects_get_size(&self->items), 0);

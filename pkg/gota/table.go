@@ -83,13 +83,12 @@ func (t *TableWidget[T]) Append(items ...T) *TableWidget[T] {
 	return t
 }
 
-// Set replaces the row at index i with v, firing a change so any realized cell
-// for that row re-binds. Out-of-range i is a no-op.
+// Set replaces the row at index i with v in place, firing a change so any
+// realized cell for that row re-binds. It reuses the row's backing object (no
+// remove+insert), so high-frequency updates do not churn GObjects. Out-of-range
+// i is a no-op.
 func (t *TableWidget[T]) Set(i int, v T) *TableWidget[T] {
-	if i < 0 || i >= t.model.Len() {
-		return t
-	}
-	t.model.Splice(i, 1, v)
+	t.model.Set(i, v)
 	return t
 }
 

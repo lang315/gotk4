@@ -85,6 +85,20 @@ func (l *ListModel[T]) Splice(position, removals int, values ...T) {
 	C.gotk4_gbox_list_splice(l.native(), C.guint(position), C.guint(removals), idsPtr)
 }
 
+// Set replaces the value at index in place. The existing list-item object is
+// reused (only its boxed value is repointed) rather than removed and
+// reinserted, then items-changed is emitted so views re-render that row.
+// Reusing the object avoids the per-update GObject churn a Splice-based update
+// causes under a realized view. Out-of-range index is a no-op.
+func (l *ListModel[T]) Set(index int, v T) {
+	if index < 0 || index >= l.Len() {
+		return
+	}
+	old := uintptr(C.gotk4_gbox_list_get_id(l.native(), C.guint(index)))
+	C.gotk4_gbox_list_set(l.native(), C.guint(index), C.guintptr(gbox.Assign(v)))
+	gbox.Delete(old)
+}
+
 // At returns the value at the given index.
 func (l *ListModel[T]) At(index int) T {
 	id := uintptr(C.gotk4_gbox_list_get_id(l.native(), C.guint(index)))
