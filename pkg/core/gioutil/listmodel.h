@@ -3,9 +3,13 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <glib.h>
+#include <stdint.h>
 
-// defined in gbox; is linked to gbox.Delete.
-extern void callbackDelete(guintptr id);
+// defined in gbox; is linked to gbox.Delete. The cgo //export emits the
+// parameter as GoUintptr (== uintptr_t on every platform), so declare it as
+// uintptr_t here rather than guintptr: on LLP64 (Windows) the two differ and
+// the mismatch corrupts the id / fails to link.
+extern void callbackDelete(uintptr_t id);
 
 G_BEGIN_DECLS
 
