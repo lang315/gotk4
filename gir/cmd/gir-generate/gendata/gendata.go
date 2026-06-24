@@ -43,6 +43,7 @@ var Main = genmain.Data{
 var PkgExceptions = []string{
 	"core",
 	"cairo",
+	"gota",
 	"go.mod",
 	"go.sum",
 	"LICENSE",

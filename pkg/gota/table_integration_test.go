@@ -1,3 +1,9 @@
+//go:build gtk_gui
+
+// These tests construct real GTK widgets, which needs a display backend. On
+// headless CI gtk.InitCheck() can still return true yet widget construction
+// segfaults, so they are gated behind the `gtk_gui` build tag and excluded from
+// `go test ./...`. Run locally with: go test -tags gtk_gui ./gota/...
 package gota
 
 import (
