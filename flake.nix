@@ -28,21 +28,25 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        # GTK and the Go toolchain both come from the pinned rev so the
+        # generated bindings stay reproducible. nixos-unstable (pkgs) only
+        # supplies the dev tools (gopls/gotools) and dockerEnv wrappers.
+        gtkPkgs = import nixpkgs-gotk4 {
+          inherit system;
+          overlays = [
+            # gotk4-nix.overlays.patchedGo
+            gotk4-nix.overlays.patchelf
+            # Compat shim: nixpkgs renamed wrapGAppsHook -> wrapGAppsHook3, but
+            # the pinned gotk4-nix still references the old name.
+            (final: prev: { wrapGAppsHook = prev.wrapGAppsHook3; })
+          ];
+        };
       in
       {
         devShells.default = gotk4-nix.lib.mkShell {
           base.pname = "gotk4";
-          pkgs = import nixpkgs-gotk4 {
-            inherit system;
-            overlays = [
-              # gotk4-nix.overlays.patchedGo
-              gotk4-nix.overlays.patchelf
-              # Compat shim: nixpkgs renamed wrapGAppsHook -> wrapGAppsHook3, but
-              # the pinned gotk4-nix still references the old name.
-              (final: prev: { wrapGAppsHook = prev.wrapGAppsHook3; })
-            ];
-          };
-          go = pkgs.go_1_24;
+          pkgs = gtkPkgs;
+          go = gtkPkgs.go_1_26;
           inherit (pkgs) gopls gotools;
         };
         packages.dockerEnv = pkgs.buildEnv {
