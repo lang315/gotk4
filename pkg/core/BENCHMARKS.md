@@ -81,3 +81,25 @@ Captured with `-benchtime=200ms`. Microbenchmark numbers jitter run-to-run
   `cstrbench` is a benchmark-only package under `internal/`, imported by nothing
   in production, and needs only libc (no GTK/GLib pkg-config) — it changes no
   shipping code.
+
+## Race detection
+
+`slab` and `gbox` are exercised under the race detector in CI via their parallel
+benchmarks:
+
+```sh
+go test -race -run='^$' -bench=Parallel -benchtime=10x ./core/slab/ ./core/gbox/
+```
+
+This drives concurrent `Put`/`Get`/`Delete` on a shared registry under the race
+detector (and `checkptr`); it currently passes — the global `RWMutex` keeps the
+free-list race-clean.
+
+A blanket `go test -race ./core/...` is **not** usable: it aborts with a
+`checkptr: pointer arithmetic result points to invalid allocation` fatal inside
+the third-party `github.com/KarpelesLab/weak` dependency, reached through
+`intern`'s toggle-ref notify path (`intern.gets` → `weak.Map.Get`). Weak-pointer
+libraries reconstruct pointers from stored bits, which `checkptr` (enabled by
+`-race`) flags even though it is sound under this module's `assume-no-moving-gc`.
+Until that is resolved upstream, race coverage is scoped to the `weak`-free
+primitives.
