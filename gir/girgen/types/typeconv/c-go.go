@@ -140,13 +140,24 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 	case array.FixedSize > 0:
 		value.header.Import("unsafe")
 
+		// The C value is a pointer when it is a returned `T*` annotated as a
+		// fixed-size array; it is an inline array value when it is e.g. a struct
+		// field. A pointer must be reinterpreted as a pointer to the array,
+		// whereas an array value must have its address taken — taking the
+		// address of a pointer would add a level and fail to compile/index.
+		fixedArrayIsPtr := strings.HasPrefix(value.In.Type, "*")
+
 		// Detect if the underlying is a compatible Go primitive type that isn't
 		// a string. If it is, then we can directly cast the fixed-size array
 		// pointer.
 		if inner.Resolved.CanCast(conv.fgen) {
+			ref := "&" + value.In.Name
+			if fixedArrayIsPtr {
+				ref = value.In.Name
+			}
 			value.p.Linef(
-				"%s = *(*%s)(unsafe.Pointer(&%s))",
-				value.Out.Set, value.Out.Type, value.In.Name)
+				"%s = *(*%s)(unsafe.Pointer(%s))",
+				value.Out.Set, value.Out.Type, ref)
 			return true
 		}
 
@@ -155,7 +166,13 @@ func (conv *Converter) cgoArrayConverter(value *ValueConverted) bool {
 
 		// Direct cast is not possible; make a temporary array with the CGo type
 		// so we can loop over it easily.
-		value.p.Linef("src := &%s", value.In.Name)
+		if fixedArrayIsPtr {
+			value.p.Linef(
+				"src := (*[%d]%s)(unsafe.Pointer(%s))",
+				array.FixedSize, inner.In.Type, value.In.Name)
+		} else {
+			value.p.Linef("src := &%s", value.In.Name)
+		}
 		value.p.Linef("for i := 0; i < %d; i++ {", array.FixedSize)
 		value.p.Linef("  %s", inner.Conversion)
 		value.p.Linef("}")

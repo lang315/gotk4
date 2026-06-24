@@ -1,7 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-gotk4.url = "github:NixOS/nixpkgs?ref=nixos-24.05";
+    # Pinned to a nixos-unstable rev providing GTK 4.22.4. Bump this rev to
+    # change the GTK version the bindings are generated against.
+    nixpkgs-gotk4.url = "github:NixOS/nixpkgs/567a49d1913ce81ac6e9582e3553dd90a955875f";
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
@@ -35,6 +37,9 @@
             overlays = [
               # gotk4-nix.overlays.patchedGo
               gotk4-nix.overlays.patchelf
+              # Compat shim: nixpkgs renamed wrapGAppsHook -> wrapGAppsHook3, but
+              # the pinned gotk4-nix still references the old name.
+              (final: prev: { wrapGAppsHook = prev.wrapGAppsHook3; })
             ];
           };
           go = pkgs.go_1_24;
