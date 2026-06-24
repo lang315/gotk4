@@ -26,12 +26,15 @@ cd pkg && go test ./...           # bindings
 
 # Single test:
 go test ./gir/girgen/generators/ -run TestEnumMemberAliasDedup -v
+go test ./gir/girgen/ -run TestGTK4Coverage -v   # GTK4 completeness guard (needs GTK .gir; skips otherwise)
 
 # Lint — goimports, NOT just gofmt (preserves manual import groupings):
 goimports -w .
 ```
 
-CI (`.github/workflows/qa.yml`) runs `go generate`, `goimports -w .`, and both test suites, each followed by a **git-dirty check**: regenerated output and formatting must produce no diff. Generation must be **idempotent** — running `go generate` repeatedly yields identical output. A dirty tree fails CI.
+CI (`.github/workflows/qa.yml`) runs `go generate`, `goimports -w .`, and both test suites, each followed by a **git-dirty check**: regenerated output and formatting must produce no diff. Generation must be **idempotent** — running `go generate` repeatedly yields identical output. A dirty tree fails CI. `.github/workflows/build.yml` additionally builds the bindings on Linux (Nix, full tree) / macOS / Windows (the portable GTK4 subset).
+
+`TestGTK4Coverage` (`gir/girgen/coverage_test.go`) is a **completeness guard**: it parses the system Gtk/Gdk/Gsk-4.0 `.gir` and asserts every public, bindable type is generated in `pkg/` or listed as an intentional skip/rename — so a GTK bump can't silently drop API. Update its `intentionalSkips`/`renames` maps when changing `gendata.go` `Filters`/`TypeRenamer`.
 
 ### Building/verifying bindings without Nix (e.g. macOS)
 
@@ -66,6 +69,8 @@ Flow: `.gir` XML → parse → resolve types → emit Go+cgo per GIR element.
 ## Branches & versioning
 
 Output is **GTK-version-specific**; the pinned GTK version determines the generated API. The pin lives in `flake.nix` as the `nixpkgs-gotk4` input rev (currently a nixos-unstable rev with GTK **4.22.4**); bump that rev to change the target GTK version. Per README: branch `4`/`main` ⇒ GTK 4.22, `4.16` ⇒ GTK 4.16. Regenerating against a newer GTK changes output drastically; Nixpkgs is never downgraded (would break existing user code). `main` is this fork's default branch and tracks `4`.
+
+Both modules target **Go 1.26** (the `go` directive in each `go.mod`). In Nix, `flake.nix` sources the Go toolchain from the **`nixpkgs-gotk4` pin** (`go_1_26`), *not* the rolling `nixpkgs` (nixos-unstable) input — that input's lock can lag and lack the required Go. CI's macOS `build.yml` pins `setup-go` to the same minor. Keep all three aligned when bumping Go.
 
 ## Conventions (from CONTRIBUTING.md)
 

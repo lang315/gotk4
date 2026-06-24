@@ -22,10 +22,11 @@ Examples are put in another repository,
 along with instructions on getting started with using these packages. Refer to
 its README for more information.
 
-As of the time this README was written, most of `pkg/gtk/v4` and `pkg/gtk/v3`
-are ready to be used for most purposes. However, memory leaks and sometimes
-crashes may occur in certain parts of the API, while other parts might be
-completely missing. In that case, an issue should be opened.
+`pkg/gtk/v4` binds the full introspectable GTK4 API — a coverage guard test
+(`TestGTK4Coverage`) enforces that every public GTK4 type is generated or
+explicitly excluded — and most of `pkg/gtk/v3` is ready for most purposes.
+Memory leaks and occasional crashes may still occur in certain parts of the
+API; in that case, an issue should be opened.
 
 ## Versions
 
@@ -33,6 +34,8 @@ completely missing. In that case, an issue should be opened.
 | ------------ | ------ |
 | 4.22         | 4, main |
 | 4.16         | 4.16   |
+
+Requires **Go 1.26+**.
 
 ## Contributing to gotk4
 
