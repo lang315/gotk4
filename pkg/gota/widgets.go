@@ -154,6 +154,30 @@ func (b *BoxWidget) Remove(child IWidget) *BoxWidget {
 	return b
 }
 
+// ScrolledWidget wraps *gtk.ScrolledWindow. Needed to scroll large children
+// such as a ColumnView/Table, which do not scroll on their own.
+type ScrolledWidget struct {
+	base[ScrolledWidget]
+	obj *gtk.ScrolledWindow
+}
+
+// Scrolled wraps child in a scrollable viewport. The child expands to fill it.
+func Scrolled(child IWidget) *ScrolledWidget {
+	sw := gtk.NewScrolledWindow()
+	w := &ScrolledWidget{obj: sw}
+	w.init(w, &sw.Widget)
+	if child != nil {
+		sw.SetChild(child.ToWidget())
+	}
+	return w
+}
+
+// Child sets the scrolled content.
+func (s *ScrolledWidget) Child(child IWidget) *ScrolledWidget {
+	s.obj.SetChild(child.ToWidget())
+	return s
+}
+
 // WindowWidget wraps *gtk.ApplicationWindow.
 type WindowWidget struct {
 	base[WindowWidget]
