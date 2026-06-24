@@ -30,7 +30,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     # --- Linux: Nix provides the exact pinned GTK; build everything ---
     - if: runner.os == 'Linux'
@@ -44,7 +44,7 @@ jobs:
 
     # --- macOS: Homebrew GTK4; portable subset ---
     - if: runner.os == 'macOS'
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version: "1.26"
     - name: Install GTK (macOS)
