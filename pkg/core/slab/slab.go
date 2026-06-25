@@ -20,7 +20,13 @@ type slabEntry struct {
 // Slab is an implementation of the internal registry free list. A zero-value
 // instance is a valid instance. A slab is safe to use concurrently.
 type Slab struct {
-	list []slabEntry  // 3 words
+	list []slabEntry // 3 words
+	// ponytail: one global RWMutex guards the whole free-list. The hot path —
+	// callback invocation via Get on a non-once entry — takes only RLock and
+	// scales; contention is limited to concurrent Put/Delete (register and
+	// unregister), which is not GTK's dominant single-threaded main-loop pattern
+	// (see pkg/core/BENCHMARKS.md). Shard the free-list by id if a real workload
+	// ever profiles as registration-bound.
 	mu   sync.RWMutex // 3 words (assuming 64-bit)
 	free uintptr      // 1 word
 }
