@@ -71,6 +71,14 @@ jobs:
     - run: cd pkg && go test ./...
       shell: nix develop -c bash -e {0}
 
+    # Race-test the concurrent registry primitives (slab + gbox) by running their
+    # parallel benchmarks under -race. Scoped to slab/gbox on purpose: a blanket
+    # -race ./core/... trips checkptr inside the third-party KarpelesLab/weak
+    # dependency (reached via intern's toggle-ref path), which is unrelated to our
+    # own concurrency. -benchtime=10x keeps it fast and deterministic.
+    - run: cd pkg && go test -race -run='^$' -bench=Parallel -benchtime=10x ./core/slab/ ./core/gbox/
+      shell: nix develop -c bash -e {0}
+
   docker:
     name: "${{ github.event_name }} / docker"
     runs-on: ubuntu-latest

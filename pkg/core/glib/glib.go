@@ -1,4 +1,12 @@
 // Package glib provides some hand-written GObject and GLib bindings.
+//
+// Thread affinity: GTK and GDK are not thread-safe. All GTK/GDK calls — and any
+// GObject/GLib call that touches UI state — must run on the thread that
+// initialized GTK and runs the main loop (the "main thread"). These bindings do
+// NOT enforce this; calling into GTK from another goroutine is undefined and may
+// crash. To run work on the main thread from another goroutine, schedule it onto
+// the main loop with IdleAdd (or TimeoutAdd), which marshals the callback back
+// onto the main thread.
 package glib
 
 // #cgo pkg-config: gio-2.0 glib-2.0 gobject-2.0
