@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sync/atomic"
 
@@ -34,6 +35,15 @@ func activate(app *gtk.Application) {
 		log.Fatal(err)
 	}
 	cacheDir, _ := config.DefaultCacheDir()
+
+	wallpaper := ""
+	for _, n := range []string{"wallpaper.jpg", "wallpaper.png"} {
+		if p := filepath.Join(dir, n); fileExists(p) {
+			wallpaper = p
+			break
+		}
+	}
+	ui.LoadCSS(wallpaper)
 
 	w := gtk.NewApplicationWindow(app)
 	w.SetTitle("gotk4 Telegram")
@@ -189,4 +199,9 @@ func activate(app *gtk.Application) {
 	default:
 		log.Fatal(err)
 	}
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }
