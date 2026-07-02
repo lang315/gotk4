@@ -3,6 +3,7 @@ package tg
 
 import (
 	"context"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,7 +13,6 @@ import (
 	"github.com/gotd/contrib/middleware/floodwait"
 	"github.com/gotd/td/session"
 	"github.com/gotd/td/telegram"
-	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/telegram/message"
 	tgapi "github.com/gotd/td/tg"
 	"github.com/gotd/td/tgerr"
@@ -81,6 +81,10 @@ func (c *Client) Run(ctx context.Context) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if err != nil && ctx.Err() == nil {
+			// gotd error strings carry no credentials; never log user input here.
+			log.Printf("tg: session ended, reconnecting: %v", err)
+		}
 		if tgerr.Is(err, "AUTH_KEY_UNREGISTERED") {
 			_ = os.Remove(c.SessionPath())
 			c.emit(model.Event{Kind: model.EventAuthNeeded})
@@ -125,8 +129,7 @@ func (c *Client) runOnce(ctx context.Context) error {
 		}
 		if !status.Authorized {
 			c.emit(model.Event{Kind: model.EventAuthNeeded})
-			flow := auth.NewFlow(c.Auth, auth.SendCodeOptions{})
-			if err := flow.Run(ctx, client.Auth()); err != nil {
+			if err := c.loginFlow(ctx, client.Auth()); err != nil {
 				return err
 			}
 		}

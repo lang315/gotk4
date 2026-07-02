@@ -46,7 +46,11 @@ func (p *LoginPage) Show(pr tg.Prompt) {
 		model.PromptCode:     "Login code",
 		model.PromptPassword: "Two-factor password",
 	}
-	p.label.SetText(titles[pr.Kind])
+	title := titles[pr.Kind]
+	if pr.Retry {
+		title += " — previous attempt was rejected, try again"
+	}
+	p.label.SetText(title)
 	p.entry.SetText("")
 	p.entry.PasswordMode(pr.Kind == model.PromptPassword)
 	p.submit = func() {
