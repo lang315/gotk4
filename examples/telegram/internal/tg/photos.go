@@ -3,6 +3,7 @@ package tg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -64,6 +65,10 @@ func cachePath(root string, photoID int64, sizeType string) (string, error) {
 // DownloadPhoto downloads ref into cacheDir. Cached files reused. One retry
 // on FILE_REFERENCE_EXPIRED via a peer-kind-aware message refetch.
 func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir string) (string, error) {
+	api := c.api()
+	if api == nil {
+		return "", errors.New("not connected")
+	}
 	if ref.SizeType == "" {
 		return "", fmt.Errorf("photo has no renderable size")
 	}
@@ -84,13 +89,13 @@ func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir
 			FileReference: r.FileRef, ThumbSize: r.SizeType,
 		}
 		_, err := downloader.NewDownloader().WithPartSize(512*1024).
-			Download(c.api(), loc).ToPath(ctx, path)
+			Download(api, loc).ToPath(ctx, path)
 		return err
 	}
 
 	err = dl(ref)
 	if err != nil && tgerr.Is(err, "FILE_REFERENCE_EXPIRED") {
-		fresh, ferr := c.refreshPhotoRef(ctx, ref)
+		fresh, ferr := c.refreshPhotoRef(ctx, api, ref)
 		if ferr != nil {
 			return "", ferr
 		}
@@ -110,14 +115,17 @@ func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir
 // refreshPhotoRef refetches the carrying message for a fresh file_reference.
 // Channel/supergroup messages need ChannelsGetMessages (messages.getMessages
 // does NOT return them — verified against gotd v0.159.0 / Telegram API).
-func (c *Client) refreshPhotoRef(ctx context.Context, ref model.PhotoRef) (model.PhotoRef, error) {
+func (c *Client) refreshPhotoRef(ctx context.Context, api *tgapi.Client, ref model.PhotoRef) (model.PhotoRef, error) {
+	if api == nil {
+		return ref, errors.New("not connected")
+	}
 	var msgs []tgapi.MessageClass
 	if ref.Kind == model.PeerChannel {
 		ch, ok := c.peers.InputChannel(ref.PeerID)
 		if !ok {
 			return ref, errUnknownPeer
 		}
-		res, err := c.api().ChannelsGetMessages(ctx, &tgapi.ChannelsGetMessagesRequest{
+		res, err := api.ChannelsGetMessages(ctx, &tgapi.ChannelsGetMessagesRequest{
 			Channel: ch,
 			ID:      []tgapi.InputMessageClass{&tgapi.InputMessageID{ID: ref.MsgID}},
 		})
@@ -128,7 +136,7 @@ func (c *Client) refreshPhotoRef(ctx context.Context, ref model.PhotoRef) (model
 			msgs = v.Messages
 		}
 	} else {
-		res, err := c.api().MessagesGetMessages(ctx, []tgapi.InputMessageClass{
+		res, err := api.MessagesGetMessages(ctx, []tgapi.InputMessageClass{
 			&tgapi.InputMessageID{ID: ref.MsgID},
 		})
 		if err != nil {

@@ -115,6 +115,7 @@ func activate(app *gtk.Application) {
 			go func() {
 				ds, err := cl.Dialogs(context.Background())
 				if err != nil {
+					coreglib.IdleAdd(func() { chat.SetBanner("failed to load chats") })
 					return
 				}
 				coreglib.IdleAdd(func() { chat.SetDialogs(ds) })

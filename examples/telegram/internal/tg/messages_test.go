@@ -36,14 +36,18 @@ func TestMapMessage(t *testing.T) {
 
 func TestChatStatesNote(t *testing.T) {
 	cs := newChatStates()
-	if !cs.Note(1, 100) {
+	if !cs.Note(model.PeerUser, 1, 100) {
 		t.Fatal("first sighting true")
 	}
-	if cs.Note(1, 100) {
+	if cs.Note(model.PeerUser, 1, 100) {
 		t.Fatal("second sighting false")
 	}
-	if !cs.Note(2, 100) {
+	if !cs.Note(model.PeerUser, 2, 100) {
 		t.Fatal("chats independent")
+	}
+	// same (peerID, msgID) under a different kind is a distinct namespace
+	if !cs.Note(model.PeerChannel, 1, 100) {
+		t.Fatal("different kind must be independent from same peerID/msgID")
 	}
 }
 
@@ -61,7 +65,7 @@ func TestConsumeSentShortUpdate(t *testing.T) {
 		t.Fatal("no event emitted")
 	}
 	// the seen-set now contains 900: a later push of the same message dedups
-	if c.chats.Note(7, 900) {
+	if c.chats.Note(model.PeerUser, 7, 900) {
 		t.Fatal("id 900 must already be seen")
 	}
 }

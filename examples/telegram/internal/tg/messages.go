@@ -54,27 +54,35 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 
 // ---- dedup ----
 
+type seenKey struct {
+	kind model.PeerKind
+	id   int64
+}
+
 type chatStates struct {
 	mu   sync.Mutex
-	seen map[int64]map[int]struct{} // peerID → msg IDs
+	seen map[seenKey]map[int]struct{} // (kind, peerID) → msg IDs
 }
 
 func newChatStates() *chatStates {
-	return &chatStates{seen: map[int64]map[int]struct{}{}}
+	return &chatStates{seen: map[seenKey]map[int]struct{}{}}
 }
 
 // Note records a message ID; returns true only on first sighting. Protects
 // against history-load vs live-update races and send-echo double delivery.
-func (cs *chatStates) Note(peerID int64, msgID int) bool {
+// Keyed by (kind, peerID): user/chat/channel IDs are separate Telegram
+// namespaces and can collide numerically.
+func (cs *chatStates) Note(kind model.PeerKind, peerID int64, msgID int) bool {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
-	if cs.seen[peerID] == nil {
-		cs.seen[peerID] = map[int]struct{}{}
+	key := seenKey{kind, peerID}
+	if cs.seen[key] == nil {
+		cs.seen[key] = map[int]struct{}{}
 	}
-	if _, dup := cs.seen[peerID][msgID]; dup {
+	if _, dup := cs.seen[key][msgID]; dup {
 		return false
 	}
-	cs.seen[peerID][msgID] = struct{}{}
+	cs.seen[key][msgID] = struct{}{}
 	return true
 }
 
@@ -89,7 +97,7 @@ func (c *Client) handleNewMessage(mc tgapi.MessageClass) {
 	if !ok {
 		return
 	}
-	if !c.chats.Note(m.PeerID, m.ID) {
+	if !c.chats.Note(m.Kind, m.PeerID, m.ID) {
 		return
 	}
 	c.emit(model.Event{Kind: model.EventNewMessage, Msg: m})
@@ -125,7 +133,7 @@ func (c *Client) History(ctx context.Context, kind model.PeerKind, peerID int64)
 	out := make([]model.Message, 0, len(raw))
 	for i := len(raw) - 1; i >= 0; i-- { // newest-first → oldest-first
 		if m, ok := mapMessage(c.peers, selfID, raw[i]); ok {
-			c.chats.Note(peerID, m.ID)
+			c.chats.Note(kind, peerID, m.ID)
 			out = append(out, m)
 		}
 	}
@@ -153,7 +161,7 @@ func (c *Client) Send(ctx context.Context, kind model.PeerKind, peerID int64, te
 func (c *Client) consumeSent(kind model.PeerKind, peerID int64, text string, upd tgapi.UpdatesClass) {
 	switch u := upd.(type) {
 	case *tgapi.UpdateShortSentMessage:
-		if !c.chats.Note(peerID, u.ID) {
+		if !c.chats.Note(kind, peerID, u.ID) {
 			return
 		}
 		c.emit(model.Event{Kind: model.EventNewMessage, Msg: model.Message{
