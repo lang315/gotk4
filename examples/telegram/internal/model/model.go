@@ -1,6 +1,8 @@
 // model.go
 package model
 
+import "time"
+
 type PeerKind int
 
 const (
@@ -10,22 +12,26 @@ const (
 )
 
 type Dialog struct {
-	PeerID  int64
-	Kind    PeerKind
-	Title   string
-	Preview string
-	Unread  int
-	CanSend bool // false for broadcast channels
+	PeerID   int64
+	Kind     PeerKind
+	Title    string
+	Preview  string
+	Unread   int
+	CanSend  bool // false for broadcast channels
+	Members  int  // participant count; 0 = unknown
+	LastDate time.Time
 }
 
 type Message struct {
-	ID     int
-	PeerID int64
-	Kind   PeerKind
-	Sender string
-	Text   string // plain text; "[photo]"/"[file]"/"[media]" for media
-	Out    bool
-	Photo  *PhotoRef
+	ID       int
+	PeerID   int64
+	Kind     PeerKind
+	Sender   string
+	SenderID int64
+	Text     string // plain text; "[photo]"/"[file]"/"[media]" for media
+	Out      bool
+	Date     time.Time
+	Photo    *PhotoRef
 }
 
 type PhotoRef struct {

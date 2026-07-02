@@ -3,6 +3,8 @@ package tg
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	tgapi "github.com/gotd/td/tg"
 
@@ -42,15 +44,15 @@ func previewText(m tgapi.MessageClass) string {
 	if msg.Media != nil {
 		return mediaLabel(msg.Media)
 	}
-	return msg.Message
+	return strings.Join(strings.Fields(msg.Message), " ")
 }
 
 func mapDialogs(s *peerStore, dialogs []tgapi.DialogClass, msgs []tgapi.MessageClass, users []tgapi.UserClass, chats []tgapi.ChatClass) []model.Dialog {
 	s.Add(users, chats)
-	top := make(map[int]tgapi.MessageClass, len(msgs))
+	top := make(map[int]*tgapi.Message, len(msgs))
 	for _, m := range msgs {
 		if mm, ok := m.(*tgapi.Message); ok {
-			top[mm.ID] = m
+			top[mm.ID] = mm
 		}
 	}
 	out := make([]model.Dialog, 0, len(dialogs))
@@ -66,9 +68,11 @@ func mapDialogs(s *peerStore, dialogs []tgapi.DialogClass, msgs []tgapi.MessageC
 			Title:   s.Title(kind, id),
 			Unread:  d.UnreadCount,
 			CanSend: s.CanSend(kind, id),
+			Members: s.Members(kind, id),
 		}
 		if tm, ok := top[d.TopMessage]; ok {
 			md.Preview = previewText(tm)
+			md.LastDate = time.Unix(int64(tm.Date), 0)
 		}
 		out = append(out, md)
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	tgapi "github.com/gotd/td/tg"
 
@@ -21,13 +22,25 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 		return model.Message{}, false
 	}
 	kind, peerID := peerKey(m.PeerID)
-	out := model.Message{ID: m.ID, PeerID: peerID, Kind: kind, Text: m.Message, Out: m.Out}
-	if m.FromID != nil {
-		if fu, ok := m.FromID.(*tgapi.PeerUser); ok {
-			out.Sender = s.Title(model.PeerUser, fu.UserID)
-			if fu.UserID == selfID {
-				out.Out = true
-			}
+	out := model.Message{
+		ID: m.ID, PeerID: peerID, Kind: kind,
+		Text: m.Message, Out: m.Out,
+		Date: time.Unix(int64(m.Date), 0),
+	}
+	switch from := m.FromID.(type) {
+	case *tgapi.PeerUser:
+		out.Sender = s.Title(model.PeerUser, from.UserID)
+		out.SenderID = from.UserID
+		if from.UserID == selfID {
+			out.Out = true
+		}
+	case *tgapi.PeerChannel: // anonymous admin / linked channel
+		out.Sender = s.Title(model.PeerChannel, from.ChannelID)
+		out.SenderID = from.ChannelID
+	default: // channel post with no FromID: attribute to the channel itself
+		if kind == model.PeerChannel {
+			out.Sender = s.Title(kind, peerID)
+			out.SenderID = peerID
 		}
 	}
 	if m.Media != nil {
@@ -159,8 +172,13 @@ func (c *Client) consumeSent(kind model.PeerKind, peerID int64, text string, upd
 		if !c.chats.Note(kind, peerID, u.ID) {
 			return
 		}
+		selfID := int64(0)
+		if me := c.self(); me != nil {
+			selfID = me.ID
+		}
 		c.emit(model.Event{Kind: model.EventNewMessage, Msg: model.Message{
-			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", Text: text, Out: true,
+			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", SenderID: selfID,
+			Text: text, Out: true, Date: time.Unix(int64(u.Date), 0),
 		}})
 	case *tgapi.Updates:
 		c.drainNewMessages(u.Updates)

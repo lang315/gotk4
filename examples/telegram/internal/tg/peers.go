@@ -14,6 +14,7 @@ type peerInfo struct {
 	input   tgapi.InputPeerClass
 	title   string
 	canSend bool
+	members int
 }
 
 type peerStore struct {
@@ -48,12 +49,18 @@ func (s *peerStore) Add(users []tgapi.UserClass, chats []tgapi.ChatClass) {
 				input:   &tgapi.InputPeerChat{ChatID: ch.ID},
 				title:   ch.Title,
 				canSend: true,
+				members: ch.ParticipantsCount,
 			}
 		case *tgapi.Channel:
+			members := 0
+			if n, ok := ch.GetParticipantsCount(); ok {
+				members = n
+			}
 			s.m[model.PeerChannel][ch.ID] = peerInfo{
 				input:   &tgapi.InputPeerChannel{ChannelID: ch.ID, AccessHash: ch.AccessHash},
 				title:   ch.Title,
 				canSend: !ch.Broadcast,
+				members: members,
 			}
 		}
 	}
@@ -91,4 +98,10 @@ func (s *peerStore) Title(kind model.PeerKind, id int64) string {
 func (s *peerStore) CanSend(kind model.PeerKind, id int64) bool {
 	p, ok := s.get(kind, id)
 	return ok && p.canSend
+}
+
+// Members returns the participant count for a peer, 0 if unknown.
+func (s *peerStore) Members(kind model.PeerKind, id int64) int {
+	p, _ := s.get(kind, id)
+	return p.members
 }
