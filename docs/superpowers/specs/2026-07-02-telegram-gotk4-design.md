@@ -34,9 +34,10 @@ work items (not gating, not part of the app plan):
 
 1. `TestGIRDirs`: skip with reason when no common install prefix resolves
    (brew environment) — own small PR.
-2. `pkg/gota`: add an async image widget (goroutine loader → `IdleAdd` →
-   `gtk.Picture`) — identified as the one real gota gap; lands as a pkg PR,
-   used by app phase 3.
+2. `pkg/gota`: async image widget — identified as the one real gota gap.
+   v1 keeps the loader app-local (`internal/ui/photo.go`) to avoid gating
+   the app on a cross-module PR; upstreamed to gota AFTER v1 ships, with
+   the app as its consuming evidence.
 
 ## App layout
 
@@ -97,10 +98,10 @@ blocks until the connection closes. Therefore:
   `access_hash`), populated from `query.GetDialogs` results and updates.
   Not persisted in v1 → full dialog fetch on each launch (accepted).
 - Dialogs: `telegram/query` dialogs iterator, stop at 50.
-- Realtime: `updates.Manager` (`updates.New(...)`) wired as
-  `telegram.Options.UpdateHandler`; `m.Run(...)` started inside the Run
-  callback (own goroutine) so gaps are recovered. StateStorage in-memory v1
-  → full resync each launch (accepted, listed out of scope to persist).
+- Realtime: a bare `tgapi.UpdateDispatcher` wired as
+  `telegram.Options.UpdateHandler` (v1 does not persist update state, so
+  `updates.Manager`'s only marginal benefit would be mid-session gap
+  recovery — deferred to v2 with persistence; adversarial review verdict).
 - New-message events → Go channel → `coreglib.IdleAdd` → append to open chat
   + refresh sidebar preview/unread.
 
@@ -109,10 +110,12 @@ blocks until the connection closes. Therefore:
 - History: `query` GetHistory, latest 50, rendered oldest-top. Loading older
   messages (pagination): **out of scope v1**.
 - Send: `message.NewSender` to the known `InputPeer` (no username
-  re-resolution). Optimistic append keyed by `random_id`; when the server
-  echo arrives (send result or update), the optimistic row is replaced —
-  per-chat seen-message-ID set dedupes double delivery. Send failure marks
-  the row "failed" (no auto-retry).
+  re-resolution). No optimistic rows (cut after adversarial review — the
+  machinery was dead weight): the sent message is appended once by feeding
+  the sendMessage RPC response updates (including `UpdateShortSentMessage`)
+  through the same ingestion path as live updates; a per-chat
+  seen-message-ID set dedupes double delivery. Send failure shows an error
+  banner (no auto-retry).
 - Mark-as-read: `messages.readHistory` on opening a chat.
 - Rendering: GTK labels with markup **disabled** (plain text) for message
   bodies and sidebar previews — no Pango injection from message content.
@@ -142,8 +145,8 @@ blocks until the connection closes. Therefore:
   hex photo ID + size letter — never server-supplied strings; final path
   asserted inside the cache root. Download size capped (10 MB).
 - `FILE_REFERENCE_EXPIRED` → refetch the message once, retry download once.
-- Async: download goroutine → `IdleAdd` → `gtk.Picture` (the new gota async
-  image widget); placeholder while loading.
+- Async: download goroutine → `IdleAdd` → `gtk.Picture` (app-local async
+  loader; upstreamed to gota post-v1); placeholder while loading.
 
 ## Threading
 

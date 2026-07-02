@@ -1,83 +1,84 @@
-# Telegram client on gotk4 — Implementation Plan
+# Telegram client on gotk4 — Implementation Plan (v2)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `examples/telegram`, a real Telegram client (gotd MTProto + gotk4 GTK4 UI) proving the bindings end-to-end, per the approved spec `docs/superpowers/specs/2026-07-02-telegram-gotk4-design.md`.
+v2 after a 4-agent adversarial review of v1 (gotd API verification against
+v0.159.0 sources, gotk4/gota verification against the local tree with
+file:line citations, executability review, devil's-advocate). Key changes vs
+v1: optimistic-send/random_id machinery cut (was dead code), send now uses
+`message.NewSender` + consuming the RPC response updates; `updates.Manager`
+replaced by a bare `UpdateDispatcher` (gap recovery → v2); gota AsyncImage
+extracted-to-pkg cut (inline loader in the app; upstream after v1); a
+walking-skeleton spike added before any UI; all gota fluent calls rewritten
+against the REAL gota API; `bindUpdates` takes a dispatcher VALUE;
+channel-photo file-reference refresh uses `ChannelsGetMessages`.
 
-**Architecture:** Direct gotd + thin event glue. A background goroutine holds `client.Run`; all RPC happens inside its callback lifetime; every UI mutation goes through `coreglib.IdleAdd`. Views live in one `gtk.Stack` (setup → login → main). List panes are `gtk.ListView` backed by `gioutil.NewListModel[T]`.
+**Goal:** Build `examples/telegram`, a real Telegram client (gotd MTProto + gotk4 GTK4 UI) proving the bindings end-to-end, per spec `docs/superpowers/specs/2026-07-02-telegram-gotk4-design.md` (as amended alongside this plan).
 
-**Tech Stack:** Go 1.26, `github.com/diamondburned/gotk4/pkg` (local replace), `github.com/gotd/td`, `github.com/gotd/contrib` (floodwait), `pkg/core/gioutil`, `pkg/gota`.
+**Architecture:** Direct gotd + thin event glue. A background goroutine holds `client.Run`; all RPC happens inside its callback lifetime; every UI mutation goes through `coreglib.IdleAdd`. Views live in one `gtk.Stack`. List panes are `gtk.ListView` backed by `gioutil.NewListModel[T]`.
+
+**Tech Stack:** Go 1.26, `github.com/diamondburned/gotk4/pkg` (local replace), `github.com/gotd/td` v0.159.x, `github.com/gotd/contrib` (floodwait), `pkg/core/gioutil`, `pkg/gota`.
 
 ## Global Constraints
 
-- App module path: `github.com/diamondburned/gotk4/examples/telegram`; `go 1.26`; `replace github.com/diamondburned/gotk4/pkg => ../../pkg`.
-- Config dir `os.UserConfigDir()/gotk4-telegram` mode 0700; config.json and session.json mode 0600. Cache dir `os.UserCacheDir()/gotk4-telegram` mode 0700.
-- Session file = highest-value secret. Never log phone/code/password; error UI never echoes them; 2FA password never persisted; gotd logger off.
-- All GTK label text: plain text only (no Pango markup) for message bodies and previews.
-- Photo cache filenames locally generated (`<photoID hex>_<size letter>.jpg`); assert final path within cache root; download cap 10 MB.
+- App module: `github.com/diamondburned/gotk4/examples/telegram`; `go 1.26`; `replace github.com/diamondburned/gotk4/pkg => ../../pkg`.
+- Config dir `os.UserConfigDir()/gotk4-telegram` 0700; config.json AND session.json 0600 (session chmod'd in code after auth — crown-jewel secret). Cache dir `os.UserCacheDir()/gotk4-telegram` 0700.
+- Never log phone/code/password; error UI never echoes them; 2FA never persisted; gotd logger off.
+- All message/preview labels: plain text, never Pango markup.
+- Photo cache filenames locally generated (`<photoID hex>_<size letter>.jpg`); path containment asserted; 10 MB cap.
 - gotd calls only in goroutines; UI mutation only via `coreglib.IdleAdd`.
-- Out of scope v1: history pagination, multiline composer, posting to broadcast channels, persisted peer/updates state, sign-up, keychain.
-- macOS dev builds: `export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$PKG_CONFIG_PATH"` before any `go build/test/run` (applies to EVERY command in this plan).
-- Import alias convention: our wrapper package is `internal/tg`; gotd's generated schema package is imported as `tgapi "github.com/gotd/td/tg"`.
-- Branch: `feat/telegram-app` for all app tasks. Task 13 (gota widget) goes on branch `feat/gota-async-image` (pkg module, separate PR). Task 19 (TestGIRDirs) goes on branch `fix/girdirs-skip-macos` (separate PR).
-- Docs to consult when signatures don't compile as written here (plan code is from review notes, verify against): pkg.go.dev/github.com/gotd/td/{telegram,telegram/auth,telegram/updates,telegram/message,telegram/downloader,telegram/query,session,tg} and gotd examples in github.com/gotd/td/examples.
+- `runtime.LockOSThread()` first line of every `main()` (GTK must own the main OS thread).
+- Out of scope v1: history pagination, multiline composer, posting to broadcast channels, update-gap recovery across offline periods, persisted peer state, sign-up, keychain, vendoring deps (explicitly rejected — CI fetches modules over network like the existing jobs do).
+- macOS: prefix EVERY `go build/test/run` with `export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$PKG_CONFIG_PATH"` (restated in Task 1; implied everywhere after).
+- Import aliases: our wrapper = `internal/tg`; gotd schema = `tgapi "github.com/gotd/td/tg"`; core glib = `coreglib "github.com/diamondburned/gotk4/pkg/core/glib"`.
+- gota REAL API (verified pkg/gota/widgets.go, widget.go, gota.go — v1's fluent DSL was wrong): `VBox(spacing int) *BoxWidget` + `.Append(...IWidget)`; `.ToWidget() *gtk.Widget` (NOT `.Widget()`); `Entry().SetPlaceholder(s)`, `.GetText()`, `.SetText(s)`, `.OnEnter(func(*gota.EntryWidget))`, `.PasswordMode(bool)`; `Button(label).OnClick(func(*gota.ButtonWidget))`; `Label(s)` with `.SetText/.GetText` only (no Wrap); base chainers: `Class/Tooltip/Name/Visible/Size/HExpand/VExpand/HAlign/VAlign` (no Spacing/Margin/Expand). gota containers accept ONLY `gota.IWidget` — raw gtk widgets go in raw `gtk.NewBox`/`gtk.NewScrolledWindow` layouts instead. Margins: set on `.ToWidget()` via `SetMarginTop/Bottom/Start/End`.
+- Branch: `feat/telegram-app` for Tasks 1–11. Task 12 on `fix/girdirs-skip-macos` (separate PR).
+- E2E evidence screenshots are from macOS/Quartz — say so in the PR; Linux rendering is covered by the CI compile only.
+- Docs when a signature fights back: pkg.go.dev/github.com/gotd/td/... — but note the 4-agent review already compile-verified every gotd call herein against v0.159.0; local bindings cites are from this repo's source.
 
 ## File Structure
 
 ```
 examples/telegram/
   go.mod, go.sum
-  main.go                      # gtk.Application + page wiring
-  internal/config/config.go    # Config Load/Save
-  internal/config/config_test.go
-  internal/model/model.go      # pure view models: Dialog, Message, PromptKind, Event
-  internal/tg/auth.go          # UIAuth channel-driven authenticator
-  internal/tg/auth_test.go
-  internal/tg/backoff.go       # pure backoff
-  internal/tg/backoff_test.go
-  internal/tg/client.go        # lifecycle: Run loop, options, updates manager wiring
-  internal/tg/peers.go         # peer store (ID → InputPeer)
-  internal/tg/peers_test.go
-  internal/tg/dialogs.go       # fetch + map dialogs
-  internal/tg/dialogs_test.go
-  internal/tg/messages.go      # history, send, mapping, dedup state
-  internal/tg/messages_test.go
-  internal/tg/updates.go       # dispatcher → model.Event channel
-  internal/tg/updates_test.go
-  internal/tg/photos.go        # size pick, cache path, download
-  internal/tg/photos_test.go
-  internal/ui/setup.go         # api_id/api_hash form
-  internal/ui/login.go         # phone/code/password pages
-  internal/ui/chat.go          # sidebar + messages + composer + banner
-  internal/ui/photo.go         # message photo cell (uses gota AsyncImage)
-pkg/gota/asyncimage.go         # Task 13 (pkg module)
-pkg/gota/asyncimage_test.go
-.github/workflows/qa.yml       # Task 17 modify
-gir/pkgconfig/pkgconfig_test.go# Task 19 modify
+  main.go                      # gtk.Application + restartable start()
+  cmd/spike/main.go            # Task 4 walking skeleton — DELETED in Task 6
+  internal/config/config.go, config_test.go
+  internal/model/model.go      # pure: Dialog, Message, PhotoRef, PromptKind, Event
+  internal/tg/auth.go, auth_test.go
+  internal/tg/backoff.go, backoff_test.go
+  internal/tg/client.go        # lifecycle; dispatcher VALUE wiring
+  internal/tg/peers.go, peers_test.go
+  internal/tg/dialogs.go, dialogs_test.go
+  internal/tg/messages.go, messages_test.go   # history, Sender send, consumeSent, dedup
+  internal/tg/updates.go, updates_test.go     # handleNewMessage, bindUpdates, Logout
+  internal/tg/photos.go, photos_test.go       # pickSize, cachePath, download, channel-aware refresh
+  internal/ui/setup.go, login.go, chat.go
+  internal/ui/photo.go, photo_test.go         # inline async picture loader (upstream to gota post-v1)
+.github/workflows/qa.yml       # Task 11 modify
+gir/pkgconfig/pkgconfig_test.go# Task 12 modify
 ```
 
 ---
 
-### Task 1: Module scaffold + hello window
+### Task 1: Scaffold + hello window + PLATFORM GATE
 
 **Files:**
 - Create: `examples/telegram/go.mod`, `examples/telegram/main.go`
 
 **Interfaces:**
-- Produces: runnable `go build ./...` module every later task compiles inside.
+- Produces: buildable module; PROOF that gio/v2 + gtk/v4 link against brew GTK on this macOS (the substrate every later E2E stands on — if this gate fails, stop and pivot E2E to Linux/Nix before continuing).
 
-- [ ] **Step 1: Scaffold module**
+- [ ] **Step 1: Scaffold**
 
 ```bash
-cd examples/telegram 2>/dev/null || mkdir -p examples/telegram && cd examples/telegram
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$PKG_CONFIG_PATH"
+mkdir -p examples/telegram && cd examples/telegram
 go mod init github.com/diamondburned/gotk4/examples/telegram
 go mod edit -replace github.com/diamondburned/gotk4/pkg=../../pkg
-go get github.com/diamondburned/gotk4/pkg@v0.0.0-00010101000000-000000000000 || go get github.com/diamondburned/gotk4/pkg
 ```
 
-(If the last command errors, add `require github.com/diamondburned/gotk4/pkg v0.0.0` to go.mod manually and run `go mod tidy` after Step 2.)
-
-- [ ] **Step 2: Write minimal window**
+- [ ] **Step 2: Minimal window**
 
 ```go
 // main.go
@@ -85,10 +86,13 @@ package main
 
 import (
 	"os"
+	"runtime"
 
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
+
+func init() { runtime.LockOSThread() } // GTK owns the main OS thread
 
 func main() {
 	app := gtk.NewApplication("com.github.diamondburned.gotk4.telegram", gio.ApplicationFlagsNone)
@@ -103,29 +107,25 @@ func main() {
 }
 ```
 
-- [ ] **Step 3: Verify build + run**
+- [ ] **Step 3: GATE — build AND run**
 
-Run: `go mod tidy && go build ./...`
-Expected: exit 0.
-Run: `go run .` — window "hello gotk4" appears; close it.
+Run: `go mod tidy && go build ./...` → exit 0 (gio/v2 links).
+Run: `go run .` → window opens, no crash after ~30s idle (LockOSThread sanity).
+If either fails on macOS: STOP, record the error, move all E2E steps of this plan to Linux (nix-shell + a display) before proceeding.
 
-- [ ] **Step 4: Commit**
-
-```bash
-git add examples/telegram && git commit -m "feat(examples/telegram): scaffold module with hello window"
-```
+- [ ] **Step 4: Commit** — `git add examples/telegram && git commit -m "feat(examples/telegram): scaffold with platform gate window"`
 
 ---
 
-### Task 2: config package
+### Task 2: config + model packages
 
 **Files:**
-- Create: `examples/telegram/internal/config/config.go`, `config_test.go`
+- Create: `examples/telegram/internal/config/config.go`, `config_test.go`, `examples/telegram/internal/model/model.go`
 
 **Interfaces:**
-- Produces: `type Config struct { APIID int; APIHash string }`; `func Load(dir string) (*Config, error)` (returns `fs.ErrNotExist`-wrapped when absent); `func Save(dir string, c *Config) error`; `func DefaultDir() (string, error)`; `func DefaultCacheDir() (string, error)`.
+- Produces: `config.Config{APIID int; APIHash string}`, `config.Load(dir) (*Config, error)` (wraps `fs.ErrNotExist` when absent), `config.Save(dir, *Config) error` (0700 dir, 0600 file), `config.DefaultDir()`, `config.DefaultCacheDir()`; and package `model` exactly as below (consumed by name everywhere).
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Failing config test**
 
 ```go
 // config_test.go
@@ -163,9 +163,9 @@ func TestRoundtrip(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run, verify FAIL** — `go test ./internal/config/ -v` → undefined: Load.
+- [ ] **Step 2: Run, FAIL** — `go test ./internal/config/ -v` → undefined: Load.
 
-- [ ] **Step 3: Implement**
+- [ ] **Step 3: Implement config**
 
 ```go
 // config.go
@@ -224,21 +224,10 @@ func Save(dir string, c *Config) error {
 }
 ```
 
-- [ ] **Step 4: Run, verify PASS** — `go test ./internal/config/ -v`.
-
-- [ ] **Step 5: Commit** — `git add examples/telegram/internal/config && git commit -m "feat(examples/telegram): config load/save with 0700/0600 perms"`
-
----
-
-### Task 3: model package (pure view models + events)
-
-**Files:**
-- Create: `examples/telegram/internal/model/model.go`
-
-**Interfaces:**
-- Produces (used by every later task):
+- [ ] **Step 4: model package (pure data, no tests — no logic)**
 
 ```go
+// model.go
 package model
 
 type PeerKind int
@@ -259,15 +248,13 @@ type Dialog struct {
 }
 
 type Message struct {
-	ID       int
-	PeerID   int64
-	Sender   string
-	Text     string // plain text; placeholders like "[photo]" for media
-	Out      bool
-	Pending  bool  // optimistic, not yet confirmed
-	Failed   bool
-	LocalKey int64 // random_id for pending rows, 0 otherwise
-	Photo    *PhotoRef
+	ID     int
+	PeerID int64
+	Kind   PeerKind
+	Sender string
+	Text   string // plain text; "[photo]"/"[file]"/"[media]" for media
+	Out    bool
+	Photo  *PhotoRef
 }
 
 type PhotoRef struct {
@@ -276,6 +263,8 @@ type PhotoRef struct {
 	FileRef    []byte
 	SizeType   string // Telegram size letter, e.g. "x"
 	MsgID      int    // for FILE_REFERENCE_EXPIRED refetch
+	PeerID     int64  // refetch routing:
+	Kind       PeerKind // channels need ChannelsGetMessages
 }
 
 type PromptKind int
@@ -291,41 +280,35 @@ type EventKind int
 const (
 	EventReady EventKind = iota
 	EventConnecting
-	EventAuthNeeded   // session absent/invalid → show login
+	EventAuthNeeded // session absent/invalid → show login
 	EventNewMessage
-	EventSendFailed
 	EventError
 )
 
 type Event struct {
-	Kind    EventKind
-	Msg     Message // EventNewMessage / EventSendFailed
-	Err     string  // EventError (already sanitized, no secrets)
+	Kind EventKind
+	Msg  Message // EventNewMessage
+	Err  string  // EventError / EventConnecting detail (sanitized, no secrets)
 }
 ```
 
-- [ ] **Step 1: Create the file with exactly the content above** (package of pure data, no tests needed — no logic).
-- [ ] **Step 2: Verify** — `go build ./...` → exit 0.
-- [ ] **Step 3: Commit** — `git commit -am "feat(examples/telegram): view model types"`
+- [ ] **Step 5: Run, PASS** — `go test ./internal/config/ -v && go build ./...`.
+- [ ] **Step 6: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): config with strict perms + view models"`
 
 ---
 
-### Task 4: gotd deps + channel-driven authenticator
+### Task 3: authenticator + backoff
 
 **Files:**
-- Create: `examples/telegram/internal/tg/auth.go`, `auth_test.go`
+- Create: `examples/telegram/internal/tg/auth.go`, `auth_test.go`, `backoff.go`, `backoff_test.go`
 
 **Interfaces:**
 - Consumes: `model.PromptKind`.
-- Produces: `type Prompt struct { Kind model.PromptKind; Reply chan string }`; `type UIAuth struct { Prompts chan Prompt }`; `func NewUIAuth() *UIAuth`; UIAuth implements `auth.UserAuthenticator` (Phone/Code/Password block per step; AcceptTermsOfService → nil; SignUp → error).
+- Produces: `tg.Prompt{Kind model.PromptKind; Reply chan string}`; `tg.NewUIAuth() *UIAuth` with exported `Prompts chan Prompt`, implementing `auth.UserAuthenticator`; `tg.NextBackoff(prev time.Duration) time.Duration` (0→1s, ×2, cap 60s).
 
-- [ ] **Step 1: Add gotd deps**
+- [ ] **Step 1: Deps** — `cd examples/telegram && go get github.com/gotd/td@latest github.com/gotd/contrib@latest && go mod tidy`
 
-```bash
-cd examples/telegram && go get github.com/gotd/td@latest github.com/gotd/contrib@latest && go mod tidy
-```
-
-- [ ] **Step 2: Write failing test**
+- [ ] **Step 2: Failing tests**
 
 ```go
 // auth_test.go
@@ -339,7 +322,6 @@ import (
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
 
-// scripted fake UI: answers each prompt kind with a canned string.
 func script(t *testing.T, a *UIAuth, answers map[model.PromptKind]string) {
 	t.Helper()
 	go func() {
@@ -384,7 +366,32 @@ func TestUIAuthSignUpRejected(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Run, verify FAIL** — `go test ./internal/tg/ -v` → undefined: NewUIAuth.
+```go
+// backoff_test.go
+package tg
+
+import (
+	"testing"
+	"time"
+)
+
+func TestNextBackoff(t *testing.T) {
+	cases := []struct{ prev, want time.Duration }{
+		{0, time.Second},
+		{time.Second, 2 * time.Second},
+		{16 * time.Second, 32 * time.Second},
+		{45 * time.Second, 60 * time.Second},
+		{60 * time.Second, 60 * time.Second},
+	}
+	for _, c := range cases {
+		if got := NextBackoff(c.prev); got != c.want {
+			t.Errorf("NextBackoff(%v) = %v, want %v", c.prev, got, c.want)
+		}
+	}
+}
+```
+
+- [ ] **Step 3: Run, FAIL** — `go test ./internal/tg/ -v`.
 
 - [ ] **Step 4: Implement**
 
@@ -411,6 +418,8 @@ type UIAuth struct {
 	Prompts chan Prompt
 }
 
+// Compile-time pin: the 4-agent review verified this interface match
+// against gotd v0.159.0 (Phone/Code/Password/AcceptTermsOfService/SignUp).
 var _ auth.UserAuthenticator = (*UIAuth)(nil)
 
 func NewUIAuth() *UIAuth { return &UIAuth{Prompts: make(chan Prompt)} }
@@ -449,53 +458,6 @@ func (a *UIAuth) SignUp(ctx context.Context) (auth.UserInfo, error) {
 }
 ```
 
-(If `auth.UserAuthenticator` method signatures differ from the above, adapt to the interface — the `var _` line pins it at compile time.)
-
-- [ ] **Step 5: Run, verify PASS** — `go test ./internal/tg/ -v`.
-- [ ] **Step 6: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): channel-driven gotd authenticator"`
-
----
-
-### Task 5: backoff + client lifecycle
-
-**Files:**
-- Create: `examples/telegram/internal/tg/backoff.go`, `backoff_test.go`, `client.go`
-
-**Interfaces:**
-- Consumes: `UIAuth`, `config.Config`, `model.Event`.
-- Produces: `func NextBackoff(prev time.Duration) time.Duration`; `type Client struct { Auth *UIAuth; Events chan model.Event; ... }`; `func NewClient(cfg config.Config, dataDir string) *Client`; `func (c *Client) Run(ctx context.Context) error` (blocking loop; re-enters on failure with backoff); `func (c *Client) Ready() bool`; `func (c *Client) Logout(ctx context.Context) error`; internal accessors used by later tasks: `c.api() *tgapi.Client`, `c.sender() *message.Sender`, `c.self() *tgapi.User`.
-
-- [ ] **Step 1: Failing backoff test**
-
-```go
-// backoff_test.go
-package tg
-
-import (
-	"testing"
-	"time"
-)
-
-func TestNextBackoff(t *testing.T) {
-	cases := []struct{ prev, want time.Duration }{
-		{0, time.Second},
-		{time.Second, 2 * time.Second},
-		{16 * time.Second, 32 * time.Second},
-		{45 * time.Second, 60 * time.Second},
-		{60 * time.Second, 60 * time.Second},
-	}
-	for _, c := range cases {
-		if got := NextBackoff(c.prev); got != c.want {
-			t.Errorf("NextBackoff(%v) = %v, want %v", c.prev, got, c.want)
-		}
-	}
-}
-```
-
-- [ ] **Step 2: Run, FAIL** — undefined: NextBackoff.
-
-- [ ] **Step 3: Implement backoff**
-
 ```go
 // backoff.go
 package tg
@@ -516,9 +478,22 @@ func NextBackoff(prev time.Duration) time.Duration {
 }
 ```
 
-- [ ] **Step 4: Run backoff test, PASS.**
+- [ ] **Step 5: Run, PASS.** — `go test ./internal/tg/ -v`
+- [ ] **Step 6: Commit** — `git commit -am "feat(examples/telegram): channel-driven authenticator + capped backoff"`
 
-- [ ] **Step 5: Implement lifecycle (compile-verified, exercised manually in Task 8's E2E)**
+---
+
+### Task 4: client lifecycle + WALKING-SKELETON SPIKE (first real E2E)
+
+**Files:**
+- Create: `examples/telegram/internal/tg/client.go`, `stubs.go`, `cmd/spike/main.go`
+
+**Interfaces:**
+- Consumes: `UIAuth`, `NextBackoff`, `config.Config`, `model.Event`.
+- Produces: `tg.NewClient(cfg config.Config, dataDir string) *Client` with `Auth *UIAuth`, `Events chan model.Event`; `(*Client).Run(ctx) error` (blocking loop, backoff re-entry); `(*Client).Ready() bool`; `(*Client).SelfName() string`; `(*Client).SessionPath() string`; internal `c.api() *tgapi.Client`, `c.sender() *message.Sender`, `c.self() *tgapi.User`, `c.peers`, `c.chats`.
+- Stubs (each deleted by the named later task): `peerStore` (Task 5), `chatStates` (Task 7), `bindUpdates` VALUE param + `Logout` (Task 8).
+
+- [ ] **Step 1: Implement client.go**
 
 ```go
 // client.go
@@ -526,6 +501,7 @@ package tg
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -536,7 +512,7 @@ import (
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/telegram/message"
-	"github.com/gotd/td/telegram/updates"
+	"github.com/gotd/td/tgerr"
 	tgapi "github.com/gotd/td/tg"
 
 	"github.com/diamondburned/gotk4/examples/telegram/internal/config"
@@ -554,9 +530,10 @@ type Client struct {
 	rawAPI *tgapi.Client
 	snd    *message.Sender
 	me     *tgapi.User
-	peers  *peerStore
-	chats  *chatStates
-	ready  atomic.Bool
+
+	peers *peerStore
+	chats *chatStates
+	ready atomic.Bool
 }
 
 func NewClient(cfg config.Config, dataDir string) *Client {
@@ -573,12 +550,24 @@ func NewClient(cfg config.Config, dataDir string) *Client {
 func (c *Client) SessionPath() string { return filepath.Join(c.dataDir, "session.json") }
 func (c *Client) Ready() bool         { return c.ready.Load() }
 
-func (c *Client) api() *tgapi.Client        { c.mu.Lock(); defer c.mu.Unlock(); return c.rawAPI }
-func (c *Client) sender() *message.Sender   { c.mu.Lock(); defer c.mu.Unlock(); return c.snd }
-func (c *Client) self() *tgapi.User         { c.mu.Lock(); defer c.mu.Unlock(); return c.me }
+func (c *Client) api() *tgapi.Client      { c.mu.Lock(); defer c.mu.Unlock(); return c.rawAPI }
+func (c *Client) sender() *message.Sender { c.mu.Lock(); defer c.mu.Unlock(); return c.snd }
+func (c *Client) self() *tgapi.User       { c.mu.Lock(); defer c.mu.Unlock(); return c.me }
+
+func (c *Client) SelfName() string {
+	me := c.self()
+	if me == nil {
+		return ""
+	}
+	if me.Username != "" {
+		return me.Username
+	}
+	return me.FirstName
+}
 
 // Run blocks; owns the gotd lifetime. Re-enters telegram.Client.Run with
-// capped backoff until ctx is canceled.
+// capped backoff until ctx cancels. AUTH_KEY_UNREGISTERED → session file
+// deleted → EventAuthNeeded → next entry runs the login flow.
 func (c *Client) Run(ctx context.Context) error {
 	backoff := time.Duration(0)
 	for {
@@ -587,8 +576,12 @@ func (c *Client) Run(ctx context.Context) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if tgerr.Is(err, "AUTH_KEY_UNREGISTERED") {
+			_ = os.Remove(c.SessionPath())
+			c.emit(model.Event{Kind: model.EventAuthNeeded})
+		}
 		backoff = NextBackoff(backoff)
-		c.Events <- model.Event{Kind: model.EventConnecting}
+		c.emit(model.Event{Kind: model.EventConnecting})
 		select {
 		case <-time.After(backoff):
 		case <-ctx.Done():
@@ -597,13 +590,22 @@ func (c *Client) Run(ctx context.Context) error {
 	}
 }
 
+// emit never blocks gotd goroutines on a full UI queue.
+func (c *Client) emit(ev model.Event) {
+	select {
+	case c.Events <- ev:
+	default:
+	}
+}
+
 func (c *Client) runOnce(ctx context.Context) error {
+	// VALUE, not pointer: NewUpdateDispatcher returns UpdateDispatcher whose
+	// value copies share the internal handlers map (verified v0.159.0).
 	dispatcher := tgapi.NewUpdateDispatcher()
-	manager := updates.New(updates.Config{Handler: dispatcher})
 
 	client := telegram.NewClient(c.cfg.APIID, c.cfg.APIHash, telegram.Options{
 		SessionStorage: &session.FileStorage{Path: c.SessionPath()},
-		UpdateHandler:  manager,
+		UpdateHandler:  dispatcher, // bare dispatcher; gap recovery is out of scope v1
 		Middlewares:    []telegram.Middleware{floodwait.NewSimpleWaiter()},
 	})
 
@@ -613,12 +615,15 @@ func (c *Client) runOnce(ctx context.Context) error {
 			return err
 		}
 		if !status.Authorized {
-			c.Events <- model.Event{Kind: model.EventAuthNeeded}
+			c.emit(model.Event{Kind: model.EventAuthNeeded})
 			flow := auth.NewFlow(c.Auth, auth.SendCodeOptions{})
 			if err := flow.Run(ctx, client.Auth()); err != nil {
 				return err
 			}
 		}
+		// crown-jewel hardening: gotd owns the write; we own the mode.
+		_ = os.Chmod(c.SessionPath(), 0o600)
+
 		me, err := client.Self(ctx)
 		if err != nil {
 			return err
@@ -630,55 +635,141 @@ func (c *Client) runOnce(ctx context.Context) error {
 		c.me = me
 		c.mu.Unlock()
 
-		c.bindUpdates(dispatcher) // Task 10
-
-		go func() {
-			_ = manager.Run(ctx, c.api(), me.ID, updates.AuthOptions{})
-		}()
+		c.bindUpdates(dispatcher)
 
 		c.ready.Store(true)
-		c.Events <- model.Event{Kind: model.EventReady}
+		c.emit(model.Event{Kind: model.EventReady})
 		<-ctx.Done()
 		return ctx.Err()
 	})
 }
 ```
 
-Add a temporary stub so this compiles until Tasks 6/9/10 land:
-
 ```go
-// stubs.go — DELETED as Tasks 6, 9, 10 replace each piece.
+// stubs.go — each stub is DELETED by the task named next to it.
 package tg
 
-import tgapi "github.com/gotd/td/tg"
+import (
+	"context"
 
-type peerStore struct{}
+	tgapi "github.com/gotd/td/tg"
+)
+
+type peerStore struct{}                     // Task 5
 func newPeerStore() *peerStore { return &peerStore{} }
 
-type chatStates struct{}
+type chatStates struct{}                    // Task 7
 func newChatStates() *chatStates { return &chatStates{} }
 
-func (c *Client) bindUpdates(*tgapi.UpdateDispatcher) {}
-func (c *Client) Logout(ctx context.Context) error { return nil }
+func (c *Client) bindUpdates(tgapi.UpdateDispatcher) {} // Task 8 (VALUE param)
+
+func (c *Client) Logout(ctx context.Context) error { return nil } // Task 8
 ```
 
-(Move the `context` import accordingly. If `updates.New`, `manager.Run`, or `client.Self` signatures differ, follow pkg.go.dev/github.com/gotd/td/telegram/updates — the wiring pattern in the spec §"Peers, dialogs, updates" is the contract.)
+- [ ] **Step 2: Build** — `go build ./...` → exit 0.
 
-- [ ] **Step 6: Verify** — `go build ./... && go test ./internal/tg/ -v` → build exit 0, tests pass.
-- [ ] **Step 7: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): gotd client lifecycle with backoff re-entry"`
+- [ ] **Step 3: Walking-skeleton spike** — proves the load-bearing triad (Run lifecycle × channel auth × IdleAdd-from-gotd-goroutine) + macOS substrate NOW, before any UI exists.
+
+```go
+// cmd/spike/main.go — TEMPORARY. Deleted in Task 6.
+package main
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"runtime"
+	"strconv"
+
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+
+	"github.com/diamondburned/gotk4/examples/telegram/internal/config"
+	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
+	"github.com/diamondburned/gotk4/examples/telegram/internal/tg"
+)
+
+func init() { runtime.LockOSThread() }
+
+func main() {
+	apiID, err := strconv.Atoi(os.Getenv("TG_API_ID"))
+	if err != nil || os.Getenv("TG_API_HASH") == "" {
+		log.Fatal("set TG_API_ID and TG_API_HASH")
+	}
+	cfg := config.Config{APIID: apiID, APIHash: os.Getenv("TG_API_HASH")}
+	dir, err := config.DefaultDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app := gtk.NewApplication("com.github.diamondburned.gotk4.telegram.spike", gio.ApplicationFlagsNone)
+	app.ConnectActivate(func() {
+		label := gtk.NewLabel("connecting…")
+		w := gtk.NewApplicationWindow(app)
+		w.SetDefaultSize(400, 120)
+		w.SetChild(label)
+		w.SetVisible(true)
+
+		client := tg.NewClient(cfg, dir)
+
+		go func() { // auth prompts answered on stdin (spike only!)
+			in := bufio.NewScanner(os.Stdin)
+			for p := range client.Auth.Prompts {
+				names := map[model.PromptKind]string{
+					model.PromptPhone: "phone", model.PromptCode: "code", model.PromptPassword: "2FA password",
+				}
+				fmt.Printf("enter %s: ", names[p.Kind])
+				in.Scan()
+				p.Reply <- in.Text()
+			}
+		}()
+		go func() {
+			for ev := range client.Events {
+				if ev.Kind == model.EventReady {
+					name := client.SelfName()
+					coreglib.IdleAdd(func() { // THE proof: UI mutation from gotd goroutine
+						label.SetText("logged in as " + name)
+					})
+				}
+			}
+		}()
+		go func() {
+			if err := client.Run(context.Background()); err != nil {
+				log.Println("client stopped:", err)
+			}
+		}()
+	})
+	os.Exit(app.Run(nil)) // nil args: spike takes no CLI flags
+}
+```
+
+- [ ] **Step 4: SPIKE E2E GATE**
+
+Run: `TG_API_ID=<id> TG_API_HASH=<hash> go run ./cmd/spike`
+1. Window "connecting…" opens.
+2. Terminal prompts phone → code (→ 2FA); label flips to "logged in as <you>".
+3. Ctrl-C, rerun → label flips straight to "logged in" (session reuse, no prompts).
+4. `ls -l "$HOME/Library/Application Support/gotk4-telegram/"` → session.json `-rw-------`.
+
+Failure here = architecture problem. STOP and fix `client.go` (this is exactly why the spike exists) before writing any UI.
+
+- [ ] **Step 5: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): client lifecycle proven by walking-skeleton spike"`
 
 ---
 
-### Task 6: peer store
+### Task 5: peer store + dialogs
 
 **Files:**
-- Create: `examples/telegram/internal/tg/peers.go`, `peers_test.go`
-- Modify: `examples/telegram/internal/tg/stubs.go` (delete peerStore stub)
+- Create: `examples/telegram/internal/tg/peers.go`, `peers_test.go`, `dialogs.go`, `dialogs_test.go`
+- Modify: `stubs.go` (delete peerStore stub)
 
 **Interfaces:**
-- Produces: `func newPeerStore() *peerStore`; `func (s *peerStore) Add(users []tgapi.UserClass, chats []tgapi.ChatClass)`; `func (s *peerStore) InputPeer(kind model.PeerKind, id int64) (tgapi.InputPeerClass, bool)`; `func (s *peerStore) Title(kind model.PeerKind, id int64) string`; `func (s *peerStore) CanSend(kind model.PeerKind, id int64) bool` (false for broadcast channels).
+- Produces: `(*peerStore).Add(users []tgapi.UserClass, chats []tgapi.ChatClass)`, `.InputPeer(kind model.PeerKind, id int64) (tgapi.InputPeerClass, bool)`, `.InputChannel(id int64) (*tgapi.InputChannel, bool)`, `.Title(kind, id) string`, `.CanSend(kind, id) bool`; `peerKey(p tgapi.PeerClass) (model.PeerKind, int64)`; `mapDialogs(...)` pure; `(*Client).Dialogs(ctx) ([]model.Dialog, error)`.
 
-- [ ] **Step 1: Failing test**
+- [ ] **Step 1: Failing tests** (both files)
 
 ```go
 // peers_test.go
@@ -722,13 +813,57 @@ func TestPeerStore(t *testing.T) {
 	if !s.CanSend(model.PeerChannel, 4) {
 		t.Error("megagroup must be sendable")
 	}
+	ic, ok := s.InputChannel(3)
+	if !ok || ic.ChannelID != 3 || ic.AccessHash != 33 {
+		t.Errorf("InputChannel = %+v ok=%v", ic, ok)
+	}
 	if _, ok := s.InputPeer(model.PeerUser, 999); ok {
 		t.Error("unknown peer must be !ok")
 	}
 }
 ```
 
-- [ ] **Step 2: Run, FAIL** (methods undefined on stub).
+```go
+// dialogs_test.go
+package tg
+
+import (
+	"testing"
+
+	tgapi "github.com/gotd/td/tg"
+
+	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
+)
+
+func TestMapDialogs(t *testing.T) {
+	s := newPeerStore()
+	users := []tgapi.UserClass{&tgapi.User{ID: 1, AccessHash: 11, FirstName: "Ann"}}
+	chats := []tgapi.ChatClass{&tgapi.Channel{ID: 3, AccessHash: 33, Title: "News", Broadcast: true}}
+	dialogs := []tgapi.DialogClass{
+		&tgapi.Dialog{Peer: &tgapi.PeerUser{UserID: 1}, TopMessage: 100, UnreadCount: 2},
+		&tgapi.Dialog{Peer: &tgapi.PeerChannel{ChannelID: 3}, TopMessage: 200, UnreadCount: 0},
+	}
+	msgs := []tgapi.MessageClass{
+		&tgapi.Message{ID: 100, Message: "hi there", PeerID: &tgapi.PeerUser{UserID: 1}},
+		&tgapi.Message{ID: 200, Media: &tgapi.MessageMediaPhoto{}, PeerID: &tgapi.PeerChannel{ChannelID: 3}},
+	}
+
+	got := mapDialogs(s, dialogs, msgs, users, chats)
+	if len(got) != 2 {
+		t.Fatalf("len = %d", len(got))
+	}
+	d0 := got[0]
+	if d0.PeerID != 1 || d0.Kind != model.PeerUser || d0.Title != "Ann" || d0.Preview != "hi there" || d0.Unread != 2 || !d0.CanSend {
+		t.Errorf("d0 = %+v", d0)
+	}
+	d1 := got[1]
+	if d1.Kind != model.PeerChannel || d1.Preview != "[photo]" || d1.CanSend {
+		t.Errorf("d1 = %+v", d1)
+	}
+}
+```
+
+- [ ] **Step 2: Run, FAIL.**
 
 - [ ] **Step 3: Implement**
 
@@ -770,26 +905,25 @@ func (s *peerStore) Add(users []tgapi.UserClass, chats []tgapi.ChatClass) {
 		if !ok {
 			continue
 		}
-		title := strings.TrimSpace(u.FirstName + " " + u.LastName)
 		s.m[model.PeerUser][u.ID] = peerInfo{
 			input:   &tgapi.InputPeerUser{UserID: u.ID, AccessHash: u.AccessHash},
-			title:   title,
+			title:   strings.TrimSpace(u.FirstName + " " + u.LastName),
 			canSend: true,
 		}
 	}
 	for _, cc := range chats {
-		switch c := cc.(type) {
+		switch ch := cc.(type) {
 		case *tgapi.Chat:
-			s.m[model.PeerChat][c.ID] = peerInfo{
-				input:   &tgapi.InputPeerChat{ChatID: c.ID},
-				title:   c.Title,
+			s.m[model.PeerChat][ch.ID] = peerInfo{
+				input:   &tgapi.InputPeerChat{ChatID: ch.ID},
+				title:   ch.Title,
 				canSend: true,
 			}
 		case *tgapi.Channel:
-			s.m[model.PeerChannel][c.ID] = peerInfo{
-				input:   &tgapi.InputPeerChannel{ChannelID: c.ID, AccessHash: c.AccessHash},
-				title:   c.Title,
-				canSend: !c.Broadcast,
+			s.m[model.PeerChannel][ch.ID] = peerInfo{
+				input:   &tgapi.InputPeerChannel{ChannelID: ch.ID, AccessHash: ch.AccessHash},
+				title:   ch.Title,
+				canSend: !ch.Broadcast,
 			}
 		}
 	}
@@ -807,6 +941,18 @@ func (s *peerStore) InputPeer(kind model.PeerKind, id int64) (tgapi.InputPeerCla
 	return p.input, ok
 }
 
+func (s *peerStore) InputChannel(id int64) (*tgapi.InputChannel, bool) {
+	p, ok := s.get(model.PeerChannel, id)
+	if !ok {
+		return nil, false
+	}
+	ipc, ok := p.input.(*tgapi.InputPeerChannel)
+	if !ok {
+		return nil, false
+	}
+	return &tgapi.InputChannel{ChannelID: ipc.ChannelID, AccessHash: ipc.AccessHash}, true
+}
+
 func (s *peerStore) Title(kind model.PeerKind, id int64) string {
 	p, _ := s.get(kind, id)
 	return p.title
@@ -817,68 +963,6 @@ func (s *peerStore) CanSend(kind model.PeerKind, id int64) bool {
 	return ok && p.canSend
 }
 ```
-
-Delete the `peerStore` stub from `stubs.go`.
-
-- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -run TestPeerStore -v`.
-- [ ] **Step 5: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): peer store with access-hash tracking"`
-
----
-
-### Task 7: dialogs fetch + mapping
-
-**Files:**
-- Create: `examples/telegram/internal/tg/dialogs.go`, `dialogs_test.go`
-
-**Interfaces:**
-- Consumes: `peerStore`, `model.Dialog`.
-- Produces: `func mapDialogs(s *peerStore, dialogs []tgapi.DialogClass, msgs []tgapi.MessageClass, users []tgapi.UserClass, chats []tgapi.ChatClass) []model.Dialog` (pure); `func (c *Client) Dialogs(ctx context.Context) ([]model.Dialog, error)` (fetch top 50, feeds peer store).
-
-- [ ] **Step 1: Failing test for the pure mapper**
-
-```go
-// dialogs_test.go
-package tg
-
-import (
-	"testing"
-
-	tgapi "github.com/gotd/td/tg"
-
-	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
-)
-
-func TestMapDialogs(t *testing.T) {
-	s := newPeerStore()
-	users := []tgapi.UserClass{&tgapi.User{ID: 1, AccessHash: 11, FirstName: "Ann"}}
-	chats := []tgapi.ChatClass{&tgapi.Channel{ID: 3, AccessHash: 33, Title: "News", Broadcast: true}}
-	dialogs := []tgapi.DialogClass{
-		&tgapi.Dialog{Peer: &tgapi.PeerUser{UserID: 1}, TopMessage: 100, UnreadCount: 2},
-		&tgapi.Dialog{Peer: &tgapi.PeerChannel{ChannelID: 3}, TopMessage: 200, UnreadCount: 0},
-	}
-	msgs := []tgapi.MessageClass{
-		&tgapi.Message{ID: 100, Message: "hi there", PeerID: &tgapi.PeerUser{UserID: 1}},
-		&tgapi.Message{ID: 200, Message: "", Media: &tgapi.MessageMediaPhoto{}, PeerID: &tgapi.PeerChannel{ChannelID: 3}},
-	}
-
-	got := mapDialogs(s, dialogs, msgs, users, chats)
-	if len(got) != 2 {
-		t.Fatalf("len = %d", len(got))
-	}
-	d0 := got[0]
-	if d0.PeerID != 1 || d0.Kind != model.PeerUser || d0.Title != "Ann" || d0.Preview != "hi there" || d0.Unread != 2 || !d0.CanSend {
-		t.Errorf("d0 = %+v", d0)
-	}
-	d1 := got[1]
-	if d1.Kind != model.PeerChannel || d1.Preview != "[photo]" || d1.CanSend {
-		t.Errorf("d1 = %+v", d1)
-	}
-}
-```
-
-- [ ] **Step 2: Run, FAIL** — undefined: mapDialogs.
-
-- [ ] **Step 3: Implement**
 
 ```go
 // dialogs.go
@@ -954,8 +1038,7 @@ func mapDialogs(s *peerStore, dialogs []tgapi.DialogClass, msgs []tgapi.MessageC
 
 // Dialogs fetches the top 50 dialogs and feeds the peer store.
 func (c *Client) Dialogs(ctx context.Context) ([]model.Dialog, error) {
-	api := c.api()
-	res, err := api.MessagesGetDialogs(ctx, &tgapi.MessagesGetDialogsRequest{
+	res, err := c.api().MessagesGetDialogs(ctx, &tgapi.MessagesGetDialogsRequest{
 		Limit:      50,
 		OffsetPeer: &tgapi.InputPeerEmpty{},
 	})
@@ -972,22 +1055,24 @@ func (c *Client) Dialogs(ctx context.Context) ([]model.Dialog, error) {
 }
 ```
 
-- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -run TestMapDialogs -v`; `go build ./...`.
-- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): dialog fetch and mapping"`
+Delete the `peerStore` stub from `stubs.go`.
+
+- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v && go build ./...`.
+- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): peer store + dialog mapping"`
 
 ---
 
-### Task 8: setup + login UI, wire lifecycle, REAL LOGIN E2E
+### Task 6: setup + login UI, restartable wiring — UI LOGIN E2E
 
 **Files:**
 - Create: `examples/telegram/internal/ui/setup.go`, `internal/ui/login.go`
-- Modify: `examples/telegram/main.go`
+- Modify: `examples/telegram/main.go` (full rewrite below)
+- Delete: `examples/telegram/cmd/spike/` (superseded)
 
 **Interfaces:**
-- Consumes: `config`, `tg.Client`, `tg.Prompt`, `model.Event`, `gota` widgets, `coreglib.IdleAdd`.
-- Produces: `ui.NewSetupPage(onSave func(id int, hash string)) gtk.Widgetter`; `ui.NewLoginPage() (*LoginPage)` with `(*LoginPage).Show(p tg.Prompt)` (renders matching prompt, sends reply) and `.Widget() gtk.Widgetter`; main.go owns the `gtk.Stack` with names `"setup"`, `"login"`, `"main"`.
+- Produces: `ui.NewSetupPage(onSave func(id int, hash string)) gtk.Widgetter`; `ui.NewLoginPage() *LoginPage` with `.Widget() gtk.Widgetter` and `.Show(p tg.Prompt)` (UI thread only); main.go's restartable `start(cfg)` pattern (hoisted `client`; pumps torn down via ctx — consumed verbatim by Tasks 8/9).
 
-- [ ] **Step 1: Setup page**
+- [ ] **Step 1: Setup page (REAL gota API — see Global Constraints)**
 
 ```go
 // setup.go
@@ -1002,30 +1087,35 @@ import (
 
 // NewSetupPage renders the api_id/api_hash form. onSave gets valid values.
 func NewSetupPage(onSave func(id int, hash string)) gtk.Widgetter {
-	idEntry := gota.Entry().Placeholder("api_id (digits)")
-	hashEntry := gota.Entry().Placeholder("api_hash")
-	errLabel := gota.Label("").Wrap(true)
+	idEntry := gota.Entry().SetPlaceholder("api_id (digits)")
+	hashEntry := gota.Entry().SetPlaceholder("api_hash")
+	errLabel := gota.Label("")
 
 	submit := func() {
-		id, err := strconv.Atoi(idEntry.Text())
-		if err != nil || id <= 0 || hashEntry.Text() == "" {
+		id, err := strconv.Atoi(idEntry.GetText())
+		if err != nil || id <= 0 || hashEntry.GetText() == "" {
 			errLabel.SetText("api_id must be a positive number; api_hash must be non-empty")
 			return
 		}
-		onSave(id, hashEntry.Text())
+		onSave(id, hashEntry.GetText())
 	}
 
-	return gota.VBox(
+	box := gota.VBox(8).Append(
 		gota.Label("Telegram API credentials").Class("title-2"),
 		gota.Label("Create them at my.telegram.org → API development tools"),
-		idEntry, hashEntry,
-		gota.Button("Save & connect").OnClick(submit),
+		idEntry,
+		hashEntry,
+		gota.Button("Save & connect").OnClick(func(*gota.ButtonWidget) { submit() }),
 		errLabel,
-	).Spacing(8).Margin(24).Widget()
+	)
+	w := box.ToWidget()
+	w.SetMarginTop(24)
+	w.SetMarginBottom(24)
+	w.SetMarginStart(24)
+	w.SetMarginEnd(24)
+	return w
 }
 ```
-
-(Adapt the exact gota builder calls to `pkg/gota/widgets.go` — `Entry()`, `.Placeholder`, `.Text`, `.OnEnter`, `.PasswordMode`, `Label`, `Button().OnClick`, `VBox` exist per the capability review; if a chained method is missing use the underlying gtk widget it wraps.)
 
 - [ ] **Step 2: Login page**
 
@@ -1042,7 +1132,7 @@ import (
 )
 
 type LoginPage struct {
-	box    gtk.Widgetter
+	root   *gtk.Widget
 	label  *gota.LabelWidget
 	entry  *gota.EntryWidget
 	submit func()
@@ -1051,23 +1141,27 @@ type LoginPage struct {
 func NewLoginPage() *LoginPage {
 	p := &LoginPage{}
 	p.label = gota.Label("")
-	p.entry = gota.Entry().OnEnter(func() {
+	p.entry = gota.Entry().OnEnter(func(*gota.EntryWidget) {
 		if p.submit != nil {
 			p.submit()
 		}
 	})
-	btn := gota.Button("Next").OnClick(func() {
+	btn := gota.Button("Next").OnClick(func(*gota.ButtonWidget) {
 		if p.submit != nil {
 			p.submit()
 		}
 	})
-	p.box = gota.VBox(p.label, p.entry, btn).Spacing(8).Margin(24).Widget()
+	p.root = gota.VBox(8).Append(p.label, p.entry, btn).ToWidget()
+	p.root.SetMarginTop(24)
+	p.root.SetMarginBottom(24)
+	p.root.SetMarginStart(24)
+	p.root.SetMarginEnd(24)
 	return p
 }
 
-func (p *LoginPage) Widget() gtk.Widgetter { return p.box }
+func (p *LoginPage) Widget() gtk.Widgetter { return p.root }
 
-// Show configures the page for one auth prompt. Must be called on the UI thread.
+// Show configures the page for one auth prompt. UI thread only.
 func (p *LoginPage) Show(pr tg.Prompt) {
 	titles := map[model.PromptKind]string{
 		model.PromptPhone:    "Phone number (international format)",
@@ -1078,7 +1172,7 @@ func (p *LoginPage) Show(pr tg.Prompt) {
 	p.entry.SetText("")
 	p.entry.PasswordMode(pr.Kind == model.PromptPassword)
 	p.submit = func() {
-		v := p.entry.Text()
+		v := p.entry.GetText()
 		if v == "" {
 			return
 		}
@@ -1088,10 +1182,10 @@ func (p *LoginPage) Show(pr tg.Prompt) {
 }
 ```
 
-- [ ] **Step 3: Wire main.go**
+- [ ] **Step 3: main.go — restartable start(), hoisted client**
 
 ```go
-// main.go (replace body)
+// main.go (full replacement)
 package main
 
 import (
@@ -1100,6 +1194,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"runtime"
 
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
@@ -1110,6 +1205,8 @@ import (
 	"github.com/diamondburned/gotk4/examples/telegram/internal/tg"
 	"github.com/diamondburned/gotk4/examples/telegram/internal/ui"
 )
+
+func init() { runtime.LockOSThread() }
 
 func main() {
 	app := gtk.NewApplication("com.github.diamondburned.gotk4.telegram", gio.ApplicationFlagsNone)
@@ -1130,38 +1227,62 @@ func activate(app *gtk.Application) {
 	stack := gtk.NewStack()
 	login := ui.NewLoginPage()
 	stack.AddNamed(login.Widget(), "login")
-	stack.AddNamed(gtk.NewLabel("connected — chat UI lands in Task 11"), "main")
+	stack.AddNamed(gtk.NewLabel("connected — chat UI lands in Task 9"), "main")
 	w.SetChild(stack)
 	w.SetVisible(true)
 
-	start := func(cfg config.Config) {
-		client := tg.NewClient(cfg, dir)
-		ctx := context.Background()
+	// Hoisted, restartable client state. UI thread owns these variables:
+	// they are written only from start()/logout (both run on the UI thread).
+	var (
+		client *tg.Client
+		cancel context.CancelFunc
+	)
 
-		go func() { // event pump: tg goroutines → UI
-			for ev := range client.Events {
-				ev := ev
-				coreglib.IdleAdd(func() {
-					switch ev.Kind {
-					case model.EventAuthNeeded:
-						stack.SetVisibleChildName("login")
-					case model.EventReady:
-						stack.SetVisibleChildName("main")
-					}
-				})
+	onEvent := func(ev model.Event) { // UI thread
+		switch ev.Kind {
+		case model.EventAuthNeeded:
+			stack.SetVisibleChildName("login")
+		case model.EventReady:
+			stack.SetVisibleChildName("main")
+		}
+	}
+
+	start := func(cfg config.Config) { // UI thread; safe to call again (logout/re-login)
+		if cancel != nil {
+			cancel()
+		}
+		ctx, cn := context.WithCancel(context.Background())
+		cancel = cn
+		client = tg.NewClient(cfg, dir)
+		cl := client // pumps capture THIS client, not the mutable variable
+
+		go func() { // event pump
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case ev := <-cl.Events:
+					ev := ev
+					coreglib.IdleAdd(func() { onEvent(ev) })
+				}
 			}
 		}()
 		go func() { // auth prompt pump
-			for pr := range client.Auth.Prompts {
-				pr := pr
-				coreglib.IdleAdd(func() {
-					login.Show(pr)
-					stack.SetVisibleChildName("login")
-				})
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case pr := <-cl.Auth.Prompts:
+					pr := pr
+					coreglib.IdleAdd(func() {
+						login.Show(pr)
+						stack.SetVisibleChildName("login")
+					})
+				}
 			}
 		}()
 		go func() {
-			if err := client.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			if err := cl.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 				log.Println("client stopped:", err)
 			}
 		}()
@@ -1188,37 +1309,34 @@ func activate(app *gtk.Application) {
 }
 ```
 
-- [ ] **Step 4: Build** — `go build ./...` → exit 0.
+- [ ] **Step 4: Delete spike** — `git rm -r examples/telegram/cmd`
 
-- [ ] **Step 5: MANUAL E2E GATE — real login**
+- [ ] **Step 5: Build + UI LOGIN E2E**
 
-Run: `go run .`
-1. Setup page appears → enter real api_id/api_hash (my.telegram.org).
-2. Login page: phone → code (→ 2FA if set).
-3. "connected" page appears.
-4. Quit, `go run .` again → goes straight to "connected" (session persisted).
-5. `ls -l "$(getconf DARWIN_USER_DIR 2>/dev/null)" 2>/dev/null; ls -la ~/Library/Application\ Support/gotk4-telegram/` → dir 700, files 600.
+`go build ./... && go run .`
+1. Fresh machine path: delete `~/Library/Application Support/gotk4-telegram/` first → setup page → enter creds → login pages (phone/code/2FA; password field masked) → "connected".
+2. Restart → straight to "connected".
+Screenshot both pages (macOS/Quartz — note platform in PR).
 
-Screenshot the connected window → save for PR evidence.
-
-- [ ] **Step 6: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): setup + login UI with real auth flow"`
+- [ ] **Step 6: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): setup/login UI with restartable client wiring"`
 
 ---
 
-### Task 9: messages — history, send, dedup state
+### Task 7: messages — history, Sender send, echo consumption, dedup
 
 **Files:**
 - Create: `examples/telegram/internal/tg/messages.go`, `messages_test.go`
 - Modify: `stubs.go` (delete chatStates stub)
 
 **Interfaces:**
-- Consumes: `peerStore`, `model.Message`.
+- Consumes: `peerStore`, `peerKey`, `model.Message`.
 - Produces:
-  - `func mapMessage(s *peerStore, selfID int64, m tgapi.MessageClass) (model.Message, bool)` (pure; media→placeholder text + PhotoRef for photos).
-  - `type chatStates` with `func (cs *chatStates) Note(peerID int64, msgID int) bool` (true = first sighting, false = already seen) and `func (cs *chatStates) Reconcile(peerID int64, randomID int64, realID int) bool` (true = a pending row with that LocalKey should be finalized).
-  - `func (c *Client) History(ctx context.Context, kind model.PeerKind, peerID int64) ([]model.Message, error)` (latest 50, oldest first).
-  - `func (c *Client) Send(ctx context.Context, kind model.PeerKind, peerID int64, text string) (randomID int64, err error)`.
-  - `func (c *Client) MarkRead(ctx context.Context, kind model.PeerKind, peerID int64) error`.
+  - `mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Message, bool)` — pure; fills `Kind`, media placeholders, `PhotoRef` (SizeType via Task 10's `pickSize`; until Task 10 lands, `SizeType` is set to `""` and photo cells don't render — see note in Step 3).
+  - `(*chatStates).Note(peerID int64, msgID int) bool` — true on first sighting (the ONLY dedup mechanism; optimistic machinery was cut in v2).
+  - `(*Client).History(ctx, kind, peerID) ([]model.Message, error)` — latest 50, oldest first.
+  - `(*Client).Send(ctx, kind, peerID, text) error` — `message.NewSender`, then feeds the RPC response updates through the same dedup path so own messages appear exactly once (handles `*tgapi.UpdateShortSentMessage`, which carries only the new ID).
+  - `(*Client).MarkRead(ctx, kind, peerID) error`.
+  - Consumed by Task 8: `(*Client).handleNewMessage(mc tgapi.MessageClass)` (defined here since Send shares it).
 
 - [ ] **Step 1: Failing tests**
 
@@ -1230,53 +1348,63 @@ import (
 	"testing"
 
 	tgapi "github.com/gotd/td/tg"
+
+	"github.com/diamondburned/gotk4/examples/telegram/internal/config"
+	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
 
-func TestMapMessagePhotoAndText(t *testing.T) {
+func TestMapMessage(t *testing.T) {
 	s := newPeerStore()
 	s.Add([]tgapi.UserClass{&tgapi.User{ID: 7, FirstName: "Bea"}}, nil)
 
 	plain := &tgapi.Message{ID: 1, Message: "yo", FromID: &tgapi.PeerUser{UserID: 7}, PeerID: &tgapi.PeerUser{UserID: 7}}
 	m, ok := mapMessage(s, 99, plain)
-	if !ok || m.Text != "yo" || m.Sender != "Bea" || m.Out {
+	if !ok || m.Text != "yo" || m.Sender != "Bea" || m.Out || m.Kind != model.PeerUser {
 		t.Fatalf("plain = %+v ok=%v", m, ok)
 	}
 
 	photo := &tgapi.Message{ID: 2, PeerID: &tgapi.PeerUser{UserID: 7},
 		Media: &tgapi.MessageMediaPhoto{Photo: &tgapi.Photo{ID: 555, AccessHash: 556, FileReference: []byte{1}}}}
 	pm, ok := mapMessage(s, 99, photo)
-	if !ok || pm.Text != "[photo]" || pm.Photo == nil || pm.Photo.PhotoID != 555 || pm.Photo.MsgID != 2 {
+	if !ok || pm.Text != "[photo]" || pm.Photo == nil || pm.Photo.PhotoID != 555 || pm.Photo.MsgID != 2 || pm.Photo.PeerID != 7 {
 		t.Fatalf("photo = %+v", pm)
 	}
 
 	own := &tgapi.Message{ID: 3, Message: "mine", Out: true, PeerID: &tgapi.PeerUser{UserID: 7}}
-	om, _ := mapMessage(s, 99, own)
-	if !om.Out {
+	if om, _ := mapMessage(s, 99, own); !om.Out {
 		t.Fatal("own message must be Out")
 	}
 }
 
-func TestChatStatesDedupAndReconcile(t *testing.T) {
+func TestChatStatesNote(t *testing.T) {
 	cs := newChatStates()
 	if !cs.Note(1, 100) {
-		t.Fatal("first sighting must be true")
+		t.Fatal("first sighting true")
 	}
 	if cs.Note(1, 100) {
-		t.Fatal("second sighting must be false")
+		t.Fatal("second sighting false")
 	}
 	if !cs.Note(2, 100) {
-		t.Fatal("same id in another chat is independent")
+		t.Fatal("chats independent")
 	}
+}
 
-	cs.Pending(1, 777) // register optimistic random_id
-	if !cs.Reconcile(1, 777, 101) {
-		t.Fatal("reconcile of known random_id must be true")
+func TestConsumeSentShortUpdate(t *testing.T) {
+	c := NewClient(config.Config{}, t.TempDir())
+	c.consumeSent(model.PeerUser, 7, "hello",
+		&tgapi.UpdateShortSentMessage{ID: 900})
+
+	select {
+	case ev := <-c.Events:
+		if ev.Kind != model.EventNewMessage || !ev.Msg.Out || ev.Msg.Text != "hello" || ev.Msg.ID != 900 || ev.Msg.PeerID != 7 {
+			t.Fatalf("ev = %+v", ev)
+		}
+	default:
+		t.Fatal("no event emitted")
 	}
-	if cs.Reconcile(1, 777, 101) {
-		t.Fatal("reconcile is one-shot")
-	}
-	if cs.Note(1, 101) {
-		t.Fatal("reconciled id must already count as seen")
+	// the seen-set now contains 900: a later push of the same message dedups
+	if c.chats.Note(7, 900) {
+		t.Fatal("id 900 must already be seen")
 	}
 }
 ```
@@ -1291,15 +1419,15 @@ package tg
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
+	"errors"
 	"sync"
 
-	"github.com/gotd/td/telegram/message"
 	tgapi "github.com/gotd/td/tg"
 
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
+
+var errUnknownPeer = errors.New("unknown peer")
 
 // ---- pure mapping ----
 
@@ -1308,8 +1436,8 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 	if !ok {
 		return model.Message{}, false
 	}
-	_, peerID := peerKey(m.PeerID)
-	out := model.Message{ID: m.ID, PeerID: peerID, Text: m.Message, Out: m.Out}
+	kind, peerID := peerKey(m.PeerID)
+	out := model.Message{ID: m.ID, PeerID: peerID, Kind: kind, Text: m.Message, Out: m.Out}
 	if m.FromID != nil {
 		if fu, ok := m.FromID.(*tgapi.PeerUser); ok {
 			out.Sender = s.Title(model.PeerUser, fu.UserID)
@@ -1323,10 +1451,15 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 		case *tgapi.MessageMediaPhoto:
 			out.Text = "[photo]"
 			if p, ok := media.Photo.(*tgapi.Photo); ok {
-				out.Photo = &model.PhotoRef{
+				ref := &model.PhotoRef{
 					PhotoID: p.ID, AccessHash: p.AccessHash,
 					FileRef: p.FileReference, MsgID: m.ID,
+					PeerID: peerID, Kind: kind,
 				}
+				// SizeType filled by pickSize once Task 10 lands; until then
+				// the empty SizeType means "no renderable size" downstream.
+				ref.SizeType, _ = pickSizeOrEmpty(p.Sizes)
+				out.Photo = ref
 			}
 		case *tgapi.MessageMediaDocument:
 			out.Text = "[file]"
@@ -1337,18 +1470,22 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 	return out, true
 }
 
-// ---- dedup / optimistic-send state ----
+// pickSizeOrEmpty is a seam: Task 10 replaces the body with pickSize.
+func pickSizeOrEmpty(sizes []tgapi.PhotoSizeClass) (string, bool) { return "", false }
+
+// ---- dedup ----
 
 type chatStates struct {
-	mu      sync.Mutex
-	seen    map[int64]map[int]struct{}   // peerID → msg IDs
-	pending map[int64]map[int64]struct{} // peerID → random_ids
+	mu   sync.Mutex
+	seen map[int64]map[int]struct{} // peerID → msg IDs
 }
 
 func newChatStates() *chatStates {
-	return &chatStates{seen: map[int64]map[int]struct{}{}, pending: map[int64]map[int64]struct{}{}}
+	return &chatStates{seen: map[int64]map[int]struct{}{}}
 }
 
+// Note records a message ID; returns true only on first sighting. Protects
+// against history-load vs live-update races and send-echo double delivery.
 func (cs *chatStates) Note(peerID int64, msgID int) bool {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
@@ -1362,27 +1499,21 @@ func (cs *chatStates) Note(peerID int64, msgID int) bool {
 	return true
 }
 
-func (cs *chatStates) Pending(peerID, randomID int64) {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-	if cs.pending[peerID] == nil {
-		cs.pending[peerID] = map[int64]struct{}{}
-	}
-	cs.pending[peerID][randomID] = struct{}{}
-}
+// ---- shared ingestion: history, live updates, and send echoes all land here ----
 
-func (cs *chatStates) Reconcile(peerID, randomID int64, realID int) bool {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-	if _, ok := cs.pending[peerID][randomID]; !ok {
-		return false
+func (c *Client) handleNewMessage(mc tgapi.MessageClass) {
+	selfID := int64(0)
+	if me := c.self(); me != nil {
+		selfID = me.ID
 	}
-	delete(cs.pending[peerID], randomID)
-	if cs.seen[peerID] == nil {
-		cs.seen[peerID] = map[int]struct{}{}
+	m, ok := mapMessage(c.peers, selfID, mc)
+	if !ok {
+		return
 	}
-	cs.seen[peerID][realID] = struct{}{}
-	return true
+	if !c.chats.Note(m.PeerID, m.ID) {
+		return
+	}
+	c.emit(model.Event{Kind: model.EventNewMessage, Msg: m})
 }
 
 // ---- RPC ----
@@ -1413,7 +1544,7 @@ func (c *Client) History(ctx context.Context, kind model.PeerKind, peerID int64)
 		selfID = me.ID
 	}
 	out := make([]model.Message, 0, len(raw))
-	for i := len(raw) - 1; i >= 0; i-- { // API returns newest-first → reverse
+	for i := len(raw) - 1; i >= 0; i-- { // newest-first → oldest-first
 		if m, ok := mapMessage(c.peers, selfID, raw[i]); ok {
 			c.chats.Note(peerID, m.ID)
 			out = append(out, m)
@@ -1422,23 +1553,52 @@ func (c *Client) History(ctx context.Context, kind model.PeerKind, peerID int64)
 	return out, nil
 }
 
-func newRandomID() int64 {
-	var b [8]byte
-	_, _ = rand.Read(b[:])
-	return int64(binary.LittleEndian.Uint64(b[:]) &^ (1 << 63))
-}
-
-func (c *Client) Send(ctx context.Context, kind model.PeerKind, peerID int64, text string) (int64, error) {
+// Send uses the idiomatic Sender, then routes the RPC response updates
+// through the same ingestion path so the sent message appears exactly once.
+func (c *Client) Send(ctx context.Context, kind model.PeerKind, peerID int64, text string) error {
 	peer, ok := c.peers.InputPeer(kind, peerID)
 	if !ok {
-		return 0, errUnknownPeer
+		return errUnknownPeer
 	}
-	randomID := newRandomID()
-	c.chats.Pending(peerID, randomID)
-	_, err := c.api().MessagesSendMessage(ctx, &tgapi.MessagesSendMessageRequest{
-		Peer: peer, Message: text, RandomID: randomID,
-	})
-	return randomID, err
+	upd, err := c.sender().To(peer).Text(ctx, text)
+	if err != nil {
+		return err
+	}
+	c.consumeSent(kind, peerID, text, upd)
+	return nil
+}
+
+// consumeSent extracts the sent message from a sendMessage RPC response.
+// Telegram may answer with UpdateShortSentMessage (ID only — synthesize the
+// row from what we sent) or a full Updates batch (contains the message).
+func (c *Client) consumeSent(kind model.PeerKind, peerID int64, text string, upd tgapi.UpdatesClass) {
+	switch u := upd.(type) {
+	case *tgapi.UpdateShortSentMessage:
+		if !c.chats.Note(peerID, u.ID) {
+			return
+		}
+		c.emit(model.Event{Kind: model.EventNewMessage, Msg: model.Message{
+			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", Text: text, Out: true,
+		}})
+	case *tgapi.Updates:
+		for _, uc := range u.Updates {
+			switch v := uc.(type) {
+			case *tgapi.UpdateNewMessage:
+				c.handleNewMessage(v.Message)
+			case *tgapi.UpdateNewChannelMessage:
+				c.handleNewMessage(v.Message)
+			}
+		}
+	case *tgapi.UpdatesCombined:
+		for _, uc := range u.Updates {
+			switch v := uc.(type) {
+			case *tgapi.UpdateNewMessage:
+				c.handleNewMessage(v.Message)
+			case *tgapi.UpdateNewChannelMessage:
+				c.handleNewMessage(v.Message)
+			}
+		}
+	}
 }
 
 func (c *Client) MarkRead(ctx context.Context, kind model.PeerKind, peerID int64) error {
@@ -1447,10 +1607,11 @@ func (c *Client) MarkRead(ctx context.Context, kind model.PeerKind, peerID int64
 		return errUnknownPeer
 	}
 	if kind == model.PeerChannel {
-		ch, _ := peer.(*tgapi.InputPeerChannel)
-		_, err := c.api().ChannelsReadHistory(ctx, &tgapi.ChannelsReadHistoryRequest{
-			Channel: &tgapi.InputChannel{ChannelID: ch.ChannelID, AccessHash: ch.AccessHash},
-		})
+		ch, ok := c.peers.InputChannel(peerID)
+		if !ok {
+			return errUnknownPeer
+		}
+		_, err := c.api().ChannelsReadHistory(ctx, &tgapi.ChannelsReadHistoryRequest{Channel: ch})
 		return err
 	}
 	_, err := c.api().MessagesReadHistory(ctx, &tgapi.MessagesReadHistoryRequest{Peer: peer})
@@ -1458,23 +1619,22 @@ func (c *Client) MarkRead(ctx context.Context, kind model.PeerKind, peerID int64
 }
 ```
 
-Add `var errUnknownPeer = errors.New("unknown peer")` (import `errors`). Delete the `chatStates` stub from `stubs.go`. Note: raw `MessagesSendMessage` is used instead of `message.NewSender` because we need control of `RandomID` for reconciliation; drop the unused `message` import from this file if the compiler flags it (the sender stays available via `c.sender()` from Task 5).
+Delete the `chatStates` stub from `stubs.go`. NOTE: no `telegram/message` import needed here — `c.sender()` comes from client.go.
 
-- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v`; `go build ./...`.
-- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): history, send with random_id dedup, mark-read"`
+- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v && go build ./...`.
+- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): history + Sender send with echo dedup + mark-read"`
 
 ---
 
-### Task 10: updates dispatch → events
+### Task 8: live updates + logout
 
 **Files:**
 - Create: `examples/telegram/internal/tg/updates.go`, `updates_test.go`
-- Modify: delete `stubs.go` entirely (implement `bindUpdates` + `Logout` for real)
+- Modify: delete `stubs.go` entirely; `main.go` (logout handling shown in Task 9's wiring)
 
 **Interfaces:**
-- Consumes: `chatStates.Note/Reconcile`, `mapMessage`, `model.Event`.
-- Produces: `func (c *Client) bindUpdates(d *tgapi.UpdateDispatcher)` emitting `model.Event{Kind: EventNewMessage}` on deduped new messages; `func (c *Client) Logout(ctx context.Context) error` (best-effort `auth.Logout` + delete session file).
-- Also produces the testable pure hook: `func (c *Client) handleNewMessage(mc tgapi.MessageClass)`.
+- Consumes: `handleNewMessage` (Task 7).
+- Produces: `(*Client).bindUpdates(d tgapi.UpdateDispatcher)` (VALUE — verified: dispatcher copies share the handlers map); `(*Client).Logout(ctx) error`.
 
 - [ ] **Step 1: Failing test**
 
@@ -1497,7 +1657,7 @@ func TestHandleNewMessageDedups(t *testing.T) {
 
 	msg := &tgapi.Message{ID: 42, Message: "hey", PeerID: &tgapi.PeerUser{UserID: 7}}
 	c.handleNewMessage(msg)
-	c.handleNewMessage(msg) // duplicate — must be dropped
+	c.handleNewMessage(msg)
 
 	select {
 	case ev := <-c.Events:
@@ -1515,7 +1675,7 @@ func TestHandleNewMessageDedups(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run, FAIL** — undefined: handleNewMessage.
+- [ ] **Step 2: Run, FAIL** (handleNewMessage exists from Task 7, but the test file also pins bindUpdates/Logout below — write it, watch the dedup test pass and the build break on the stub deletion until Step 3 completes).
 
 - [ ] **Step 3: Implement**
 
@@ -1527,31 +1687,12 @@ import (
 	"context"
 	"os"
 
-	"github.com/gotd/td/telegram/auth"
 	tgapi "github.com/gotd/td/tg"
-
-	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
 
-func (c *Client) handleNewMessage(mc tgapi.MessageClass) {
-	selfID := int64(0)
-	if me := c.self(); me != nil {
-		selfID = me.ID
-	}
-	m, ok := mapMessage(c.peers, selfID, mc)
-	if !ok {
-		return
-	}
-	if !c.chats.Note(m.PeerID, m.ID) {
-		return // already seen (e.g. our own send echo)
-	}
-	select {
-	case c.Events <- model.Event{Kind: model.EventNewMessage, Msg: m}:
-	default: // never block gotd's update goroutine on a full UI queue
-	}
-}
-
-func (c *Client) bindUpdates(d *tgapi.UpdateDispatcher) {
+// bindUpdates takes the dispatcher BY VALUE: tgapi.NewUpdateDispatcher()
+// returns a value whose copies share the internal handlers map (v0.159.0).
+func (c *Client) bindUpdates(d tgapi.UpdateDispatcher) {
 	d.OnNewMessage(func(ctx context.Context, e tgapi.Entities, u *tgapi.UpdateNewMessage) error {
 		c.addEntities(e)
 		c.handleNewMessage(u.Message)
@@ -1564,6 +1705,8 @@ func (c *Client) bindUpdates(d *tgapi.UpdateDispatcher) {
 	})
 }
 
+// addEntities feeds update-borne users/chats into the peer store.
+// tgapi.Entities holds maps (verified v0.159.0).
 func (c *Client) addEntities(e tgapi.Entities) {
 	users := make([]tgapi.UserClass, 0, len(e.Users))
 	for _, u := range e.Users {
@@ -1579,58 +1722,61 @@ func (c *Client) addEntities(e tgapi.Entities) {
 	c.peers.Add(users, chats)
 }
 
-// Logout best-effort revokes the session server-side, then deletes the
-// session file. Caller restarts the client afterwards.
+// Logout best-effort revokes server-side, then deletes the session file.
+// Caller cancels the run ctx and calls start() again.
 func (c *Client) Logout(ctx context.Context) error {
 	if api := c.api(); api != nil {
-		_, _ = api.AuthLogOut(ctx) // best-effort
+		_, _ = api.AuthLogOut(ctx) // correct call — auth.Client has no Logout method
 	}
-	_ = auth.Flow{} // keep the import honest if AuthLogOut path changes
 	return os.Remove(c.SessionPath())
 }
 ```
 
-Delete `stubs.go`. (If `tgapi.Entities` field names differ (`Users`/`Chats`/`Channels` maps), adapt `addEntities` to the actual struct — it's a map of ID→entity in current gotd. Remove the `auth.Flow{}` line if the `auth` import is otherwise used or unused.)
+Delete `stubs.go`.
 
-- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v`; `go build ./...`.
-- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): update dispatch with dedup + logout"`
+- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v && go build ./...`.
+- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): live update dispatch + logout"`
 
 ---
 
-### Task 11: chat UI — sidebar, message pane, composer
+### Task 9: chat UI — REALTIME E2E
 
 **Files:**
 - Create: `examples/telegram/internal/ui/chat.go`
-- Modify: `examples/telegram/main.go` (replace "main" placeholder page)
+- Modify: `examples/telegram/main.go`
 
 **Interfaces:**
-- Consumes: `gioutil.NewListModel[T]` (`pkg/core/gioutil/listmodel.go`: `NewListModel[T any]()`, `.Append`, `.Splice`, `.At`, `.Len`, `.EmitChanged`), `tg.Client.Dialogs/History/Send/MarkRead`, `model.*`.
-- Produces: `ui.NewChatView(actions ChatActions) *ChatView` with:
+- Consumes: `gioutil.NewListModel[T]` (verified: `.ListModel` embedded `*gio.ListModel` satisfies `gio.ListModeller`; `Append/Splice(pos, removals, values...)/At/Len/Set`; `gioutil.ObjectValue[T](item.Item())`), factory callbacks `func(*coreglib.Object)` + `.Cast().(*gtk.ListItem)`, `gtk.NewListView(sel, &factory.ListItemFactory)`.
+- Produces:
 
 ```go
 type ChatActions struct {
-	LoadHistory func(d model.Dialog)                  // called on selection (goroutine inside)
+	LoadHistory func(d model.Dialog)
 	Send        func(d model.Dialog, text string)
+	Logout      func()
 }
-type ChatView struct{ ... }
+func NewChatView(actions ChatActions) *ChatView
 func (v *ChatView) Widget() gtk.Widgetter
-func (v *ChatView) SetDialogs(ds []model.Dialog)      // UI thread
-func (v *ChatView) SetMessages(d model.Dialog, ms []model.Message) // UI thread
-func (v *ChatView) AppendMessage(m model.Message)     // UI thread; routes to open chat + sidebar preview
-func (v *ChatView) Current() (model.Dialog, bool)
-func (v *ChatView) SetBanner(text string)             // "" hides (gtk.Revealer)
+func (v *ChatView) SetDialogs(ds []model.Dialog)                    // UI thread
+func (v *ChatView) SetMessages(d model.Dialog, ms []model.Message)  // UI thread
+func (v *ChatView) AppendMessage(m model.Message)                   // UI thread
+func (v *ChatView) SetBanner(text string)                           // "" hides
 ```
 
-- [ ] **Step 1: Implement ChatView**
+- [ ] **Step 1: Implement chat.go** (mixed layout uses RAW gtk containers — gota boxes reject raw gtk children)
 
 ```go
 // chat.go
 package ui
 
 import (
+	"strconv"
+
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/gota"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4/pkg/pango"
 
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
@@ -1638,10 +1784,11 @@ import (
 type ChatActions struct {
 	LoadHistory func(d model.Dialog)
 	Send        func(d model.Dialog, text string)
+	Logout      func()
 }
 
 type ChatView struct {
-	root     gtk.Widgetter
+	root     *gtk.Box
 	banner   *gtk.Revealer
 	bannerLb *gtk.Label
 
@@ -1658,13 +1805,13 @@ func NewChatView(actions ChatActions) *ChatView {
 		messages: gioutil.NewListModel[model.Message](),
 	}
 
-	// --- banner ---
+	// banner
 	v.bannerLb = gtk.NewLabel("")
 	v.banner = gtk.NewRevealer()
 	v.banner.SetChild(v.bannerLb)
 	v.banner.SetRevealChild(false)
 
-	// --- sidebar ---
+	// sidebar
 	dlgFactory := gtk.NewSignalListItemFactory()
 	dlgFactory.ConnectSetup(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
@@ -1683,7 +1830,7 @@ func NewChatView(actions ChatActions) *ChatView {
 		if d.Preview != "" {
 			text += "\n" + d.Preview
 		}
-		item.Child().(*gtk.Label).SetText(text) // plain text — no markup
+		item.Child().(*gtk.Label).SetText(text) // plain text only
 	})
 	dlgSel := gtk.NewSingleSelection(v.dialogs.ListModel)
 	dlgSel.SetAutoselect(false)
@@ -1698,57 +1845,82 @@ func NewChatView(actions ChatActions) *ChatView {
 	})
 	dlgList := gtk.NewListView(dlgSel, &dlgFactory.ListItemFactory)
 
-	// --- message pane ---
+	// message pane
 	msgFactory := gtk.NewSignalListItemFactory()
 	msgFactory.ConnectSetup(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
-		lb := gtk.NewLabel("")
-		lb.SetXAlign(0)
-		lb.SetWrap(true)
-		item.SetChild(lb)
+		item.SetChild(newMessageCell().root)
 	})
 	msgFactory.ConnectBind(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
 		m := gioutil.ObjectValue[model.Message](item.Item())
-		prefix := m.Sender
-		if m.Out {
-			prefix = "me"
-		}
-		suffix := ""
-		if m.Pending {
-			suffix = " …"
-		}
-		if m.Failed {
-			suffix = " ⚠ failed"
-		}
-		item.Child().(*gtk.Label).SetText(prefix + ": " + m.Text + suffix)
+		bindMessageCell(item.Child().(*gtk.Box), m, nil) // photo loader arrives in Task 10
 	})
 	msgSel := gtk.NewNoSelection(v.messages.ListModel)
 	msgList := gtk.NewListView(msgSel, &msgFactory.ListItemFactory)
 
-	// --- composer ---
-	composer := gota.Entry().Placeholder("Message")
-	composer.OnEnter(func() {
-		text := composer.Text()
+	// composer (gota Entry is self-contained → ToWidget into the raw box)
+	composer := gota.Entry().SetPlaceholder("Message")
+	composer.OnEnter(func(e *gota.EntryWidget) {
+		text := e.GetText()
 		if text == "" || !v.hasCurrent || !v.current.CanSend {
 			return
 		}
-		composer.SetText("")
+		e.SetText("")
 		actions.Send(v.current, text)
 	})
 
-	right := gota.VBox(
-		gota.Scrolled(msgList).Expand(true),
-		composer,
-	).Widget()
+	logoutBtn := gota.Button("Logout").OnClick(func(*gota.ButtonWidget) { actions.Logout() })
+
+	// layout: raw gtk (gota containers only accept gota.IWidget)
+	msgScroll := gtk.NewScrolledWindow()
+	msgScroll.SetChild(msgList)
+	msgScroll.SetVExpand(true)
+
+	right := gtk.NewBox(gtk.OrientationVertical, 4)
+	right.Append(msgScroll)
+	right.Append(composer.ToWidget())
+
+	dlgScroll := gtk.NewScrolledWindow()
+	dlgScroll.SetChild(dlgList)
+	dlgScroll.SetVExpand(true)
+
+	left := gtk.NewBox(gtk.OrientationVertical, 4)
+	left.Append(logoutBtn.ToWidget())
+	left.Append(dlgScroll)
 
 	pane := gtk.NewPaned(gtk.OrientationHorizontal)
-	pane.SetStartChild(gota.Scrolled(dlgList).Widget())
+	pane.SetStartChild(left)
 	pane.SetEndChild(right)
 	pane.SetPosition(280)
+	pane.SetVExpand(true)
 
-	v.root = gota.VBox(v.banner, pane).Widget()
+	v.root = gtk.NewBox(gtk.OrientationVertical, 0)
+	v.root.Append(v.banner)
+	v.root.Append(pane)
 	return v
+}
+
+// newMessageCell / bindMessageCell live in photo.go from Task 10 on; until
+// then define them here minimally:
+type messageCell struct{ root *gtk.Box }
+
+func newMessageCell() *messageCell {
+	box := gtk.NewBox(gtk.OrientationVertical, 4)
+	lb := gtk.NewLabel("")
+	lb.SetXAlign(0)
+	lb.SetWrap(true)
+	box.Append(lb)
+	return &messageCell{root: box}
+}
+
+func bindMessageCell(box *gtk.Box, m model.Message, _ interface{}) {
+	lb := box.FirstChild().(*gtk.Label)
+	prefix := m.Sender
+	if m.Out {
+		prefix = "me"
+	}
+	lb.SetText(prefix + ": " + m.Text)
 }
 
 func (v *ChatView) Widget() gtk.Widgetter { return v.root }
@@ -1757,8 +1929,6 @@ func (v *ChatView) SetBanner(text string) {
 	v.bannerLb.SetText(text)
 	v.banner.SetRevealChild(text != "")
 }
-
-func (v *ChatView) Current() (model.Dialog, bool) { return v.current, v.hasCurrent }
 
 func (v *ChatView) SetDialogs(ds []model.Dialog) {
 	v.dialogs.Splice(0, v.dialogs.Len(), ds...)
@@ -1786,219 +1956,99 @@ func (v *ChatView) AppendMessage(m model.Message) {
 }
 ```
 
-Imports to add: `coreglib "github.com/diamondburned/gotk4/pkg/core/glib"`, `"github.com/diamondburned/gotk4/pkg/pango"`, `"strconv"`. Adapt to real gioutil/gota APIs (`ListModel` embedding, `ObjectValue`, `Set`) per `pkg/core/gioutil/listmodel.go` — the capability review confirmed `Append/Remove/Splice/Set/SetSilent/EmitChanged/At/Len` exist.
-
-- [ ] **Step 2: Wire into main.go** — replace the `"main"` placeholder:
+- [ ] **Step 2: Wire main.go.** `client`/`cancel` are already hoisted (Task 6). Add after the `login` page creation, BEFORE `start` (closures read the hoisted `client` variable at call time — always the live client):
 
 ```go
-	chat := ui.NewChatView(ui.ChatActions{
+	var chat *ui.ChatView
+	chat = ui.NewChatView(ui.ChatActions{
 		LoadHistory: func(d model.Dialog) {
+			cl := client
 			go func() {
-				ms, err := client.History(ctx, d.Kind, d.PeerID)
+				ms, err := cl.History(context.Background(), d.Kind, d.PeerID)
 				if err != nil {
+					coreglib.IdleAdd(func() { chat.SetBanner("failed to load history") })
 					return
 				}
-				_ = client.MarkRead(ctx, d.Kind, d.PeerID)
+				_ = cl.MarkRead(context.Background(), d.Kind, d.PeerID)
 				coreglib.IdleAdd(func() { chat.SetMessages(d, ms) })
 			}()
 		},
 		Send: func(d model.Dialog, text string) {
+			cl := client
 			go func() {
-				_, err := client.Send(ctx, d.Kind, d.PeerID, text)
-				if err != nil {
+				if err := cl.Send(context.Background(), d.Kind, d.PeerID, text); err != nil {
 					coreglib.IdleAdd(func() { chat.SetBanner("send failed") })
 				}
+			}()
+		},
+		Logout: func() {
+			cl := client
+			if cancel != nil {
+				cancel() // stops pumps + Run
+			}
+			go func() {
+				_ = cl.Logout(context.Background())
+				coreglib.IdleAdd(func() {
+					stack.SetVisibleChildName("login")
+					cfg, err := config.Load(dir)
+					if err == nil {
+						start(*cfg) // fresh client; auth flow will prompt
+					}
+				})
 			}()
 		},
 	})
 	stack.AddNamed(chat.Widget(), "main")
 ```
 
-And extend the event pump:
+(Remove the Task 6 placeholder `AddNamed(gtk.NewLabel(...), "main")` line.) Extend `onEvent`:
 
 ```go
-				case model.EventReady:
-					stack.SetVisibleChildName("main")
-					go func() {
-						ds, err := client.Dialogs(ctx)
-						if err != nil {
-							return
-						}
-						coreglib.IdleAdd(func() { chat.SetDialogs(ds) })
-					}()
-				case model.EventNewMessage:
-					chat.AppendMessage(ev.Msg)
-				case model.EventConnecting:
-					chat.SetBanner("connecting…")
+		case model.EventReady:
+			chat.SetBanner("")
+			stack.SetVisibleChildName("main")
+			cl := client
+			go func() {
+				ds, err := cl.Dialogs(context.Background())
+				if err != nil {
+					return
+				}
+				coreglib.IdleAdd(func() { chat.SetDialogs(ds) })
+			}()
+		case model.EventNewMessage:
+			chat.AppendMessage(ev.Msg)
+		case model.EventConnecting:
+			chat.SetBanner("connecting…")
 ```
 
-(`client`, `ctx`, `chat`, `stack` must share scope — restructure `activate` so `chat` is created before `start` and `start` captures it.)
+- [ ] **Step 3: Build + REALTIME E2E**
 
-- [ ] **Step 3: Build + MANUAL E2E** — `go build ./... && go run .`:
-1. Dialog list appears with titles/previews/unread.
-2. Click a dialog → history renders oldest-top.
-3. Send a message from the app → appears; check on phone.
-4. Send from phone → appears in-app within seconds (updates path).
-5. Unread badge clears after opening (check another client).
-Screenshot main window for PR evidence.
+`go build ./... && go run .`
+1. Dialog list with titles/previews/unread badges.
+2. Open chat → history oldest-top.
+3. Send from app → appears ONCE (echo consumption); verify on phone.
+4. Send from phone → appears in-app in seconds, sidebar preview updates.
+5. Unread clears after open (check another client).
+6. Logout → login pages → re-login works (restartable start; no double events — watch for duplicate rows as the regression signal for leaked pumps).
+Screenshot the chat (macOS/Quartz).
 
-- [ ] **Step 4: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): chat view with realtime send/receive"`
+- [ ] **Step 4: Commit** — `git add -A examples/telegram && git commit -m "feat(examples/telegram): chat view with realtime send/receive + logout"`
 
 ---
 
-### Task 12: logout + session-invalid recovery + optimistic send rows
+### Task 10: photos — pipeline + inline async cell — PHOTO E2E
 
 **Files:**
-- Modify: `examples/telegram/internal/ui/chat.go` (logout button in sidebar header), `main.go`, `internal/tg/client.go`
+- Create: `examples/telegram/internal/tg/photos.go`, `photos_test.go`, `internal/ui/photo.go`, `photo_test.go`
+- Modify: `internal/tg/messages.go` (replace `pickSizeOrEmpty` seam), `messages_test.go` (photo fixture gains Sizes), `internal/ui/chat.go` (bind cells with the loader), `main.go` (pass loader)
 
 **Interfaces:**
-- Consumes: `tg.Client.Logout`, `chatStates.Pending/Reconcile`.
-- Produces: logout button → `client.Logout` → app returns to login; `AUTH_KEY_UNREGISTERED` from `runOnce` → delete session + `EventAuthNeeded`; sends render as Pending rows finalized on echo.
+- Produces: `tg.pickSize(sizes []tgapi.PhotoSizeClass) (string, bool)`; `tg.cachePath(root string, photoID int64, sizeType string) (string, error)`; `(*tg.Client).DownloadPhoto(ctx, ref model.PhotoRef, cacheDir string) (string, error)`; `ui.PhotoLoader func(ref model.PhotoRef) (string, error)`; async picture loader in `ui` (upstreamed to `pkg/gota` AFTER v1 ships — deliberately app-local now).
 
-- [ ] **Step 1: Optimistic row.** In `main.go`'s Send action, before the goroutine: build `m := model.Message{PeerID: d.PeerID, Sender: "me", Text: text, Out: true, Pending: true, LocalKey: randomID}` — restructure so `client.Send` returns randomID first (synchronous call is fine: run `Send` in the goroutine, then `IdleAdd` the append with `Pending: true` once it returns without error; on error set `Failed: true`). In `handleNewMessage` (Task 10), before the `Note` dedup, out-messages reconcile: gotd's send echo arrives as `UpdateNewMessage` with `Out: true` — `Note` already dedupes by ID; pending row replacement: in `ChatView.AppendMessage`, if `m.Out` and the last row is `Pending && Out`, replace it (`v.messages.Set(last, m)`) instead of appending.
-
-```go
-// in AppendMessage, before the plain append:
-	if m.Out && v.hasCurrent && v.current.PeerID == m.PeerID {
-		for i := v.messages.Len() - 1; i >= 0; i-- {
-			prev := v.messages.At(i)
-			if prev.Pending && prev.Out {
-				v.messages.Set(i, m)
-				return
-			}
-		}
-	}
-```
-
-- [ ] **Step 2: Session-invalid recovery.** In `client.go` `Run` loop, inspect `runOnce` error:
+- [ ] **Step 1: Failing tests**
 
 ```go
-		if isAuthKeyUnregistered(err) { // strings.Contains(err.Error(), "AUTH_KEY_UNREGISTERED")
-			_ = os.Remove(c.SessionPath())
-			c.Events <- model.Event{Kind: model.EventAuthNeeded}
-		}
-```
-
-(gotd exposes typed RPC errors via `tgerr.Is(err, "AUTH_KEY_UNREGISTERED")` — prefer that; import `github.com/gotd/td/tgerr`.)
-
-- [ ] **Step 3: Logout button.** Sidebar header: `gota.Button("Logout").OnClick(...)` → confirm via plain `gtk.AlertDialog` or just do it → goroutine `client.Logout(ctx)` → `IdleAdd` switch stack to "login". Cancel the client ctx and call `start` again with the same config (restructure `start` to be restartable: keep `cancel` func, `start` cancels previous run).
-
-- [ ] **Step 4: Build + manual check** — logout returns to login page; re-login works; sent message shows `…` then finalizes.
-- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): logout, session recovery, optimistic sends"`
-
----
-
-### Task 13: gota AsyncImage widget (pkg module — SEPARATE BRANCH/PR)
-
-**Files:**
-- Create: `pkg/gota/asyncimage.go`, `pkg/gota/asyncimage_test.go`
-- Branch: `git checkout main && git checkout -b feat/gota-async-image` (merge back into `feat/telegram-app` after, or rebase app branch on it).
-
-**Interfaces:**
-- Produces: `func AsyncImage() *AsyncImageWidget` (wraps `*gtk.Picture`, default size request 320×240); `func (w *AsyncImageWidget) LoadFunc(fetch func() (path string, err error))` — runs fetch in a goroutine, marshals the result via IdleAdd, sets the picture from filename on success; on error leaves the placeholder. Test seam: `w.idle func(func())` defaulting to `IdleAdd`.
-
-- [ ] **Step 1: Read the existing patterns first** — `pkg/gota/widgets.go` (builder style) and `pkg/gota/gota_test.go` + `table_integration_test.go` (how tests initialize/skip GTK — follow the same guard so CI behavior matches).
-
-- [ ] **Step 2: Failing test (logic-level, no display needed)**
-
-```go
-// asyncimage_test.go
-package gota
-
-import (
-	"errors"
-	"sync"
-	"testing"
-)
-
-// TestAsyncImageLoadFuncMarshaling verifies fetch runs off-thread and the
-// result is delivered through the idle hook exactly once.
-func TestAsyncImageLoadFuncMarshaling(t *testing.T) {
-	requireGTK(t) // same guard the existing gota tests use; adapt name
-
-	var mu sync.Mutex
-	var delivered []func()
-	w := AsyncImage()
-	w.idle = func(f func()) { mu.Lock(); delivered = append(delivered, f); mu.Unlock() }
-
-	done := make(chan struct{})
-	w.onLoaded = func() { close(done) }
-
-	w.LoadFunc(func() (string, error) { return "", errors.New("nope") })
-	<-done
-
-	mu.Lock()
-	defer mu.Unlock()
-	if len(delivered) != 1 {
-		t.Fatalf("idle deliveries = %d, want 1", len(delivered))
-	}
-}
-```
-
-- [ ] **Step 3: Run, FAIL** — `cd pkg && go test ./gota/ -run TestAsyncImage -v`.
-
-- [ ] **Step 4: Implement**
-
-```go
-// asyncimage.go
-package gota
-
-import (
-	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-)
-
-// AsyncImageWidget shows a placeholder until LoadFunc delivers an image path.
-type AsyncImageWidget struct {
-	*gtk.Picture
-	idle     func(func()) // test seam; defaults to IdleAdd
-	onLoaded func()       // test seam; nil in production
-}
-
-// AsyncImage creates an async-loading picture widget.
-func AsyncImage() *AsyncImageWidget {
-	p := gtk.NewPicture()
-	p.SetSizeRequest(320, 240)
-	p.SetCanShrink(true)
-	return &AsyncImageWidget{Picture: p, idle: func(f func()) { IdleAdd(f) }}
-}
-
-// LoadFunc runs fetch in a goroutine and sets the picture from the returned
-// file path on the UI loop. On error the placeholder stays.
-func (w *AsyncImageWidget) LoadFunc(fetch func() (string, error)) {
-	go func() {
-		path, err := fetch()
-		w.idle(func() {
-			if err == nil && path != "" {
-				w.SetFilename(path)
-			}
-			if w.onLoaded != nil {
-				w.onLoaded()
-			}
-		})
-	}()
-}
-```
-
-(Match `IdleAdd`'s actual name/signature in `pkg/gota/gota.go`; if `SetFilename` doesn't exist on `gtk.Picture`, use `gtk.NewPictureForFilename`-equivalent setter — capability review confirmed the constructors at pkg/gtk/v4/gtk.go:89805-89863.)
-
-- [ ] **Step 5: Run, PASS** — `cd pkg && go test ./gota/ -v` (all gota tests, not just the new one).
-- [ ] **Step 6: Commit + PR** — `git add pkg/gota && git commit -m "feat(gota): AsyncImage widget for goroutine-loaded pictures"`; push, open PR with test output as evidence. Rebase `feat/telegram-app` onto it (or merge) before Task 14.
-
----
-
-### Task 14: photo pipeline (size pick, cache path, download)
-
-**Files:**
-- Create: `examples/telegram/internal/tg/photos.go`, `photos_test.go`
-
-**Interfaces:**
-- Consumes: `model.PhotoRef`, `telegram/downloader`.
-- Produces: `func pickSize(sizes []tgapi.PhotoSizeClass) (string, bool)` (largest w ≤ 800, else smallest; only variants with real dimensions); `func cachePath(root string, photoID int64, sizeType string) (string, error)` (locally-generated name, asserts containment); `func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir string) (string, error)` (skips if cached; 10 MB cap; one retry on FILE_REFERENCE_EXPIRED by refetching the message).
-
-- [ ] **Step 1: Failing tests (pure parts)**
-
-```go
-// photos_test.go
+// photos_test.go (package tg)
 package tg
 
 import (
@@ -2011,10 +2061,10 @@ import (
 
 func TestPickSize(t *testing.T) {
 	sizes := []tgapi.PhotoSizeClass{
-		&tgapi.PhotoStrippedSize{Type: "i"},          // no dimensions — ignored
+		&tgapi.PhotoStrippedSize{Type: "i"},
 		&tgapi.PhotoSize{Type: "m", W: 320, H: 240},
 		&tgapi.PhotoSize{Type: "x", W: 800, H: 600},
-		&tgapi.PhotoSize{Type: "y", W: 1280, H: 960}, // too wide
+		&tgapi.PhotoSize{Type: "y", W: 1280, H: 960},
 	}
 	if got, ok := pickSize(sizes); !ok || got != "x" {
 		t.Fatalf("pickSize = %q, %v", got, ok)
@@ -2043,9 +2093,41 @@ func TestCachePath(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run, FAIL.**
+```go
+// photo_test.go (package ui) — verifies the async loader marshals through
+// the idle hook exactly once and never calls SetFilename on error.
+package ui
 
-- [ ] **Step 3: Implement**
+import (
+	"errors"
+	"testing"
+
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+)
+
+func TestAsyncPicMarshalsOnce(t *testing.T) {
+	if !gtk.InitCheck() {
+		t.Skip("no GTK display available")
+	}
+	p := newAsyncPic()
+	calls := 0
+	done := make(chan struct{})
+	p.idle = func(f func()) { // fake idle RUNS f (v1 review: a storing fake deadlocks)
+		calls++
+		f()
+		close(done)
+	}
+	p.load(func() (string, error) { return "", errors.New("nope") })
+	<-done
+	if calls != 1 {
+		t.Fatalf("idle calls = %d, want 1", calls)
+	}
+}
+```
+
+- [ ] **Step 2: Run, FAIL** — `go test ./internal/tg/ ./internal/ui/ -v`.
+
+- [ ] **Step 3: Implement tg side**
 
 ```go
 // photos.go
@@ -2057,7 +2139,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tgerr"
@@ -2106,15 +2187,18 @@ func cachePath(root string, photoID int64, sizeType string) (string, error) {
 	}
 	name := fmt.Sprintf("%x_%s.jpg", photoID, sizeType)
 	p := filepath.Join(root, name)
-	if filepath.Dir(p) != filepath.Clean(root) || strings.Contains(name, string(os.PathSeparator)) {
+	if filepath.Dir(p) != filepath.Clean(root) {
 		return "", fmt.Errorf("cache path escapes root")
 	}
 	return p, nil
 }
 
-// DownloadPhoto downloads ref into cacheDir, returning the local path.
-// Cached files are reused. One retry on FILE_REFERENCE_EXPIRED.
+// DownloadPhoto downloads ref into cacheDir. Cached files reused. One retry
+// on FILE_REFERENCE_EXPIRED via a peer-kind-aware message refetch.
 func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir string) (string, error) {
+	if ref.SizeType == "" {
+		return "", fmt.Errorf("photo has no renderable size")
+	}
 	if err := os.MkdirAll(cacheDir, 0o700); err != nil {
 		return "", err
 	}
@@ -2155,19 +2239,38 @@ func (c *Client) DownloadPhoto(ctx context.Context, ref model.PhotoRef, cacheDir
 	return path, nil
 }
 
-// refreshPhotoRef refetches the message to obtain a fresh file_reference.
+// refreshPhotoRef refetches the carrying message for a fresh file_reference.
+// Channel/supergroup messages need ChannelsGetMessages (messages.getMessages
+// does NOT return them — verified against gotd v0.159.0 / Telegram API).
 func (c *Client) refreshPhotoRef(ctx context.Context, ref model.PhotoRef) (model.PhotoRef, error) {
-	res, err := c.api().MessagesGetMessages(ctx, []tgapi.InputMessageClass{
-		&tgapi.InputMessageID{ID: ref.MsgID},
-	})
-	if err != nil {
-		return ref, err
+	var msgs []tgapi.MessageClass
+	if ref.Kind == model.PeerChannel {
+		ch, ok := c.peers.InputChannel(ref.PeerID)
+		if !ok {
+			return ref, errUnknownPeer
+		}
+		res, err := c.api().ChannelsGetMessages(ctx, &tgapi.ChannelsGetMessagesRequest{
+			Channel: ch,
+			ID:      []tgapi.InputMessageClass{&tgapi.InputMessageID{ID: ref.MsgID}},
+		})
+		if err != nil {
+			return ref, err
+		}
+		if v, ok := res.(*tgapi.MessagesChannelMessages); ok {
+			msgs = v.Messages
+		}
+	} else {
+		res, err := c.api().MessagesGetMessages(ctx, []tgapi.InputMessageClass{
+			&tgapi.InputMessageID{ID: ref.MsgID},
+		})
+		if err != nil {
+			return ref, err
+		}
+		if v, ok := res.(*tgapi.MessagesMessages); ok {
+			msgs = v.Messages
+		}
 	}
-	msgs, ok := res.(*tgapi.MessagesMessages)
-	if !ok {
-		return ref, fmt.Errorf("unexpected getMessages result")
-	}
-	for _, mc := range msgs.Messages {
+	for _, mc := range msgs {
 		m, ok := mc.(*tgapi.Message)
 		if !ok || m.ID != ref.MsgID {
 			continue
@@ -2183,33 +2286,16 @@ func (c *Client) refreshPhotoRef(ctx context.Context, ref model.PhotoRef) (model
 }
 ```
 
-Also: in Task 9's `mapMessage`, populate `PhotoRef.SizeType` via `pickSize(p.Sizes)` (add `if st, ok := pickSize(p.Sizes); ok { ...SizeType: st... }` and skip the PhotoRef if `!ok`). Update `messages_test.go`'s photo fixture to include `Sizes: []tgapi.PhotoSizeClass{&tgapi.PhotoSize{Type: "x", W: 800, H: 600}}` and assert `SizeType == "x"`.
+In `messages.go`: delete `pickSizeOrEmpty` and call `pickSize` directly (`ref.SizeType, _ = pickSize(p.Sizes)`). In `messages_test.go`: add `Sizes: []tgapi.PhotoSizeClass{&tgapi.PhotoSize{Type: "x", W: 800, H: 600}}` to the photo fixture and assert `pm.Photo.SizeType == "x"`.
 
-(A true byte-cap DURING download needs a size probe; the post-hoc stat + the ≤800px class keep v1 honest — the class bounds legitimate sizes well under 10 MB. If `downloader`'s builder differs, follow pkg.go.dev/github.com/gotd/td/telegram/downloader.)
-
-- [ ] **Step 4: Run, PASS** — `go test ./internal/tg/ -v`; `go build ./...`.
-- [ ] **Step 5: Commit** — `git commit -am "feat(examples/telegram): photo download with cache + file-reference retry"`
-
----
-
-### Task 15: photos in the message pane
-
-**Files:**
-- Create: `examples/telegram/internal/ui/photo.go`
-- Modify: `examples/telegram/internal/ui/chat.go` (message factory), `main.go` (pass cache dir + downloader)
-
-**Interfaces:**
-- Consumes: `gota.AsyncImage` (Task 13), `tg.Client.DownloadPhoto` (Task 14).
-- Produces: `type PhotoLoader func(ref model.PhotoRef) (string, error)`; `NewChatView(actions ChatActions)` gains `actions.LoadPhoto PhotoLoader`; message cells with `m.Photo != nil` render an AsyncImage under the text.
-
-- [ ] **Step 1: Message cell with photo**
+- [ ] **Step 4: Implement ui side**
 
 ```go
 // photo.go
 package ui
 
 import (
-	"github.com/diamondburned/gotk4/pkg/gota"
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
@@ -2217,119 +2303,106 @@ import (
 
 type PhotoLoader func(ref model.PhotoRef) (string, error)
 
-// photoCell builds a message row that may carry an image.
-type photoCell struct {
-	box   *gtk.Box
-	label *gtk.Label
-	img   *gota.AsyncImageWidget
+// asyncPic: goroutine fetch → idle → SetFilename. Kept app-local for v1;
+// upstream to pkg/gota (with a real consumer as evidence) after v1 ships.
+type asyncPic struct {
+	*gtk.Picture
+	idle func(func()) // test seam; defaults to coreglib.IdleAdd
 }
 
-func newPhotoCell() *photoCell {
-	c := &photoCell{}
-	c.label = gtk.NewLabel("")
-	c.label.SetXAlign(0)
-	c.label.SetWrap(true)
-	c.box = gtk.NewBox(gtk.OrientationVertical, 4)
-	c.box.Append(c.label)
-	return c
+func newAsyncPic() *asyncPic {
+	p := gtk.NewPicture()
+	p.SetSizeRequest(320, 240)
+	p.SetCanShrink(true)
+	return &asyncPic{Picture: p, idle: func(f func()) { coreglib.IdleAdd(f) }}
 }
 
-func (c *photoCell) bind(m model.Message, load PhotoLoader) {
-	// text part identical to the plain cell
-	prefix := m.Sender
-	if m.Out {
-		prefix = "me"
-	}
-	c.label.SetText(prefix + ": " + m.Text)
-
-	if c.img != nil {
-		c.box.Remove(c.img)
-		c.img = nil
-	}
-	if m.Photo != nil && load != nil {
-		ref := *m.Photo
-		c.img = gota.AsyncImage()
-		c.box.Append(c.img)
-		c.img.LoadFunc(func() (string, error) { return load(ref) })
-	}
+func (a *asyncPic) load(fetch func() (string, error)) {
+	go func() {
+		path, err := fetch()
+		a.idle(func() {
+			if err == nil && path != "" {
+				a.SetFilename(path)
+			}
+		})
+	}()
 }
 ```
 
-Change `chat.go`'s message factory Setup to create `newPhotoCell()` (store via `item.SetChild(c.box)` and keep the cell in a `map[uintptr]*photoCell` keyed by the ListItem, or reconstruct in Bind via child lookup), and Bind to call `cell.bind(m, actions.LoadPhoto)` — including the Pending/Failed suffix from Task 11.
+Update `chat.go`: change `bindMessageCell(box *gtk.Box, m model.Message, load PhotoLoader)` — after setting the label, remove any previous picture child (`for c := box.FirstChild(); ...` keep only the label, or track via `box.LastChild()` != label → `box.Remove`), and when `m.Photo != nil && m.Photo.SizeType != "" && load != nil`:
 
-- [ ] **Step 2: Wire in main.go**
+```go
+	if m.Photo != nil && m.Photo.SizeType != "" && load != nil {
+		ref := *m.Photo
+		pic := newAsyncPic()
+		box.Append(pic)
+		pic.load(func() (string, error) { return load(ref) })
+	}
+```
+
+`NewChatView` gains the loader via `ChatActions`: add field `LoadPhoto PhotoLoader`, pass `actions.LoadPhoto` in the Bind callback. In `main.go`:
 
 ```go
 	cacheDir, _ := config.DefaultCacheDir()
-	// in ChatActions:
+	// in ChatActions literal:
 	LoadPhoto: func(ref model.PhotoRef) (string, error) {
 		return client.DownloadPhoto(context.Background(), ref, cacheDir)
 	},
 ```
 
-- [ ] **Step 3: Build + MANUAL E2E** — `go run .`; open a chat containing photos → placeholders appear, then images; second open is instant (cache hit); `ls ~/Library/Caches/gotk4-telegram/` shows `<hex>_<letter>.jpg` names only.
-- [ ] **Step 4: Screenshot for evidence. Commit** — `git commit -am "feat(examples/telegram): inline photo rendering via gota AsyncImage"`
+- [ ] **Step 5: Run, PASS** — `go test ./internal/tg/ ./internal/ui/ -v && go build ./...`.
+- [ ] **Step 6: PHOTO E2E** — `go run .`; open a photo-bearing chat → placeholder → image renders; reopen instant (cache); `ls ~/Library/Caches/gotk4-telegram/` → only `<hex>_<letter>.jpg`. Screenshot.
+- [ ] **Step 7: Commit** — `git commit -am "feat(examples/telegram): photo pipeline with channel-aware refresh + async cells"`
 
 ---
 
-### Task 16: polish — empty states, failed sends, connecting banner
+### Task 11: polish + README + CI + PR
 
 **Files:**
-- Modify: `examples/telegram/internal/ui/chat.go`, `main.go`
+- Modify: `examples/telegram/internal/ui/chat.go`, `.github/workflows/qa.yml`
+- Create: `examples/telegram/README.md`
 
-- [ ] **Step 1:** Empty dialog list → `gtk.Label("No chats yet")` via `dlgList.SetPlaceholder`-equivalent (GTK4 ListView has no placeholder: instead wrap sidebar in a `gtk.Stack` toggling label/list on `SetDialogs(len==0)`). Same for empty message pane.
-- [ ] **Step 2:** Send errors: `EventSendFailed` path — in main.go Send action error branch, `IdleAdd` append `model.Message{..., Failed: true}` so the row shows `⚠ failed` (Task 11 factory already renders it).
-- [ ] **Step 3:** Banner text states: "connecting…" on `EventConnecting`, cleared ("" → hidden) on `EventReady`, error text on `EventError`.
-- [ ] **Step 4:** Build + manual sanity run. Commit — `git commit -am "feat(examples/telegram): empty states, failed-send rows, status banner"`
+- [ ] **Step 1: Empty states.** Sidebar: wrap `dlgScroll` in a `gtk.Stack` with a `gtk.NewLabel("No chats yet")` page; `SetDialogs` flips: `if len(ds) == 0 { sideStack.SetVisibleChildName("empty") } else { sideStack.SetVisibleChildName("list") }`. Same pattern for the message pane ("Select a chat").
+Verify: run with a test account with 0 dialogs OR temporarily `SetDialogs(nil)` → label shows.
 
----
+- [ ] **Step 2: README.md** — sections: purpose (bindings proof), prerequisites (nix-shell or brew + the PKG_CONFIG_PATH export line; api_id/api_hash from my.telegram.org), run (`go run .`), storage table (config.json 0600, session.json 0600 = full-account secret, cache dir) + logout note, v1 scope + out-of-scope (copy the spec lists), screenshots (login/chat/photo; captioned "macOS/Quartz"), and "gap recovery + pagination: v2" note.
 
-### Task 17: CI — build the app on Linux/Nix
+- [ ] **Step 3: goimports BEFORE CI push** (v1 review: qa.yml runs goimports + git-dirty; unformatted examples would fail the watched run)
 
-**Files:**
-- Modify: `.github/workflows/qa.yml`
+```bash
+goimports -w examples/telegram && git diff --exit-code examples/telegram || git commit -am "style: goimports"
+```
 
-- [ ] **Step 1:** Read qa.yml; find the job that runs inside nix-shell (the one running `go generate`/tests). Add a step after the pkg tests, mirroring the surrounding step syntax exactly:
+- [ ] **Step 4: CI step.** Read qa.yml; mirror the existing nix step syntax exactly; add after the pkg tests:
 
 ```yaml
       - name: Build examples/telegram
         run: nix-shell --run "cd examples/telegram && go build ./... && go test ./..."
 ```
 
-(If existing steps use a different nix invocation — `nix develop -c`, a shared shell wrapper — copy that form instead. The git-dirty check must stay after it.)
+Module downloads use the network like every other CI `go` step — vendoring is REJECTED (Global Constraints), do not add a vendor/ tree if the run fails; fix the fetch instead.
 
-- [ ] **Step 2:** Commit + push, verify workflow green: `git commit -am "ci: build examples/telegram in qa" && git push -u origin feat/telegram-app && gh run watch`
-- [ ] **Step 3:** If the Nix pin lacks network access for `go mod download` of gotd in CI, vendor instead: `cd examples/telegram && go mod vendor && git add vendor && git commit -m "chore(examples/telegram): vendor deps for CI"` (check how CI fetches pkg deps first — if `go test` in pkg already downloads modules in CI, gotd will download fine too and vendoring is unnecessary).
-
----
-
-### Task 18: README + PR with evidence
-
-**Files:**
-- Create: `examples/telegram/README.md`
-
-- [ ] **Step 1: README** — sections: what it is (proof app for the bindings), prerequisites (GTK4 via nix-shell or brew + PKG_CONFIG_PATH line, api_id/api_hash from my.telegram.org), run (`go run .`), storage locations + permissions note (config/session 0600 in dir 0700; session file grants full account access — treat like a password), v1 scope + out-of-scope list (copy from spec), screenshots (login, chat, photos — the ones captured in Tasks 8/11/15).
-- [ ] **Step 2: Full verification sweep**
+- [ ] **Step 5: Full sweep**
 
 ```bash
 cd examples/telegram && go vet ./... && go test ./... && go build ./... && cd ../..
-goimports -w examples/telegram && git diff --exit-code examples/telegram
+git push -u origin feat/telegram-app && gh run watch
 ```
 
-Expected: all exit 0, no diff after goimports.
+Expected: vet/test/build exit 0; CI green including the new step.
 
-- [ ] **Step 3: PR** — `gh pr create` from `feat/telegram-app`. Body MUST include (global PR rules): test output (`go test ./...` exit status), build output, the screenshots, and a note of what was manually E2E-verified (real login, realtime receive, photo render). State explicitly that E2E is manual.
+- [ ] **Step 6: PR** — `gh pr create` from `feat/telegram-app`. Body (global PR evidence rules): `go test ./...` output with exit status, build output, CI link, screenshots (labeled macOS/Quartz), list of manually-E2E-verified flows (real login, session reuse, realtime receive, send-echo single-append, logout/re-login, photo render+cache) and the explicit note that E2E is manual.
 
 ---
 
-### Task 19: TestGIRDirs graceful skip on macOS/brew (SEPARATE BRANCH/PR)
+### Task 12: TestGIRDirs graceful skip on macOS/brew (SEPARATE PR)
 
 **Files:**
 - Modify: `gir/pkgconfig/pkgconfig_test.go`
 - Branch: `git checkout main && git checkout -b fix/girdirs-skip-macos`
 
-- [ ] **Step 1: Reproduce** — `go test ./gir/pkgconfig/ -run TestGIRDirs -v` on macOS with brew GTK: FAIL `could not resolve install prefix for packages: [gtk4 pango cairo glib-2.0]`.
-- [ ] **Step 2: Add guarded skip.** In the failing case's error branch (read the test first; wrap where the error is asserted):
+- [ ] **Step 1: Reproduce** — `go test ./gir/pkgconfig/ -run TestGIRDirs -v` on macOS/brew: FAIL `could not resolve install prefix for packages: [gtk4 pango cairo glib-2.0]`.
+- [ ] **Step 2: Guarded skip.** Read the test; immediately before its "Did not expect an error" assertion insert:
 
 ```go
 	if err != nil && runtime.GOOS == "darwin" &&
@@ -2338,15 +2411,20 @@ Expected: all exit 0, no diff after goimports.
 	}
 ```
 
-(Placement: immediately before the existing `Did not expect an error` assertion; imports `runtime`, `strings`. Linux CI behavior unchanged — skip is darwin-only.)
-
-- [ ] **Step 3: Verify both ways** — macOS: `go test ./gir/pkgconfig/ -run TestGIRDirs -v` → SKIP with reason. Confirm the file still passes `go vet ./gir/...`.
-- [ ] **Step 4: Commit + PR** — `git commit -am "test(pkgconfig): skip TestGIRDirs on darwin when no common prefix resolves"`; push; PR body: before/after test output as evidence; note Linux CI unaffected.
+(imports: `runtime`, `strings`; Linux CI path unchanged.)
+- [ ] **Step 3: Verify** — macOS: SKIP with reason; `go vet ./gir/...` clean.
+- [ ] **Step 4: Commit + PR** — `git commit -am "test(pkgconfig): skip TestGIRDirs on darwin when no common prefix resolves"`; push; PR body: before/after output.
 
 ---
 
+## Follow-ups (explicitly NOT in this plan)
+
+- Upstream `asyncPic` to `pkg/gota` as `AsyncImage`, citing examples/telegram as the consumer (post-v1, own PR).
+- Update-gap recovery via `updates.Manager` + persisted state (v2).
+- History pagination (v2).
+
 ## Self-Review Notes
 
-- Spec coverage: setup/config (T1-2), auth+session+logout (T4,5,8,12), peers/dialogs/updates (T6,7,10), messages+dedup+mark-read (T9,11,12), photos (T13-15), polish/empty/failed (T16), CI (T17), evidence (T18), TestGIRDirs (T19), gota gap (T13). Out-of-scope list enforced by absence.
-- Known risk, stated openly: gotd/gtk API signatures in this plan come from the review agents' verification notes, not from compiled code. Steps that hit a signature mismatch must consult the pinned docs (Global Constraints, last bullet) and adapt — the tests, not the plan's code blocks, are the contract.
-- Type consistency: `model.*` defined once in Task 3 and consumed by exact name everywhere; `chatStates.Pending/Note/Reconcile` defined T9, consumed T10/T12; `PhotoRef.SizeType` produced T14's mapMessage amendment, consumed T15.
+- All 4 plan-review findings folded in: gotd wont-compile (dispatcher value) fixed at Tasks 4/8; channel photo refresh (ChannelsGetMessages + PhotoRef.Kind/PeerID) at Task 10; the 11 gota wont-compiles rewritten against the verified API (Global Constraints documents it); T13-deadlock test replaced by a fake-idle-that-runs-f; scoping/stale-capture/pump-leak fixed by the hoisted restartable start (Task 6) with per-pump ctx teardown and call-time `cl := client` captures; optimistic/random_id machinery cut (Send→Sender + consumeSent, unit-tested incl. UpdateShortSentMessage); goimports ordered before the CI push; spike gates the triad at Task 4; platform gate at Task 1; LockOSThread everywhere; session chmod 0600 in code; screenshots labeled.
+- Type consistency: `model.*` (Task 2) consumed by name throughout; `pickSizeOrEmpty` seam (Task 7) explicitly replaced in Task 10; `bindMessageCell` signature change (Task 9 → Task 10) called out in Task 10's modify list.
+- Spec deviations (spec amended in the same commit as this plan): bare dispatcher instead of updates.Manager; no optimistic rows (send-echo append); async image app-local instead of gota-first.
