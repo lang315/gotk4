@@ -75,6 +75,9 @@ func (c *Client) Run(ctx context.Context) error {
 	for {
 		err := c.runOnce(ctx)
 		c.ready.Store(false)
+		c.mu.Lock()
+		c.rawAPI, c.snd, c.me = nil, nil, nil
+		c.mu.Unlock()
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -101,6 +104,10 @@ func (c *Client) emit(ev model.Event) {
 }
 
 func (c *Client) runOnce(ctx context.Context) error {
+	if err := os.MkdirAll(c.dataDir, 0o700); err != nil {
+		return err
+	}
+
 	// VALUE, not pointer: NewUpdateDispatcher returns UpdateDispatcher whose
 	// value copies share the internal handlers map (verified v0.159.0).
 	dispatcher := tgapi.NewUpdateDispatcher()
