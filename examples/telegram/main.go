@@ -39,7 +39,6 @@ func activate(app *gtk.Application) {
 	stack := gtk.NewStack()
 	login := ui.NewLoginPage()
 	stack.AddNamed(login.Widget(), "login")
-	stack.AddNamed(gtk.NewLabel("connected — chat UI lands in Task 9"), "main")
 	w.SetChild(stack)
 	w.SetVisible(true)
 
@@ -48,18 +47,73 @@ func activate(app *gtk.Application) {
 	var (
 		client *tg.Client
 		cancel context.CancelFunc
+		start  func(cfg config.Config) // forward-declared: Logout below calls start() before its literal is assigned
 	)
+
+	var chat *ui.ChatView
+	chat = ui.NewChatView(ui.ChatActions{
+		LoadHistory: func(d model.Dialog) {
+			cl := client
+			go func() {
+				ms, err := cl.History(context.Background(), d.Kind, d.PeerID)
+				if err != nil {
+					coreglib.IdleAdd(func() { chat.SetBanner("failed to load history") })
+					return
+				}
+				_ = cl.MarkRead(context.Background(), d.Kind, d.PeerID)
+				coreglib.IdleAdd(func() { chat.SetMessages(d, ms) })
+			}()
+		},
+		Send: func(d model.Dialog, text string) {
+			cl := client
+			go func() {
+				if err := cl.Send(context.Background(), d.Kind, d.PeerID, text); err != nil {
+					coreglib.IdleAdd(func() { chat.SetBanner("send failed") })
+				}
+			}()
+		},
+		Logout: func() {
+			cl := client
+			if cancel != nil {
+				cancel() // stops pumps + Run
+			}
+			go func() {
+				_ = cl.Logout(context.Background())
+				coreglib.IdleAdd(func() {
+					stack.SetVisibleChildName("login")
+					cfg, err := config.Load(dir)
+					if err == nil {
+						start(*cfg) // fresh client; auth flow will prompt
+					}
+				})
+			}()
+		},
+	})
+	stack.AddNamed(chat.Widget(), "main")
 
 	onEvent := func(ev model.Event) { // UI thread
 		switch ev.Kind {
 		case model.EventAuthNeeded:
 			stack.SetVisibleChildName("login")
 		case model.EventReady:
+			chat.SetBanner("")
 			stack.SetVisibleChildName("main")
+			cl := client
+			go func() {
+				ds, err := cl.Dialogs(context.Background())
+				if err != nil {
+					return
+				}
+				coreglib.IdleAdd(func() { chat.SetDialogs(ds) })
+			}()
+		case model.EventNewMessage:
+			chat.AppendMessage(ev.Msg)
+		case model.EventConnecting:
+			chat.SetBanner("connecting…")
 		}
 	}
 
-	start := func(cfg config.Config) { // UI thread; safe to call again (logout/re-login)
+	start = func(cfg config.Config) { // UI thread; safe to call again (logout/re-login)
 		if cancel != nil {
 			cancel()
 		}
