@@ -128,3 +128,30 @@ func TestBindMessagePhotoSlot(t *testing.T) {
 		t.Fatal("recycled cell must clear the photo slot")
 	}
 }
+
+func TestComposerFollowsCanSend(t *testing.T) {
+	if !gtkOK {
+		t.Skip("no display; GTK cannot init")
+	}
+	sent := 0
+	v := NewChatView(ChatActions{
+		LoadHistory: func(model.Dialog) {},
+		Send:        func(model.Dialog, string) { sent++ },
+	})
+	if v.sendBtn.Sensitive() {
+		t.Fatal("composer must start disabled")
+	}
+	v.showDialog(model.Dialog{Title: "RO", Kind: model.PeerChannel, PeerID: 1, CanSend: false})
+	if v.sendBtn.Sensitive() || v.composer.ToWidget().Sensitive() {
+		t.Fatal("read-only channel must disable the composer")
+	}
+	v.showDialog(model.Dialog{Title: "G", Kind: model.PeerChat, PeerID: 2, CanSend: true})
+	if !v.sendBtn.Sensitive() {
+		t.Fatal("writable chat must enable the composer")
+	}
+	v.composer.SetText("hi")
+	v.submitComposer()
+	if sent != 1 || v.composer.GetText() != "" {
+		t.Fatalf("submit: sent=%d text=%q", sent, v.composer.GetText())
+	}
+}

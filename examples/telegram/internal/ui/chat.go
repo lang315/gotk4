@@ -41,6 +41,9 @@ type ChatView struct {
 	msgScroll *gtk.ScrolledWindow
 	fab       *gtk.Button
 
+	composer *gota.EntryWidget
+	sendBtn  *gtk.Button
+
 	current    model.Dialog
 	hasCurrent bool
 }
@@ -159,16 +162,27 @@ func NewChatView(actions ChatActions) *ChatView {
 	msgList := gtk.NewListView(msgSel, &msgFactory.ListItemFactory)
 	msgList.AddCSSClass("msg-list")
 
-	// composer (gota Entry is self-contained → ToWidget into the raw box)
-	composer := gota.Entry().SetPlaceholder("Message")
-	composer.OnEnter(func(e *gota.EntryWidget) {
-		text := e.GetText()
-		if text == "" || !v.hasCurrent || !v.current.CanSend {
-			return
-		}
-		e.SetText("")
-		actions.Send(v.current, text)
-	})
+	v.composer = gota.Entry().SetPlaceholder("Message")
+	v.composer.OnEnter(func(*gota.EntryWidget) { v.submitComposer() })
+	entryW := v.composer.ToWidget()
+	entryW.SetHExpand(true)
+
+	v.sendBtn = gtk.NewButtonWithLabel("Send")
+	v.sendBtn.AddCSSClass("suggested-action")
+	v.sendBtn.ConnectClicked(func() { v.submitComposer() })
+
+	comp := gtk.NewBox(gtk.OrientationHorizontal, 8)
+	comp.AddCSSClass("composer")
+	comp.SetMarginTop(8)
+	comp.SetMarginBottom(8)
+	comp.SetMarginStart(8)
+	comp.SetMarginEnd(8)
+	comp.Append(entryW)
+	comp.Append(v.sendBtn)
+
+	// initial state: nothing selected yet
+	entryW.SetSensitive(false)
+	v.sendBtn.SetSensitive(false)
 
 	// header
 	v.headerTitle = gtk.NewLabel("")
@@ -229,7 +243,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	right := gtk.NewBox(gtk.OrientationVertical, 4)
 	right.Append(header)
 	right.Append(overlay)
-	right.Append(composer.ToWidget())
+	right.Append(comp)
 
 	dlgScroll := gtk.NewScrolledWindow()
 	dlgScroll.SetChild(dlgList)
@@ -277,7 +291,28 @@ func (v *ChatView) showDialog(d model.Dialog) {
 	v.headerSub.SetText(sub)
 	v.headerSub.SetVisible(sub != "")
 	v.msgStack.SetVisibleChildName("messages")
+	v.composerFor(d)
 	v.actions.LoadHistory(d)
+}
+
+func (v *ChatView) submitComposer() {
+	text := v.composer.GetText()
+	if text == "" || !v.hasCurrent || !v.current.CanSend {
+		return
+	}
+	v.composer.SetText("")
+	v.actions.Send(v.current, text)
+}
+
+// composerFor enables/disables input to match the open conversation.
+func (v *ChatView) composerFor(d model.Dialog) {
+	if d.CanSend {
+		v.composer.SetPlaceholder("Message")
+	} else {
+		v.composer.SetPlaceholder("Read-only channel")
+	}
+	v.composer.ToWidget().SetSensitive(d.CanSend)
+	v.sendBtn.SetSensitive(d.CanSend)
 }
 
 // msgCell is the recycled widget tree of one message row:
@@ -517,4 +552,7 @@ func (v *ChatView) Reset() {
 	v.headerTitle.SetText("")
 	v.headerSub.SetText("")
 	v.headerSub.SetVisible(false)
+	v.composer.ToWidget().SetSensitive(false)
+	v.sendBtn.SetSensitive(false)
+	v.composer.SetPlaceholder("Message")
 }
