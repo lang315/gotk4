@@ -40,9 +40,7 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 					FileRef: p.FileReference, MsgID: m.ID,
 					PeerID: peerID, Kind: kind,
 				}
-				// SizeType filled by pickSize once Task 10 lands; until then
-				// the empty SizeType means "no renderable size" downstream.
-				ref.SizeType, _ = pickSizeOrEmpty(p.Sizes)
+				ref.SizeType, _ = pickSize(p.Sizes)
 				out.Photo = ref
 			}
 		case *tgapi.MessageMediaDocument:
@@ -53,9 +51,6 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 	}
 	return out, true
 }
-
-// pickSizeOrEmpty is a seam: Task 10 replaces the body with pickSize.
-func pickSizeOrEmpty(sizes []tgapi.PhotoSizeClass) (string, bool) { return "", false }
 
 // ---- dedup ----
 

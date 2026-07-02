@@ -31,6 +31,7 @@ func activate(app *gtk.Application) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	cacheDir, _ := config.DefaultCacheDir()
 
 	w := gtk.NewApplicationWindow(app)
 	w.SetTitle("gotk4 Telegram")
@@ -87,6 +88,9 @@ func activate(app *gtk.Application) {
 					}
 				})
 			}()
+		},
+		LoadPhoto: func(ref model.PhotoRef) (string, error) {
+			return client.DownloadPhoto(context.Background(), ref, cacheDir)
 		},
 	})
 	stack.AddNamed(chat.Widget(), "main")

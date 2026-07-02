@@ -21,9 +21,10 @@ func TestMapMessage(t *testing.T) {
 	}
 
 	photo := &tgapi.Message{ID: 2, PeerID: &tgapi.PeerUser{UserID: 7},
-		Media: &tgapi.MessageMediaPhoto{Photo: &tgapi.Photo{ID: 555, AccessHash: 556, FileReference: []byte{1}}}}
+		Media: &tgapi.MessageMediaPhoto{Photo: &tgapi.Photo{ID: 555, AccessHash: 556, FileReference: []byte{1},
+			Sizes: []tgapi.PhotoSizeClass{&tgapi.PhotoSize{Type: "x", W: 800, H: 600}}}}}
 	pm, ok := mapMessage(s, 99, photo)
-	if !ok || pm.Text != "[photo]" || pm.Photo == nil || pm.Photo.PhotoID != 555 || pm.Photo.MsgID != 2 || pm.Photo.PeerID != 7 {
+	if !ok || pm.Text != "[photo]" || pm.Photo == nil || pm.Photo.PhotoID != 555 || pm.Photo.MsgID != 2 || pm.Photo.PeerID != 7 || pm.Photo.SizeType != "x" {
 		t.Fatalf("photo = %+v", pm)
 	}
 

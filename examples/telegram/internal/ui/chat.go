@@ -17,6 +17,7 @@ type ChatActions struct {
 	LoadHistory func(d model.Dialog)
 	Send        func(d model.Dialog, text string)
 	Logout      func()
+	LoadPhoto   PhotoLoader
 }
 
 type ChatView struct {
@@ -86,7 +87,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	msgFactory.ConnectBind(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
 		m := gioutil.ObjectValue[model.Message](item.Item())
-		bindMessageCell(item.Child().(*gtk.Box), m, nil) // photo loader arrives in Task 10
+		bindMessageCell(item.Child().(*gtk.Box), m, actions.LoadPhoto)
 	})
 	msgSel := gtk.NewNoSelection(v.messages.ListModel)
 	msgList := gtk.NewListView(msgSel, &msgFactory.ListItemFactory)
@@ -133,8 +134,6 @@ func NewChatView(actions ChatActions) *ChatView {
 	return v
 }
 
-// newMessageCell / bindMessageCell live in photo.go from Task 10 on; until
-// then define them here minimally:
 type messageCell struct{ root *gtk.Box }
 
 func newMessageCell() *messageCell {
@@ -146,13 +145,30 @@ func newMessageCell() *messageCell {
 	return &messageCell{root: box}
 }
 
-func bindMessageCell(box *gtk.Box, m model.Message, _ interface{}) {
+func bindMessageCell(box *gtk.Box, m model.Message, load PhotoLoader) {
 	lb := box.FirstChild().(*gtk.Label)
 	prefix := m.Sender
 	if m.Out {
 		prefix = "me"
 	}
 	lb.SetText(prefix + ": " + m.Text)
+
+	// ListView recycles cells: drop any picture appended by a previous bind
+	// before (maybe) appending a fresh one below. Widgetter values from
+	// separate FirstChild()/LastChild() calls are NOT pointer-identical even
+	// for the same underlying widget (each call wraps a fresh Go struct), so
+	// identity must be checked via the native GObject pointer.
+	if last := box.LastChild(); last != nil &&
+		coreglib.BaseObject(last).Native() != coreglib.BaseObject(lb).Native() {
+		box.Remove(last)
+	}
+
+	if m.Photo != nil && m.Photo.SizeType != "" && load != nil {
+		ref := *m.Photo
+		pic := newAsyncPic()
+		box.Append(pic)
+		pic.load(func() (string, error) { return load(ref) })
+	}
 }
 
 func (v *ChatView) Widget() gtk.Widgetter { return v.root }
