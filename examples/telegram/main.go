@@ -85,6 +85,7 @@ func activate(app *gtk.Application) {
 			go func() {
 				_ = cl.Logout(context.Background())
 				coreglib.IdleAdd(func() {
+					chat.Reset()
 					stack.SetVisibleChildName("login")
 					cfg, err := config.Load(dir)
 					if err == nil {

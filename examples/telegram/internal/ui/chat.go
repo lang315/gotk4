@@ -70,16 +70,6 @@ func NewChatView(actions ChatActions) *ChatView {
 	})
 	dlgSel := gtk.NewSingleSelection(v.dialogs.ListModel)
 	dlgSel.SetAutoselect(false)
-	dlgSel.ConnectSelectionChanged(func(_, _ uint) {
-		i := dlgSel.Selected()
-		if i == gtk.InvalidListPosition {
-			return
-		}
-		d := v.dialogs.At(int(i))
-		v.current, v.hasCurrent = d, true
-		v.msgStack.SetVisibleChildName("messages")
-		actions.LoadHistory(d)
-	})
 	dlgList := gtk.NewListView(dlgSel, &dlgFactory.ListItemFactory)
 
 	// message pane
@@ -139,6 +129,19 @@ func NewChatView(actions ChatActions) *ChatView {
 	left := gtk.NewBox(gtk.OrientationVertical, 4)
 	left.Append(logoutBtn.ToWidget())
 	left.Append(v.sideStack)
+
+	// ordering: v.msgStack and v.sideStack are both assigned above, so this
+	// handler can safely reference them.
+	dlgSel.ConnectSelectionChanged(func(_, _ uint) {
+		i := dlgSel.Selected()
+		if i == gtk.InvalidListPosition {
+			return
+		}
+		d := v.dialogs.At(int(i))
+		v.current, v.hasCurrent = d, true
+		v.msgStack.SetVisibleChildName("messages")
+		actions.LoadHistory(d)
+	})
 
 	pane := gtk.NewPaned(gtk.OrientationHorizontal)
 	pane.SetStartChild(left)
@@ -223,4 +226,16 @@ func (v *ChatView) AppendMessage(m model.Message) {
 			break
 		}
 	}
+}
+
+// Reset clears the open conversation and returns to empty placeholders.
+// Call on the UI thread (e.g. after logout).
+func (v *ChatView) Reset() {
+	v.current = model.Dialog{}
+	v.hasCurrent = false
+	v.messages.Splice(0, v.messages.Len())
+	v.dialogs.Splice(0, v.dialogs.Len())
+	v.msgStack.SetVisibleChildName("empty")
+	v.sideStack.SetVisibleChildName("empty")
+	v.SetBanner("")
 }
