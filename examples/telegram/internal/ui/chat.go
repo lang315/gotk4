@@ -4,6 +4,7 @@ package ui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
@@ -193,6 +194,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	v.headerSub.AddCSSClass("chat-subtitle")
 	header := gtk.NewBox(gtk.OrientationVertical, 1)
 	header.AddCSSClass("chat-header")
+	header.SetSizeRequest(-1, 40) // + 8px margins above/below = spec's 56px header
 	header.SetMarginTop(8)
 	header.SetMarginBottom(8)
 	header.SetMarginStart(12)
@@ -530,7 +532,9 @@ func (v *ChatView) AppendMessage(m model.Message) {
 	for i := 0; i < v.dialogs.Len(); i++ {
 		d := v.dialogs.At(i)
 		if d.PeerID == m.PeerID {
-			d.Preview = m.Text
+			// Flatten whitespace like previewText does, or a multi-line
+			// message grows its sidebar row (the spec's preview-overflow bug).
+			d.Preview = strings.Join(strings.Fields(m.Text), " ")
 			d.LastDate = m.Date
 			v.dialogs.Set(i, d)
 			break
