@@ -97,11 +97,7 @@ func (cs *chatStates) Note(kind model.PeerKind, peerID int64, msgID int) bool {
 // ---- shared ingestion: history, live updates, and send echoes all land here ----
 
 func (c *Client) handleNewMessage(mc tgapi.MessageClass) {
-	selfID := int64(0)
-	if me := c.self(); me != nil {
-		selfID = me.ID
-	}
-	m, ok := mapMessage(c.peers, selfID, mc)
+	m, ok := mapMessage(c.peers, c.selfID(), mc)
 	if !ok {
 		return
 	}
@@ -134,10 +130,7 @@ func (c *Client) History(ctx context.Context, kind model.PeerKind, peerID int64)
 		c.peers.Add(v.Users, v.Chats)
 		raw = v.Messages
 	}
-	selfID := int64(0)
-	if me := c.self(); me != nil {
-		selfID = me.ID
-	}
+	selfID := c.selfID()
 	out := make([]model.Message, 0, len(raw))
 	for i := len(raw) - 1; i >= 0; i-- { // newest-first → oldest-first
 		if m, ok := mapMessage(c.peers, selfID, raw[i]); ok {
@@ -172,12 +165,8 @@ func (c *Client) consumeSent(kind model.PeerKind, peerID int64, text string, upd
 		if !c.chats.Note(kind, peerID, u.ID) {
 			return
 		}
-		selfID := int64(0)
-		if me := c.self(); me != nil {
-			selfID = me.ID
-		}
 		c.emit(model.Event{Kind: model.EventNewMessage, Msg: model.Message{
-			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", SenderID: selfID,
+			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", SenderID: c.selfID(),
 			Text: text, Out: true, Date: time.Unix(int64(u.Date), 0),
 		}})
 	case *tgapi.Updates:

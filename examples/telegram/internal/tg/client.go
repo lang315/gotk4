@@ -56,6 +56,14 @@ func (c *Client) api() *tgapi.Client      { c.mu.Lock(); defer c.mu.Unlock(); re
 func (c *Client) sender() *message.Sender { c.mu.Lock(); defer c.mu.Unlock(); return c.snd }
 func (c *Client) self() *tgapi.User       { c.mu.Lock(); defer c.mu.Unlock(); return c.me }
 
+// selfID returns the logged-in user's ID, 0 while unknown.
+func (c *Client) selfID() int64 {
+	if me := c.self(); me != nil {
+		return me.ID
+	}
+	return 0
+}
+
 func (c *Client) SelfName() string {
 	me := c.self()
 	if me == nil {

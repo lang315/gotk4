@@ -1,7 +1,15 @@
 // model.go
 package model
 
-import "time"
+import (
+	"strings"
+	"time"
+)
+
+// OneLine collapses every whitespace run to a single space — the one rule for
+// rendering message text as a single-line sidebar preview (initial dialog
+// load and live updates must agree).
+func OneLine(s string) string { return strings.Join(strings.Fields(s), " ") }
 
 type PeerKind int
 

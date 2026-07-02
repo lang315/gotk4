@@ -3,7 +3,6 @@ package tg
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	tgapi "github.com/gotd/td/tg"
@@ -44,7 +43,7 @@ func previewText(m tgapi.MessageClass) string {
 	if msg.Media != nil {
 		return mediaLabel(msg.Media)
 	}
-	return strings.Join(strings.Fields(msg.Message), " ")
+	return model.OneLine(msg.Message)
 }
 
 func mapDialogs(s *peerStore, dialogs []tgapi.DialogClass, msgs []tgapi.MessageClass, users []tgapi.UserClass, chats []tgapi.ChatClass) []model.Dialog {

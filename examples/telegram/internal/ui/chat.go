@@ -4,7 +4,6 @@ package ui
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
@@ -40,6 +39,7 @@ type ChatView struct {
 	msgStack  *gtk.Stack
 	msgList   *gtk.ListView
 	msgScroll *gtk.ScrolledWindow
+	msgAdj    *gtk.Adjustment
 	fab       *gtk.Button
 
 	composer *gota.EntryWidget
@@ -49,14 +49,41 @@ type ChatView struct {
 	hasCurrent bool
 }
 
+// Palette class names are precomputed once: bind callbacks run on every list
+// recycle and must not re-Sprintf fixed strings.
+var (
+	avatarClasses = paletteClassNames("avatar")
+	senderClasses = paletteClassNames("sender")
+)
+
+func paletteClassNames(prefix string) [paletteSize]string {
+	var out [paletteSize]string
+	for i := range out {
+		out[i] = fmt.Sprintf("%s-%d", prefix, i)
+	}
+	return out
+}
+
+// swapPaletteClass leaves exactly one <prefix>-N class on the label.
+func swapPaletteClass(lb *gtk.Label, classes *[paletteSize]string, id int64) {
+	for _, cl := range classes {
+		lb.RemoveCSSClass(cl)
+	}
+	lb.AddCSSClass(classes[colorIndex(id)])
+}
+
 // setAvatar fills an avatar label: initials text plus the peer's palette
-// gradient class (exactly one avatar-N class at a time).
+// gradient class.
 func setAvatar(lb *gtk.Label, title string, id int64) {
 	lb.SetText(initials(title))
-	for i := 0; i < paletteSize; i++ {
-		lb.RemoveCSSClass(fmt.Sprintf("avatar-%d", i))
-	}
-	lb.AddCSSClass(fmt.Sprintf("avatar-%d", colorIndex(id)))
+	swapPaletteClass(lb, &avatarClasses, id)
+}
+
+func setMargins(b *gtk.Box, top, bottom, start, end int) {
+	b.SetMarginTop(top)
+	b.SetMarginBottom(bottom)
+	b.SetMarginStart(start)
+	b.SetMarginEnd(end)
 }
 
 func NewChatView(actions ChatActions) *ChatView {
@@ -77,10 +104,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	dlgFactory.ConnectSetup(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
 		row := gtk.NewBox(gtk.OrientationHorizontal, 10)
-		row.SetMarginTop(8)
-		row.SetMarginBottom(8)
-		row.SetMarginStart(10)
-		row.SetMarginEnd(10)
+		setMargins(row, 8, 8, 10, 10)
 
 		av := gtk.NewLabel("")
 		av.AddCSSClass("avatar")
@@ -174,16 +198,11 @@ func NewChatView(actions ChatActions) *ChatView {
 
 	comp := gtk.NewBox(gtk.OrientationHorizontal, 8)
 	comp.AddCSSClass("composer")
-	comp.SetMarginTop(8)
-	comp.SetMarginBottom(8)
-	comp.SetMarginStart(8)
-	comp.SetMarginEnd(8)
+	setMargins(comp, 8, 8, 8, 8)
 	comp.Append(entryW)
 	comp.Append(v.sendBtn)
 
-	// initial state: nothing selected yet
-	entryW.SetSensitive(false)
-	v.sendBtn.SetSensitive(false)
+	v.setComposerEnabled(false) // nothing selected yet
 
 	// header
 	v.headerTitle = gtk.NewLabel("")
@@ -195,10 +214,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	header := gtk.NewBox(gtk.OrientationVertical, 1)
 	header.AddCSSClass("chat-header")
 	header.SetSizeRequest(-1, 40) // + 8px margins above/below = spec's 56px header
-	header.SetMarginTop(8)
-	header.SetMarginBottom(8)
-	header.SetMarginStart(12)
-	header.SetMarginEnd(12)
+	setMargins(header, 8, 8, 12, 12)
 	header.Append(v.headerTitle)
 	header.Append(v.headerSub)
 
@@ -238,7 +254,10 @@ func NewChatView(actions ChatActions) *ChatView {
 	})
 	overlay.AddOverlay(v.fab)
 
-	v.msgScroll.VAdjustment().ConnectValueChanged(func() {
+	// Capture the adjustment once: this handler fires continuously while
+	// scrolling, and atBottom reuses the same object.
+	v.msgAdj = msgScroll.VAdjustment()
+	v.msgAdj.ConnectValueChanged(func() {
 		v.fab.SetVisible(v.messages.Len() > 0 && !v.atBottom())
 	})
 
@@ -313,8 +332,13 @@ func (v *ChatView) composerFor(d model.Dialog) {
 	} else {
 		v.composer.SetPlaceholder("Read-only channel")
 	}
-	v.composer.ToWidget().SetSensitive(d.CanSend)
-	v.sendBtn.SetSensitive(d.CanSend)
+	v.setComposerEnabled(d.CanSend)
+}
+
+// setComposerEnabled toggles every input widget that tracks send ability.
+func (v *ChatView) setComposerEnabled(enabled bool) {
+	v.composer.ToWidget().SetSensitive(enabled)
+	v.sendBtn.SetSensitive(enabled)
 }
 
 // msgCell is the recycled widget tree of one message row:
@@ -433,16 +457,13 @@ func (v *ChatView) bindMessage(c *msgCell, m model.Message, prev, next *model.Me
 	c.sender.SetVisible(showSender)
 	if showSender {
 		c.sender.SetText(m.Sender)
-		for i := 0; i < paletteSize; i++ {
-			c.sender.RemoveCSSClass(fmt.Sprintf("sender-%d", i))
-		}
-		c.sender.AddCSSClass(fmt.Sprintf("sender-%d", colorIndex(m.SenderID)))
+		swapPaletteClass(c.sender, &senderClasses, m.SenderID)
 	}
 
 	c.text.SetText(m.Text)
 	c.text.SetVisible(m.Text != "")
 
-	for _, cl := range []string{"bubble-in", "bubble-out", "r-tl4", "r-bl4", "r-tr4", "r-br4"} {
+	for _, cl := range bubbleStateClasses {
 		c.bubble.RemoveCSSClass(cl)
 	}
 	if m.Out {
@@ -479,9 +500,13 @@ func (v *ChatView) bindMessage(c *msgCell, m model.Message, prev, next *model.Me
 	}
 }
 
+// bubbleStateClasses are the conditional bubble classes cleared on every bind
+// before the current message's set is re-added.
+var bubbleStateClasses = []string{"bubble-in", "bubble-out", "r-tl4", "r-bl4", "r-tr4", "r-br4"}
+
 // atBottom reports whether the message view is scrolled to (near) the end.
 func (v *ChatView) atBottom() bool {
-	adj := v.msgScroll.VAdjustment()
+	adj := v.msgAdj
 	return adj.Value()+adj.PageSize() >= adj.Upper()-60
 }
 
@@ -532,9 +557,7 @@ func (v *ChatView) AppendMessage(m model.Message) {
 	for i := 0; i < v.dialogs.Len(); i++ {
 		d := v.dialogs.At(i)
 		if d.PeerID == m.PeerID {
-			// Flatten whitespace like previewText does, or a multi-line
-			// message grows its sidebar row (the spec's preview-overflow bug).
-			d.Preview = strings.Join(strings.Fields(m.Text), " ")
+			d.Preview = model.OneLine(m.Text)
 			d.LastDate = m.Date
 			v.dialogs.Set(i, d)
 			break
@@ -556,7 +579,6 @@ func (v *ChatView) Reset() {
 	v.headerTitle.SetText("")
 	v.headerSub.SetText("")
 	v.headerSub.SetVisible(false)
-	v.composer.ToWidget().SetSensitive(false)
-	v.sendBtn.SetSensitive(false)
+	v.setComposerEnabled(false)
 	v.composer.SetPlaceholder("Message")
 }
