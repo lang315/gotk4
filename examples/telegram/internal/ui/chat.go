@@ -2,7 +2,9 @@
 package ui
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
@@ -25,8 +27,13 @@ type ChatView struct {
 	banner   *gtk.Revealer
 	bannerLb *gtk.Label
 
+	actions ChatActions
+
 	dialogs  *gioutil.ListModel[model.Dialog]
 	messages *gioutil.ListModel[model.Message]
+
+	headerTitle *gtk.Label
+	headerSub   *gtk.Label
 
 	sideStack *gtk.Stack
 	msgStack  *gtk.Stack
@@ -35,11 +42,22 @@ type ChatView struct {
 	hasCurrent bool
 }
 
+// setAvatar fills an avatar label: initials text plus the peer's palette
+// gradient class (exactly one avatar-N class at a time).
+func setAvatar(lb *gtk.Label, title string, id int64) {
+	lb.SetText(initials(title))
+	for i := 0; i < paletteSize; i++ {
+		lb.RemoveCSSClass(fmt.Sprintf("avatar-%d", i))
+	}
+	lb.AddCSSClass(fmt.Sprintf("avatar-%d", colorIndex(id)))
+}
+
 func NewChatView(actions ChatActions) *ChatView {
 	v := &ChatView{
 		dialogs:  gioutil.NewListModel[model.Dialog](),
 		messages: gioutil.NewListModel[model.Message](),
 	}
+	v.actions = actions
 
 	// banner
 	v.bannerLb = gtk.NewLabel("")
@@ -51,22 +69,63 @@ func NewChatView(actions ChatActions) *ChatView {
 	dlgFactory := gtk.NewSignalListItemFactory()
 	dlgFactory.ConnectSetup(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
-		lb := gtk.NewLabel("")
-		lb.SetXAlign(0)
-		lb.SetEllipsize(pango.EllipsizeEnd)
-		item.SetChild(lb)
+		row := gtk.NewBox(gtk.OrientationHorizontal, 10)
+		row.SetMarginTop(8)
+		row.SetMarginBottom(8)
+		row.SetMarginStart(10)
+		row.SetMarginEnd(10)
+
+		av := gtk.NewLabel("")
+		av.AddCSSClass("avatar")
+		av.SetSizeRequest(46, 46)
+
+		mid := gtk.NewBox(gtk.OrientationVertical, 2)
+		mid.SetHExpand(true)
+		title := gtk.NewLabel("")
+		title.SetXAlign(0)
+		title.SetEllipsize(pango.EllipsizeEnd)
+		title.AddCSSClass("dialog-title")
+		preview := gtk.NewLabel("")
+		preview.SetXAlign(0)
+		preview.SetEllipsize(pango.EllipsizeEnd)
+		preview.AddCSSClass("dialog-preview")
+		mid.Append(title)
+		mid.Append(preview)
+
+		right := gtk.NewBox(gtk.OrientationVertical, 2)
+		tm := gtk.NewLabel("")
+		tm.SetXAlign(1)
+		tm.AddCSSClass("dialog-time")
+		pill := gtk.NewLabel("")
+		pill.AddCSSClass("unread-pill")
+		pill.SetHAlign(gtk.AlignEnd)
+		pill.SetVisible(false)
+		right.Append(tm)
+		right.Append(pill)
+
+		row.Append(av)
+		row.Append(mid)
+		row.Append(right)
+		item.SetChild(row)
 	})
 	dlgFactory.ConnectBind(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
 		d := gioutil.ObjectValue[model.Dialog](item.Item())
-		text := d.Title
-		if d.Unread > 0 {
-			text += " (" + strconv.Itoa(d.Unread) + ")"
-		}
-		if d.Preview != "" {
-			text += "\n" + d.Preview
-		}
-		item.Child().(*gtk.Label).SetText(text) // plain text only
+		row := item.Child().(*gtk.Box)
+		av := row.FirstChild().(*gtk.Label)
+		mid := av.NextSibling().(*gtk.Box)
+		right := mid.NextSibling().(*gtk.Box)
+		title := mid.FirstChild().(*gtk.Label)
+		preview := title.NextSibling().(*gtk.Label)
+		tm := right.FirstChild().(*gtk.Label)
+		pill := tm.NextSibling().(*gtk.Label)
+
+		setAvatar(av, d.Title, d.PeerID)
+		title.SetText(d.Title)
+		preview.SetText(d.Preview)
+		tm.SetText(sidebarTime(d.LastDate, time.Now()))
+		pill.SetText(strconv.Itoa(d.Unread))
+		pill.SetVisible(d.Unread > 0)
 	})
 	dlgSel := gtk.NewSingleSelection(v.dialogs.ListModel)
 	dlgSel.SetAutoselect(false)
@@ -97,7 +156,25 @@ func NewChatView(actions ChatActions) *ChatView {
 		actions.Send(v.current, text)
 	})
 
+	// header
+	v.headerTitle = gtk.NewLabel("")
+	v.headerTitle.SetXAlign(0)
+	v.headerTitle.AddCSSClass("chat-title")
+	v.headerSub = gtk.NewLabel("")
+	v.headerSub.SetXAlign(0)
+	v.headerSub.AddCSSClass("chat-subtitle")
+	header := gtk.NewBox(gtk.OrientationVertical, 1)
+	header.AddCSSClass("chat-header")
+	header.SetMarginTop(8)
+	header.SetMarginBottom(8)
+	header.SetMarginStart(12)
+	header.SetMarginEnd(12)
+	header.Append(v.headerTitle)
+	header.Append(v.headerSub)
+
 	logoutBtn := gota.Button("Logout").OnClick(func(*gota.ButtonWidget) { actions.Logout() })
+	logoutW := logoutBtn.ToWidget()
+	logoutW.AddCSSClass("flat")
 
 	// layout: raw gtk (gota containers only accept gota.IWidget)
 	msgScroll := gtk.NewScrolledWindow()
@@ -112,6 +189,7 @@ func NewChatView(actions ChatActions) *ChatView {
 	v.msgStack.SetVisibleChildName("empty")
 
 	right := gtk.NewBox(gtk.OrientationVertical, 4)
+	right.Append(header)
 	right.Append(v.msgStack)
 	right.Append(composer.ToWidget())
 
@@ -127,8 +205,8 @@ func NewChatView(actions ChatActions) *ChatView {
 	v.sideStack.SetVisibleChildName("empty")
 
 	left := gtk.NewBox(gtk.OrientationVertical, 4)
-	left.Append(logoutBtn.ToWidget())
 	left.Append(v.sideStack)
+	left.Append(logoutW)
 
 	// ordering: v.msgStack and v.sideStack are both assigned above, so this
 	// handler can safely reference them.
@@ -137,22 +215,31 @@ func NewChatView(actions ChatActions) *ChatView {
 		if i == gtk.InvalidListPosition {
 			return
 		}
-		d := v.dialogs.At(int(i))
-		v.current, v.hasCurrent = d, true
-		v.msgStack.SetVisibleChildName("messages")
-		actions.LoadHistory(d)
+		v.showDialog(v.dialogs.At(int(i)))
 	})
 
 	pane := gtk.NewPaned(gtk.OrientationHorizontal)
 	pane.SetStartChild(left)
 	pane.SetEndChild(right)
-	pane.SetPosition(280)
+	pane.SetPosition(300)
 	pane.SetVExpand(true)
 
 	v.root = gtk.NewBox(gtk.OrientationVertical, 0)
 	v.root.Append(v.banner)
 	v.root.Append(pane)
 	return v
+}
+
+// showDialog opens a conversation: header, message stack, history load.
+// UI thread only.
+func (v *ChatView) showDialog(d model.Dialog) {
+	v.current, v.hasCurrent = d, true
+	v.headerTitle.SetText(d.Title)
+	sub := subtitleText(d)
+	v.headerSub.SetText(sub)
+	v.headerSub.SetVisible(sub != "")
+	v.msgStack.SetVisibleChildName("messages")
+	v.actions.LoadHistory(d)
 }
 
 type messageCell struct{ root *gtk.Box }
@@ -238,4 +325,7 @@ func (v *ChatView) Reset() {
 	v.msgStack.SetVisibleChildName("empty")
 	v.sideStack.SetVisibleChildName("empty")
 	v.SetBanner("")
+	v.headerTitle.SetText("")
+	v.headerSub.SetText("")
+	v.headerSub.SetVisible(false)
 }
