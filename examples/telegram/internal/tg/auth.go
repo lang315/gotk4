@@ -13,6 +13,7 @@ import (
 
 type Prompt struct {
 	Kind  model.PromptKind
+	Retry bool // the previous answer for this step was rejected; re-asking
 	Reply chan string
 }
 
@@ -27,10 +28,10 @@ var _ auth.UserAuthenticator = (*UIAuth)(nil)
 
 func NewUIAuth() *UIAuth { return &UIAuth{Prompts: make(chan Prompt)} }
 
-func (a *UIAuth) ask(ctx context.Context, k model.PromptKind) (string, error) {
+func (a *UIAuth) ask(ctx context.Context, k model.PromptKind, retry bool) (string, error) {
 	reply := make(chan string, 1)
 	select {
-	case a.Prompts <- Prompt{Kind: k, Reply: reply}:
+	case a.Prompts <- Prompt{Kind: k, Retry: retry, Reply: reply}:
 	case <-ctx.Done():
 		return "", ctx.Err()
 	}
@@ -42,14 +43,16 @@ func (a *UIAuth) ask(ctx context.Context, k model.PromptKind) (string, error) {
 	}
 }
 
-func (a *UIAuth) Phone(ctx context.Context) (string, error) { return a.ask(ctx, model.PromptPhone) }
+func (a *UIAuth) Phone(ctx context.Context) (string, error) {
+	return a.ask(ctx, model.PromptPhone, false)
+}
 
 func (a *UIAuth) Code(ctx context.Context, _ *tgapi.AuthSentCode) (string, error) {
-	return a.ask(ctx, model.PromptCode)
+	return a.ask(ctx, model.PromptCode, false)
 }
 
 func (a *UIAuth) Password(ctx context.Context) (string, error) {
-	return a.ask(ctx, model.PromptPassword)
+	return a.ask(ctx, model.PromptPassword, false)
 }
 
 func (a *UIAuth) AcceptTermsOfService(ctx context.Context, tos tgapi.HelpTermsOfService) error {
