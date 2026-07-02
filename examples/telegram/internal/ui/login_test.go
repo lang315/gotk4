@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +12,17 @@ import (
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 	"github.com/diamondburned/gotk4/examples/telegram/internal/tg"
 )
+
+// gtkOK is decided by a single InitCheck: repeated init attempts after a
+// failure can leave GTK half-initialized and segfault (observed on macOS
+// with a forced-unavailable GDK_BACKEND), so every test consults this one
+// result instead of re-calling InitCheck.
+var gtkOK bool
+
+func TestMain(m *testing.M) {
+	gtkOK = gtk.InitCheck()
+	os.Exit(m.Run())
+}
 
 // gtkEntry unwraps the gota entry to the underlying *gtk.Entry so the test
 // can drive the real activate signal (what Enter does).
@@ -30,7 +42,7 @@ func recvReply(t *testing.T, ch chan string) string {
 }
 
 func TestLoginPageAutoSubmitAllSteps(t *testing.T) {
-	if !gtk.InitCheck() {
+	if !gtkOK {
 		t.Skip("no display; GTK cannot init")
 	}
 	p := NewLoginPage()
@@ -74,7 +86,7 @@ func TestLoginPageAutoSubmitAllSteps(t *testing.T) {
 }
 
 func TestLoginPageEmptySubmitIsIgnored(t *testing.T) {
-	if !gtk.InitCheck() {
+	if !gtkOK {
 		t.Skip("no display; GTK cannot init")
 	}
 	p := NewLoginPage()
@@ -92,7 +104,7 @@ func TestLoginPageEmptySubmitIsIgnored(t *testing.T) {
 }
 
 func TestLoginPageRetryTitle(t *testing.T) {
-	if !gtk.InitCheck() {
+	if !gtkOK {
 		t.Skip("no display; GTK cannot init")
 	}
 	p := NewLoginPage()
