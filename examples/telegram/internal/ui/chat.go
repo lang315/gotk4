@@ -28,6 +28,9 @@ type ChatView struct {
 	dialogs  *gioutil.ListModel[model.Dialog]
 	messages *gioutil.ListModel[model.Message]
 
+	sideStack *gtk.Stack
+	msgStack  *gtk.Stack
+
 	current    model.Dialog
 	hasCurrent bool
 }
@@ -74,6 +77,7 @@ func NewChatView(actions ChatActions) *ChatView {
 		}
 		d := v.dialogs.At(int(i))
 		v.current, v.hasCurrent = d, true
+		v.msgStack.SetVisibleChildName("messages")
 		actions.LoadHistory(d)
 	})
 	dlgList := gtk.NewListView(dlgSel, &dlgFactory.ListItemFactory)
@@ -110,17 +114,31 @@ func NewChatView(actions ChatActions) *ChatView {
 	msgScroll.SetChild(msgList)
 	msgScroll.SetVExpand(true)
 
+	msgEmpty := gtk.NewLabel("Select a chat")
+	v.msgStack = gtk.NewStack()
+	v.msgStack.SetVExpand(true)
+	v.msgStack.AddNamed(msgScroll, "messages")
+	v.msgStack.AddNamed(msgEmpty, "empty")
+	v.msgStack.SetVisibleChildName("empty")
+
 	right := gtk.NewBox(gtk.OrientationVertical, 4)
-	right.Append(msgScroll)
+	right.Append(v.msgStack)
 	right.Append(composer.ToWidget())
 
 	dlgScroll := gtk.NewScrolledWindow()
 	dlgScroll.SetChild(dlgList)
 	dlgScroll.SetVExpand(true)
 
+	sideEmpty := gtk.NewLabel("No chats yet")
+	v.sideStack = gtk.NewStack()
+	v.sideStack.SetVExpand(true)
+	v.sideStack.AddNamed(dlgScroll, "list")
+	v.sideStack.AddNamed(sideEmpty, "empty")
+	v.sideStack.SetVisibleChildName("empty")
+
 	left := gtk.NewBox(gtk.OrientationVertical, 4)
 	left.Append(logoutBtn.ToWidget())
-	left.Append(dlgScroll)
+	left.Append(v.sideStack)
 
 	pane := gtk.NewPaned(gtk.OrientationHorizontal)
 	pane.SetStartChild(left)
@@ -179,6 +197,11 @@ func (v *ChatView) SetBanner(text string) {
 
 func (v *ChatView) SetDialogs(ds []model.Dialog) {
 	v.dialogs.Splice(0, v.dialogs.Len(), ds...)
+	if len(ds) == 0 {
+		v.sideStack.SetVisibleChildName("empty")
+	} else {
+		v.sideStack.SetVisibleChildName("list")
+	}
 }
 
 func (v *ChatView) SetMessages(d model.Dialog, ms []model.Message) {
