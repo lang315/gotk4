@@ -7,9 +7,6 @@ import (
 	tgapi "github.com/gotd/td/tg"
 )
 
-type peerStore struct{}        // Task 5
-func newPeerStore() *peerStore { return &peerStore{} }
-
 type chatStates struct{}         // Task 7
 func newChatStates() *chatStates { return &chatStates{} }
 
