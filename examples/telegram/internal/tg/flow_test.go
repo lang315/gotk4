@@ -17,8 +17,9 @@ import (
 // fakeAuthClient scripts per-attempt outcomes. Error slices are consumed one
 // entry per call; an empty slice means success.
 type fakeAuthClient struct {
-	signInErrs   []error
-	passwordErrs []error
+	signInErrs      []error
+	passwordErrs    []error
+	sentCodeSuccess bool // when true, SendCode returns AuthSentCodeSuccess instead of AuthSentCode
 
 	gotPhone     string
 	gotCodes     []string
@@ -27,6 +28,9 @@ type fakeAuthClient struct {
 
 func (f *fakeAuthClient) SendCode(_ context.Context, phone string, _ auth.SendCodeOptions) (tgapi.AuthSentCodeClass, error) {
 	f.gotPhone = phone
+	if f.sentCodeSuccess {
+		return &tgapi.AuthSentCodeSuccess{}, nil
+	}
 	return &tgapi.AuthSentCode{PhoneCodeHash: "hash123"}, nil
 }
 
@@ -214,6 +218,35 @@ func TestLoginFlowCtxCancelUnblocks(t *testing.T) {
 		cancel()
 	}()
 	// No autoSubmit: the flow blocks on the phone prompt until ctx cancels.
+	if err := c.loginFlow(ctx, &fakeAuthClient{}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("loginFlow err = %v, want context.Canceled", err)
+	}
+}
+
+func TestLoginFlowSentCodeSuccessSkipsCodeStep(t *testing.T) {
+	c := &Client{Auth: NewUIAuth()}
+	fake := &fakeAuthClient{sentCodeSuccess: true}
+	seen := autoSubmit(c.Auth, map[model.PromptKind][]string{
+		model.PromptPhone: {"+15551234567"},
+	})
+
+	if err := c.loginFlow(context.Background(), fake); err != nil {
+		t.Fatalf("loginFlow: %v", err)
+	}
+	want := []model.PromptKind{model.PromptPhone}
+	if !kindsEqual(kinds(*seen), want) {
+		t.Fatalf("prompt sequence = %v, want %v", kinds(*seen), want)
+	}
+}
+
+func TestLoginFlowCtxCancelWhileAwaitingReply(t *testing.T) {
+	c := &Client{Auth: NewUIAuth()}
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		pr := <-c.Auth.Prompts // accept the phone prompt...
+		_ = pr
+		cancel() // ...but cancel instead of replying
+	}()
 	if err := c.loginFlow(ctx, &fakeAuthClient{}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("loginFlow err = %v, want context.Canceled", err)
 	}

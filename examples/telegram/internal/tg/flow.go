@@ -12,7 +12,7 @@ import (
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
 
-// authClient is the slice of *auth.Client the login flow needs. Tests inject
+// authClient is the subset of *auth.Client the login flow needs. Tests inject
 // a scripted fake so the entire flow runs without network.
 type authClient interface {
 	SendCode(ctx context.Context, phone string, options auth.SendCodeOptions) (tgapi.AuthSentCodeClass, error)
