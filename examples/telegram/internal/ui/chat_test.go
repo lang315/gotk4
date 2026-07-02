@@ -50,3 +50,81 @@ func TestShowDialogHeader(t *testing.T) {
 		t.Fatal("Reset must clear header")
 	}
 }
+
+func TestBindMessageInOutAndGrouping(t *testing.T) {
+	if !gtkOK {
+		t.Skip("no display; GTK cannot init")
+	}
+	v := NewChatView(ChatActions{})
+	c := newMsgCell()
+	day := time.Date(2026, 7, 2, 10, 0, 0, 0, time.Local)
+	alice1 := model.Message{SenderID: 1, Sender: "Alice", Text: "one", Date: day}
+	alice2 := model.Message{SenderID: 1, Sender: "Alice", Text: "two", Date: day.Add(time.Minute)}
+	mine := model.Message{SenderID: 9, Out: true, Text: "yo", Date: day.Add(2 * time.Minute)}
+
+	// First of a 2-message group: sender shown, no top-near-4 radius, ghost avatar.
+	v.bindMessage(c, alice1, nil, &alice2)
+	cl := c.bubble.CSSClasses()
+	if !slices.Contains(cl, "bubble-in") || slices.Contains(cl, "r-tl4") {
+		t.Fatalf("first-of-group classes = %v", cl)
+	}
+	if !c.sender.Visible() || c.sender.Text() != "Alice" {
+		t.Fatal("sender must show on first of group")
+	}
+	if c.avatar.Opacity() != 0 {
+		t.Fatal("non-last incoming message must ghost the avatar")
+	}
+	if !c.sepBox.Visible() {
+		t.Fatal("date separator must show at the top edge")
+	}
+
+	// Last of the group: r-tl4 present, avatar visible, sender hidden, no separator.
+	v.bindMessage(c, alice2, &alice1, &mine)
+	cl = c.bubble.CSSClasses()
+	if !slices.Contains(cl, "r-tl4") {
+		t.Fatalf("continuation classes = %v, want r-tl4", cl)
+	}
+	if c.sender.Visible() {
+		t.Fatal("sender must hide inside a group")
+	}
+	if c.avatar.Opacity() != 1 {
+		t.Fatal("last-of-group must show the avatar")
+	}
+	if c.sepBox.Visible() {
+		t.Fatal("no separator inside the same day")
+	}
+
+	// Outgoing: right-aligned, out classes, avatar hidden entirely.
+	v.bindMessage(c, mine, &alice2, nil)
+	cl = c.bubble.CSSClasses()
+	if !slices.Contains(cl, "bubble-out") || slices.Contains(cl, "bubble-in") {
+		t.Fatalf("out classes = %v", cl)
+	}
+	if c.row.HAlign() != gtk.AlignEnd {
+		t.Fatal("outgoing row must right-align")
+	}
+	if c.avatar.Visible() {
+		t.Fatal("outgoing rows have no avatar")
+	}
+}
+
+func TestBindMessagePhotoSlot(t *testing.T) {
+	if !gtkOK {
+		t.Skip("no display; GTK cannot init")
+	}
+	v := NewChatView(ChatActions{LoadPhoto: func(model.PhotoRef) (string, error) { return "", nil }})
+	c := newMsgCell()
+	day := time.Now()
+	withPhoto := model.Message{SenderID: 1, Text: "[photo]", Date: day,
+		Photo: &model.PhotoRef{PhotoID: 1, SizeType: "x"}}
+	plain := model.Message{SenderID: 1, Text: "no photo", Date: day}
+
+	v.bindMessage(c, withPhoto, nil, nil)
+	if c.photos.FirstChild() == nil {
+		t.Fatal("photo message must populate the photo slot")
+	}
+	v.bindMessage(c, plain, nil, nil) // recycled: slot must be cleared
+	if c.photos.FirstChild() != nil {
+		t.Fatal("recycled cell must clear the photo slot")
+	}
+}

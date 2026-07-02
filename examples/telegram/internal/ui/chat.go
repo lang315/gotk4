@@ -37,6 +37,9 @@ type ChatView struct {
 
 	sideStack *gtk.Stack
 	msgStack  *gtk.Stack
+	msgList   *gtk.ListView
+	msgScroll *gtk.ScrolledWindow
+	fab       *gtk.Button
 
 	current    model.Dialog
 	hasCurrent bool
@@ -135,15 +138,26 @@ func NewChatView(actions ChatActions) *ChatView {
 	msgFactory := gtk.NewSignalListItemFactory()
 	msgFactory.ConnectSetup(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
-		item.SetChild(newMessageCell().root)
+		item.SetChild(newMsgCell().root)
 	})
 	msgFactory.ConnectBind(func(obj *coreglib.Object) {
 		item := obj.Cast().(*gtk.ListItem)
+		pos := int(item.Position())
 		m := gioutil.ObjectValue[model.Message](item.Item())
-		bindMessageCell(item.Child().(*gtk.Box), m, actions.LoadPhoto)
+		var prev, next *model.Message
+		if pos > 0 {
+			p := v.messages.At(pos - 1)
+			prev = &p
+		}
+		if pos+1 < v.messages.Len() {
+			n := v.messages.At(pos + 1)
+			next = &n
+		}
+		v.bindMessage(cellOf(item.Child().(*gtk.Box)), m, prev, next)
 	})
 	msgSel := gtk.NewNoSelection(v.messages.ListModel)
 	msgList := gtk.NewListView(msgSel, &msgFactory.ListItemFactory)
+	msgList.AddCSSClass("msg-list")
 
 	// composer (gota Entry is self-contained → ToWidget into the raw box)
 	composer := gota.Entry().SetPlaceholder("Message")
@@ -180,6 +194,8 @@ func NewChatView(actions ChatActions) *ChatView {
 	msgScroll := gtk.NewScrolledWindow()
 	msgScroll.SetChild(msgList)
 	msgScroll.SetVExpand(true)
+	v.msgList = msgList
+	v.msgScroll = msgScroll
 
 	msgEmpty := gtk.NewLabel("Select a chat")
 	v.msgStack = gtk.NewStack()
@@ -188,9 +204,31 @@ func NewChatView(actions ChatActions) *ChatView {
 	v.msgStack.AddNamed(msgEmpty, "empty")
 	v.msgStack.SetVisibleChildName("empty")
 
+	overlay := gtk.NewOverlay()
+	overlay.SetChild(v.msgStack)
+	overlay.SetVExpand(true)
+	overlay.AddCSSClass("chat-pane")
+
+	v.fab = gtk.NewButtonFromIconName("go-down-symbolic")
+	v.fab.AddCSSClass("fab")
+	v.fab.SetHAlign(gtk.AlignEnd)
+	v.fab.SetVAlign(gtk.AlignEnd)
+	v.fab.SetMarginEnd(16)
+	v.fab.SetMarginBottom(16)
+	v.fab.SetVisible(false)
+	v.fab.ConnectClicked(func() {
+		v.scrollToBottom()
+		v.fab.SetVisible(false)
+	})
+	overlay.AddOverlay(v.fab)
+
+	v.msgScroll.VAdjustment().ConnectValueChanged(func() {
+		v.fab.SetVisible(v.messages.Len() > 0 && !v.atBottom())
+	})
+
 	right := gtk.NewBox(gtk.OrientationVertical, 4)
 	right.Append(header)
-	right.Append(v.msgStack)
+	right.Append(overlay)
 	right.Append(composer.ToWidget())
 
 	dlgScroll := gtk.NewScrolledWindow()
@@ -242,39 +280,177 @@ func (v *ChatView) showDialog(d model.Dialog) {
 	v.actions.LoadHistory(d)
 }
 
-type messageCell struct{ root *gtk.Box }
-
-func newMessageCell() *messageCell {
-	box := gtk.NewBox(gtk.OrientationVertical, 4)
-	lb := gtk.NewLabel("")
-	lb.SetXAlign(0)
-	lb.SetWrap(true)
-	box.Append(lb)
-	return &messageCell{root: box}
+// msgCell is the recycled widget tree of one message row:
+// root(V)[ sepBox(H center)[sep], row(H)[avatar, bubble(V)[sender, text, photos, timeLb]] ]
+type msgCell struct {
+	root   *gtk.Box
+	sepBox *gtk.Box
+	sep    *gtk.Label
+	row    *gtk.Box
+	avatar *gtk.Label
+	bubble *gtk.Box
+	sender *gtk.Label
+	text   *gtk.Label
+	photos *gtk.Box
+	timeLb *gtk.Label
 }
 
-func bindMessageCell(box *gtk.Box, m model.Message, load PhotoLoader) {
-	lb := box.FirstChild().(*gtk.Label)
-	prefix := m.Sender
+func newMsgCell() *msgCell {
+	c := &msgCell{}
+
+	c.sep = gtk.NewLabel("")
+	c.sep.AddCSSClass("date-pill")
+	c.sepBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	c.sepBox.SetHAlign(gtk.AlignCenter)
+	c.sepBox.SetMarginTop(8)
+	c.sepBox.SetMarginBottom(8)
+	c.sepBox.Append(c.sep)
+	c.sepBox.SetVisible(false)
+
+	c.avatar = gtk.NewLabel("")
+	c.avatar.AddCSSClass("avatar")
+	c.avatar.SetSizeRequest(33, 33)
+	c.avatar.SetVAlign(gtk.AlignEnd)
+
+	c.sender = gtk.NewLabel("")
+	c.sender.SetXAlign(0)
+	c.sender.AddCSSClass("sender")
+	c.text = gtk.NewLabel("")
+	c.text.SetXAlign(0)
+	c.text.SetWrap(true)
+	c.text.SetMaxWidthChars(55)
+	c.photos = gtk.NewBox(gtk.OrientationVertical, 4)
+	c.timeLb = gtk.NewLabel("")
+	c.timeLb.SetXAlign(1)
+
+	c.bubble = gtk.NewBox(gtk.OrientationVertical, 2)
+	c.bubble.AddCSSClass("bubble")
+	c.bubble.Append(c.sender)
+	c.bubble.Append(c.text)
+	c.bubble.Append(c.photos)
+	c.bubble.Append(c.timeLb)
+
+	c.row = gtk.NewBox(gtk.OrientationHorizontal, 8)
+	c.row.SetMarginStart(12)
+	c.row.SetMarginEnd(12)
+	c.row.Append(c.avatar)
+	c.row.Append(c.bubble)
+
+	c.root = gtk.NewBox(gtk.OrientationVertical, 0)
+	c.root.Append(c.sepBox)
+	c.root.Append(c.row)
+	return c
+}
+
+// cellOf rebuilds the typed cell view from a recycled root (fixed tree walk).
+func cellOf(root *gtk.Box) *msgCell {
+	c := &msgCell{root: root}
+	c.sepBox = root.FirstChild().(*gtk.Box)
+	c.sep = c.sepBox.FirstChild().(*gtk.Label)
+	c.row = c.sepBox.NextSibling().(*gtk.Box)
+	c.avatar = c.row.FirstChild().(*gtk.Label)
+	c.bubble = c.avatar.NextSibling().(*gtk.Box)
+	c.sender = c.bubble.FirstChild().(*gtk.Label)
+	c.text = c.sender.NextSibling().(*gtk.Label)
+	c.photos = c.text.NextSibling().(*gtk.Box)
+	c.timeLb = c.photos.NextSibling().(*gtk.Label)
+	return c
+}
+
+// bindMessage renders one message into a (possibly recycled) cell.
+// prev/next are the neighboring messages in display order, nil at the edges.
+func (v *ChatView) bindMessage(c *msgCell, m model.Message, prev, next *model.Message) {
+	first := prev == nil || !grouped(*prev, m)
+	last := next == nil || !grouped(m, *next)
+
+	showSep := prev == nil || !sameDay(prev.Date, m.Date)
+	if showSep {
+		c.sep.SetText(dateSeparator(m.Date, time.Now()))
+	}
+	c.sepBox.SetVisible(showSep)
+
 	if m.Out {
-		prefix = "me"
+		c.row.SetHAlign(gtk.AlignEnd)
+	} else {
+		c.row.SetHAlign(gtk.AlignStart)
 	}
-	lb.SetText(prefix + ": " + m.Text)
-
-	// ListView recycles cells: drop any picture appended by a previous bind
-	// before (maybe) appending a fresh one below. Widgetter values from
-	// separate FirstChild()/LastChild() calls are NOT pointer-identical even
-	// for the same underlying widget (each call wraps a fresh Go struct), so
-	// identity must be checked via the native GObject pointer.
-	if last := box.LastChild(); last != nil && !coreglib.ObjectEq(last, lb) {
-		box.Remove(last)
+	if first {
+		c.root.SetMarginTop(8) // gap between groups
+	} else {
+		c.root.SetMarginTop(2) // gap inside a group
 	}
 
-	if m.Photo != nil && m.Photo.SizeType != "" && load != nil {
+	// Incoming rows always allocate the avatar column so grouped bubbles stay
+	// aligned; only the last message of a group actually shows it.
+	c.avatar.SetVisible(!m.Out)
+	if !m.Out {
+		if last {
+			setAvatar(c.avatar, m.Sender, m.SenderID)
+			c.avatar.SetOpacity(1)
+		} else {
+			c.avatar.SetOpacity(0)
+		}
+	}
+
+	showSender := first && !m.Out && m.Sender != ""
+	c.sender.SetVisible(showSender)
+	if showSender {
+		c.sender.SetText(m.Sender)
+		for i := 0; i < paletteSize; i++ {
+			c.sender.RemoveCSSClass(fmt.Sprintf("sender-%d", i))
+		}
+		c.sender.AddCSSClass(fmt.Sprintf("sender-%d", colorIndex(m.SenderID)))
+	}
+
+	c.text.SetText(m.Text)
+	c.text.SetVisible(m.Text != "")
+
+	for _, cl := range []string{"bubble-in", "bubble-out", "r-tl4", "r-bl4", "r-tr4", "r-br4"} {
+		c.bubble.RemoveCSSClass(cl)
+	}
+	if m.Out {
+		c.bubble.AddCSSClass("bubble-out")
+		if !first {
+			c.bubble.AddCSSClass("r-tr4")
+		}
+		c.bubble.AddCSSClass("r-br4") // tail substitute
+	} else {
+		c.bubble.AddCSSClass("bubble-in")
+		if !first {
+			c.bubble.AddCSSClass("r-tl4")
+		}
+		c.bubble.AddCSSClass("r-bl4") // tail substitute
+	}
+
+	c.timeLb.SetText(m.Date.Format("15:04"))
+	c.timeLb.RemoveCSSClass("msg-time")
+	c.timeLb.RemoveCSSClass("msg-time-out")
+	if m.Out {
+		c.timeLb.AddCSSClass("msg-time-out")
+	} else {
+		c.timeLb.AddCSSClass("msg-time")
+	}
+
+	for ch := c.photos.FirstChild(); ch != nil; ch = c.photos.FirstChild() {
+		c.photos.Remove(ch)
+	}
+	if m.Photo != nil && m.Photo.SizeType != "" && v.actions.LoadPhoto != nil {
 		ref := *m.Photo
 		pic := newAsyncPic()
-		box.Append(pic)
-		pic.load(func() (string, error) { return load(ref) })
+		c.photos.Append(pic)
+		pic.load(func() (string, error) { return v.actions.LoadPhoto(ref) })
+	}
+}
+
+// atBottom reports whether the message view is scrolled to (near) the end.
+func (v *ChatView) atBottom() bool {
+	adj := v.msgScroll.VAdjustment()
+	return adj.Value()+adj.PageSize() >= adj.Upper()-60
+}
+
+func (v *ChatView) scrollToBottom() {
+	if n := v.messages.Len(); n > 0 {
+		v.msgList.ScrollTo(uint(n-1), gtk.ListScrollNone, nil)
 	}
 }
 
@@ -299,16 +475,28 @@ func (v *ChatView) SetMessages(d model.Dialog, ms []model.Message) {
 		return
 	}
 	v.messages.Splice(0, v.messages.Len(), ms...)
+	v.fab.SetVisible(false)
+	coreglib.IdleAdd(func() { v.scrollToBottom() })
 }
 
 func (v *ChatView) AppendMessage(m model.Message) {
 	if v.hasCurrent && v.current.PeerID == m.PeerID {
+		wasBottom := v.atBottom()
 		v.messages.Append(m)
+		if n := v.messages.Len(); n >= 2 {
+			v.messages.Set(n-2, v.messages.At(n-2)) // re-render: it may no longer be last-of-group
+		}
+		if wasBottom {
+			coreglib.IdleAdd(func() { v.scrollToBottom() })
+		} else {
+			v.fab.SetVisible(true)
+		}
 	}
 	for i := 0; i < v.dialogs.Len(); i++ {
 		d := v.dialogs.At(i)
 		if d.PeerID == m.PeerID {
 			d.Preview = m.Text
+			d.LastDate = m.Date
 			v.dialogs.Set(i, d)
 			break
 		}
@@ -324,6 +512,7 @@ func (v *ChatView) Reset() {
 	v.dialogs.Splice(0, v.dialogs.Len())
 	v.msgStack.SetVisibleChildName("empty")
 	v.sideStack.SetVisibleChildName("empty")
+	v.fab.SetVisible(false)
 	v.SetBanner("")
 	v.headerTitle.SetText("")
 	v.headerSub.SetText("")
