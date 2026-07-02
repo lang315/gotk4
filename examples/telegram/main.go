@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"runtime"
+	"sync/atomic"
 
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
@@ -43,18 +45,20 @@ func activate(app *gtk.Application) {
 	w.SetChild(stack)
 	w.SetVisible(true)
 
-	// Hoisted, restartable client state. UI thread owns these variables:
-	// they are written only from start()/logout (both run on the UI thread).
+	// Hoisted, restartable client state. UI thread owns cancel/start: they are
+	// written only from start()/logout (both run on the UI thread). clientPtr
+	// is also read from asyncPic's fetch goroutine (LoadPhoto), off the UI
+	// thread, so it must be an atomic pointer rather than a plain variable.
 	var (
-		client *tg.Client
-		cancel context.CancelFunc
-		start  func(cfg config.Config) // forward-declared: Logout below calls start() before its literal is assigned
+		clientPtr atomic.Pointer[tg.Client]
+		cancel    context.CancelFunc
+		start     func(cfg config.Config) // forward-declared: Logout below calls start() before its literal is assigned
 	)
 
 	var chat *ui.ChatView
 	chat = ui.NewChatView(ui.ChatActions{
 		LoadHistory: func(d model.Dialog) {
-			cl := client
+			cl := clientPtr.Load()
 			go func() {
 				ms, err := cl.History(context.Background(), d.Kind, d.PeerID)
 				if err != nil {
@@ -66,7 +70,7 @@ func activate(app *gtk.Application) {
 			}()
 		},
 		Send: func(d model.Dialog, text string) {
-			cl := client
+			cl := clientPtr.Load()
 			go func() {
 				if err := cl.Send(context.Background(), d.Kind, d.PeerID, text); err != nil {
 					coreglib.IdleAdd(func() { chat.SetBanner("send failed") })
@@ -74,7 +78,7 @@ func activate(app *gtk.Application) {
 			}()
 		},
 		Logout: func() {
-			cl := client
+			cl := clientPtr.Load()
 			if cancel != nil {
 				cancel() // stops pumps + Run
 			}
@@ -90,7 +94,11 @@ func activate(app *gtk.Application) {
 			}()
 		},
 		LoadPhoto: func(ref model.PhotoRef) (string, error) {
-			return client.DownloadPhoto(context.Background(), ref, cacheDir)
+			cl := clientPtr.Load()
+			if cl == nil {
+				return "", fmt.Errorf("not connected")
+			}
+			return cl.DownloadPhoto(context.Background(), ref, cacheDir)
 		},
 	})
 	stack.AddNamed(chat.Widget(), "main")
@@ -102,7 +110,7 @@ func activate(app *gtk.Application) {
 		case model.EventReady:
 			chat.SetBanner("")
 			stack.SetVisibleChildName("main")
-			cl := client
+			cl := clientPtr.Load()
 			go func() {
 				ds, err := cl.Dialogs(context.Background())
 				if err != nil {
@@ -123,8 +131,8 @@ func activate(app *gtk.Application) {
 		}
 		ctx, cn := context.WithCancel(context.Background())
 		cancel = cn
-		client = tg.NewClient(cfg, dir)
-		cl := client // pumps capture THIS client, not the mutable variable
+		cl := tg.NewClient(cfg, dir) // pumps capture THIS client, not the mutable variable
+		clientPtr.Store(cl)
 
 		go func() { // event pump
 			for {

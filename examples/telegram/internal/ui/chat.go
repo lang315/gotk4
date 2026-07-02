@@ -158,8 +158,7 @@ func bindMessageCell(box *gtk.Box, m model.Message, load PhotoLoader) {
 	// separate FirstChild()/LastChild() calls are NOT pointer-identical even
 	// for the same underlying widget (each call wraps a fresh Go struct), so
 	// identity must be checked via the native GObject pointer.
-	if last := box.LastChild(); last != nil &&
-		coreglib.BaseObject(last).Native() != coreglib.BaseObject(lb).Native() {
+	if last := box.LastChild(); last != nil && !coreglib.ObjectEq(last, lb) {
 		box.Remove(last)
 	}
 
