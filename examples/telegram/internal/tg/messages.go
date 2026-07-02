@@ -31,9 +31,8 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 		}
 	}
 	if m.Media != nil {
-		switch media := m.Media.(type) {
-		case *tgapi.MessageMediaPhoto:
-			out.Text = "[photo]"
+		out.Text = mediaLabel(m.Media)
+		if media, ok := m.Media.(*tgapi.MessageMediaPhoto); ok {
 			if p, ok := media.Photo.(*tgapi.Photo); ok {
 				ref := &model.PhotoRef{
 					PhotoID: p.ID, AccessHash: p.AccessHash,
@@ -43,10 +42,6 @@ func mapMessage(s *peerStore, selfID int64, mc tgapi.MessageClass) (model.Messag
 				ref.SizeType, _ = pickSize(p.Sizes)
 				out.Photo = ref
 			}
-		case *tgapi.MessageMediaDocument:
-			out.Text = "[file]"
-		default:
-			out.Text = "[media]"
 		}
 	}
 	return out, true
@@ -168,22 +163,21 @@ func (c *Client) consumeSent(kind model.PeerKind, peerID int64, text string, upd
 			ID: u.ID, PeerID: peerID, Kind: kind, Sender: "me", Text: text, Out: true,
 		}})
 	case *tgapi.Updates:
-		for _, uc := range u.Updates {
-			switch v := uc.(type) {
-			case *tgapi.UpdateNewMessage:
-				c.handleNewMessage(v.Message)
-			case *tgapi.UpdateNewChannelMessage:
-				c.handleNewMessage(v.Message)
-			}
-		}
+		c.drainNewMessages(u.Updates)
 	case *tgapi.UpdatesCombined:
-		for _, uc := range u.Updates {
-			switch v := uc.(type) {
-			case *tgapi.UpdateNewMessage:
-				c.handleNewMessage(v.Message)
-			case *tgapi.UpdateNewChannelMessage:
-				c.handleNewMessage(v.Message)
-			}
+		c.drainNewMessages(u.Updates)
+	}
+}
+
+// drainNewMessages feeds new-message updates from an RPC response batch
+// through the shared ingestion path.
+func (c *Client) drainNewMessages(updates []tgapi.UpdateClass) {
+	for _, uc := range updates {
+		switch v := uc.(type) {
+		case *tgapi.UpdateNewMessage:
+			c.handleNewMessage(v.Message)
+		case *tgapi.UpdateNewChannelMessage:
+			c.handleNewMessage(v.Message)
 		}
 	}
 }

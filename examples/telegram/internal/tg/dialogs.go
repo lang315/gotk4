@@ -21,20 +21,26 @@ func peerKey(p tgapi.PeerClass) (model.PeerKind, int64) {
 	return model.PeerUser, 0
 }
 
+// mediaLabel is the single source of the placeholder text shown for media,
+// used by both dialog previews and message bodies.
+func mediaLabel(m tgapi.MessageMediaClass) string {
+	switch m.(type) {
+	case *tgapi.MessageMediaPhoto:
+		return "[photo]"
+	case *tgapi.MessageMediaDocument:
+		return "[file]"
+	default:
+		return "[media]"
+	}
+}
+
 func previewText(m tgapi.MessageClass) string {
 	msg, ok := m.(*tgapi.Message)
 	if !ok {
 		return ""
 	}
 	if msg.Media != nil {
-		switch msg.Media.(type) {
-		case *tgapi.MessageMediaPhoto:
-			return "[photo]"
-		case *tgapi.MessageMediaDocument:
-			return "[file]"
-		default:
-			return "[media]"
-		}
+		return mediaLabel(msg.Media)
 	}
 	return msg.Message
 }

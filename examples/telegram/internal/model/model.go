@@ -53,11 +53,9 @@ const (
 	EventConnecting
 	EventAuthNeeded // session absent/invalid → show login
 	EventNewMessage
-	EventError
 )
 
 type Event struct {
 	Kind EventKind
 	Msg  Message // EventNewMessage
-	Err  string  // EventError / EventConnecting detail (sanitized, no secrets)
 }

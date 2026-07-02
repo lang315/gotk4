@@ -65,8 +65,9 @@ func activate(app *gtk.Application) {
 					coreglib.IdleAdd(func() { chat.SetBanner("failed to load history") })
 					return
 				}
-				_ = cl.MarkRead(context.Background(), d.Kind, d.PeerID)
 				coreglib.IdleAdd(func() { chat.SetMessages(d, ms) })
+				// Read receipt is fire-and-forget housekeeping; don't delay paint.
+				_ = cl.MarkRead(context.Background(), d.Kind, d.PeerID)
 			}()
 		},
 		Send: func(d model.Dialog, text string) {
