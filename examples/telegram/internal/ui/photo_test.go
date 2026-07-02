@@ -4,12 +4,10 @@ package ui
 import (
 	"errors"
 	"testing"
-
-	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
 func TestAsyncPicMarshalsOnce(t *testing.T) {
-	if !gtk.InitCheck() {
+	if !gtkOK { // shared single-shot init result from TestMain (login_test.go)
 		t.Skip("no GTK display available")
 	}
 	p := newAsyncPic()
