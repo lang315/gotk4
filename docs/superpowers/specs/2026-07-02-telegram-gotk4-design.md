@@ -1,115 +1,178 @@
 # Telegram client on gotk4 — design
 
 Date: 2026-07-02
-Status: approved (brainstorming session)
+Status: approved design, revised after 4-agent review (gotd feasibility, gotk4
+capability, scope/completeness, security)
 
 ## Goal
 
 Prove the gotk4 bindings work end-to-end by building a real, usable Telegram
-client with them. Secondary goal: close the few remaining rough edges the app
-work exposes in this repo (gota gaps, environmental test failure on macOS).
+client with them. Secondary: close the one concrete gap the app exposes in
+`pkg/gota` (async image widget).
 
-## Decisions (from brainstorming)
+## Decisions
 
-- **Full real client**, not an offline demo. Connects to Telegram via
-  [gotd/td](https://github.com/gotd/td) (pure-Go MTProto). The user supplies
-  their own `api_id`/`api_hash` through an in-app setup screen.
-- **V1 feature set: text core + photo display.** Login (phone → code →
-  optional 2FA password), dialog list, message history, send/receive text in
-  realtime, inline photo rendering. Other media shows placeholders
-  (`[file]`, `[sticker]`, `[voice]`).
-- **Lives in this repo** at `examples/telegram/` as its own Go module with a
-  `replace` directive pointing at `../../pkg`, so the app always builds
-  against the working tree and CI can compile it.
-- **Architecture A: direct gotd + thin event glue.** No `ChatBackend`
-  abstraction layer (YAGNI for a single backend); no tdlib (heavy C
-  dependency, defeats the "prove gotk4" purpose).
+- **Full real client** via [gotd/td](https://github.com/gotd/td) (pure-Go
+  MTProto). User supplies their own `api_id`/`api_hash` through an in-app
+  setup screen.
+- **V1 features:** login (phone → code → optional 2FA), dialog list, message
+  history (latest ~50), send/receive text realtime, inline photo rendering,
+  mark-as-read on open, logout. Other media: placeholders (`[file]`,
+  `[sticker]`, `[voice]`).
+- **Lives in this repo** at `examples/telegram/`, its own Go module,
+  `replace github.com/diamondburned/gotk4/pkg => ../../pkg`, `go 1.26`.
+  Dependencies: `gotd/td`, `gotd/contrib` (floodwait middleware).
+- **Architecture A: direct gotd + thin event glue.** No backend abstraction
+  layer, no tdlib.
 
 ## Repo review outcome
 
-The review found **no real bugs**:
+No real bugs found. Root module tests pass (only `pkgconfig.TestGIRDirs`
+fails, environmental on macOS/Homebrew — heterogeneous keg prefixes; Linux CI
+green). `pkg` builds; `core`/`gota` tests pass. Related but **separate**
+work items (not gating, not part of the app plan):
 
-- Root module (generator) tests pass. The only failure, `pkgconfig.TestGIRDirs`,
-  is environmental on macOS/Homebrew: brew installs each package into its own
-  Cellar keg, so a single install prefix cannot be resolved. Documented in
-  CLAUDE.md; CI (Linux/Nix) is green.
-- `pkg` module: `gtk/v4` and `gota` build; `core` and `gota` tests pass.
-- No open PRs or issues; recent PRs (#10–#12) already added a generator test
-  harness, benchmarks, and race-scoped CI.
-
-Completion items bundled into this effort (kept deliberately small, no broad
-refactors per CONTRIBUTING):
-
-1. Make `TestGIRDirs` skip with an explanatory reason when the environment
-   cannot resolve a common install prefix (heterogeneous brew kegs), instead
-   of failing red on a non-bug.
-2. Any `pkg/gota` gaps the app exposes are fixed in `gota` with tests, rather
-   than worked around inside the app.
+1. `TestGIRDirs`: skip with reason when no common install prefix resolves
+   (brew environment) — own small PR.
+2. `pkg/gota`: add an async image widget (goroutine loader → `IdleAdd` →
+   `gtk.Picture`) — identified as the one real gota gap; lands as a pkg PR,
+   used by app phase 3.
 
 ## App layout
 
 ```
 examples/telegram/
-  go.mod                 # module …/examples/telegram; replace → ../../pkg
-  main.go                # gtk.Application wiring, IdleAdd marshaling helper
-  internal/config/       # api_id/api_hash JSON at os.UserConfigDir()/gotk4-telegram/, 0600
-  internal/tg/           # gotd wrapper: client lifecycle, auth flow, dialogs,
-                         # history, send, updates dispatch, photo download+cache
-  internal/ui/           # setup.go (creds form), login.go (phone/code/password),
-                         # chat.go (sidebar + messages + composer), photo.go (async picture)
+  go.mod                 # replace → ../../pkg; deps gotd/td, gotd/contrib
+  main.go                # gtk.Application wiring
+  internal/config/       # api_id/api_hash JSON, 0600, in os.UserConfigDir()/gotk4-telegram/ (dir 0700)
+  internal/tg/           # gotd wrapper: lifecycle, auth, peers, dialogs,
+                         # history, send, updates, photo download+cache
+  internal/ui/           # setup.go, login.go, chat.go, photo.go; view models ui.Dialog, ui.Message
 ```
 
-## Auth and storage
+## Client lifecycle (load-bearing constraints)
 
-- gotd `auth.Flow` with a custom `UserAuthenticator` driven by the UI: the
-  gotd goroutine blocks on a channel per step (phone, code, 2FA password) and
-  each login page sends the entered value into that channel.
-- Session persistence: gotd `session.FileStorage` in the config directory, so
-  a restart with a valid session skips login entirely.
-- Credentials are stored as a plaintext JSON file with 0600 permissions.
-  OS-keychain storage is explicitly out of scope for v1.
+gotd RPC is valid **only inside the `client.Run(ctx, f)` callback**; `Run`
+blocks until the connection closes. Therefore:
 
-## Data flow
+- A background goroutine calls `client.Run`; the callback runs the auth flow,
+  checks `Auth().Status`, starts the updates manager, signals the UI
+  "ready" (via `IdleAdd`), then blocks until shutdown/logout.
+- UI-triggered RPCs run in their own goroutines and are only issued between
+  "ready" and shutdown (client is concurrency-safe while running).
+- Reconnect: transport-level reconnects are automatic while `Run` is live;
+  if `Run` exits with an error, re-enter it with capped exponential backoff
+  (1s → 60s max, until ctx cancel), UI shows a connecting banner.
+- FLOOD_WAIT: `gotd/contrib/middleware/floodwait.NewSimpleWaiter()` via
+  `telegram.Options.Middlewares`.
 
-- **Startup:** missing config → setup page; config present → connect →
-  needs auth? → login pages → main view. Views live in one `gtk.Stack`.
-- **Main view:** sidebar `ListView` with the top ~50 dialogs (title, last
-  message preview, unread count) | message pane rendering ~50 history
-  messages (`messages.getHistory`) | text composer.
-- **Send:** `messages.sendMessage` with optimistic local append.
-- **Receive:** gotd updates handler → Go channel → `coreglib.IdleAdd` →
-  append to the open chat and refresh the sidebar preview.
-- **Photos:** photo media is downloaded asynchronously (largest size class
-  whose width ≤ 800px, falling back to the smallest available) into
-  `~/.cache/gotk4-telegram/`, then rendered via
-  `gtk.Picture` on the main loop. A placeholder shows while downloading.
+## Auth
 
-## Threading and error handling
+- `auth.NewFlow(uiAuthenticator, auth.SendCodeOptions{}).Run(ctx, client.Auth())`
+  executed inside the Run callback.
+- `uiAuthenticator` implements the full `auth.UserAuthenticator` interface:
+  `Phone`, `Code`, `Password` block on a channel each while the UI (told via
+  `IdleAdd`) shows the matching login page; `AcceptTermsOfService` returns
+  nil; `SignUp` returns an error (sign-up out of scope).
+- The authenticator is an interface consumed by `internal/tg`, so unit tests
+  drive it with a scripted fake (no network).
+- Errors: invalid `api_id`/`api_hash` (`API_ID_INVALID`) → error message →
+  back to setup page. Wrong code/password → retry on same page. Error UI
+  never echoes the entered code/password.
+- Session: gotd `session.FileStorage` in the config dir. **The session file
+  is the highest-value secret** (full account access): file 0600, dir 0700.
+  A session invalidated mid-use (`AUTH_KEY_UNREGISTERED`) → delete session
+  file → login pages.
+- Logout: menu action → `auth.Logout` best-effort → delete session file →
+  login pages.
+- Secrets hygiene: 2FA password entry masked (gota `EntryWidget.PasswordMode`),
+  never persisted, never logged; gotd logger stays off/info in release.
 
-- Iron rule: gotd/network calls run only in goroutines; all UI mutation goes
-  through `coreglib.IdleAdd`. This exercises the bindings' hardest surface —
-  the gbox/closure registry and the "no Go pointers across cgo" model.
-- Errors surface in an infobar; FLOOD_WAIT handled by gotd's ratelimit
-  middleware; simple reconnect with backoff.
+## Peers, dialogs, updates
+
+- Supported peers v1: users, basic groups, supergroups, channels (read).
+  Sending: users + groups + supergroups. Posting to broadcast channels: out
+  of scope.
+- `internal/tg` keeps an in-memory peer store (ID → `InputPeer` with
+  `access_hash`), populated from `query.GetDialogs` results and updates.
+  Not persisted in v1 → full dialog fetch on each launch (accepted).
+- Dialogs: `telegram/query` dialogs iterator, stop at 50.
+- Realtime: `updates.Manager` (`updates.New(...)`) wired as
+  `telegram.Options.UpdateHandler`; `m.Run(...)` started inside the Run
+  callback (own goroutine) so gaps are recovered. StateStorage in-memory v1
+  → full resync each launch (accepted, listed out of scope to persist).
+- New-message events → Go channel → `coreglib.IdleAdd` → append to open chat
+  + refresh sidebar preview/unread.
+
+## Messages
+
+- History: `query` GetHistory, latest 50, rendered oldest-top. Loading older
+  messages (pagination): **out of scope v1**.
+- Send: `message.NewSender` to the known `InputPeer` (no username
+  re-resolution). Optimistic append keyed by `random_id`; when the server
+  echo arrives (send result or update), the optimistic row is replaced —
+  per-chat seen-message-ID set dedupes double delivery. Send failure marks
+  the row "failed" (no auto-retry).
+- Mark-as-read: `messages.readHistory` on opening a chat.
+- Rendering: GTK labels with markup **disabled** (plain text) for message
+  bodies and sidebar previews — no Pango injection from message content.
+
+## UI
+
+- One `gtk.Stack`: setup page → login pages (phone/code/password) → main.
+- Main: sidebar `gtk.ListView` backed by `gioutil.NewListModel[ui.Dialog]`
+  (generic model from `pkg/core/gioutil`, no manual GObject boxing) |
+  message pane: `ListView` backed by `gioutil.NewListModel[ui.Message]` |
+  composer: single-line `gtk.Entry`, Enter-to-send via activate (gota
+  `EntryWidget.OnEnter`). Multiline composer: out of scope.
+- Reuse `pkg/gota` where it fits (RunApp, boxes, Entry, Label, Scrolled);
+  chat panes use raw ListView (gota Table is a ColumnView — wrong shape).
+- Errors/status: top-of-window `gtk.Revealer` banner (InfoBar is deprecated
+  since GTK 4.10). Connecting/offline state shown in the same banner.
+- Empty states: placeholder label for zero dialogs / empty chat.
+
+## Photos
+
+- From `tg.Photo.Sizes` (union type): consider only variants carrying real
+  dimensions (`PhotoSize`, `PhotoSizeProgressive`); pick the largest with
+  width ≤ 800px, else the smallest available; pass that size's `Type` letter
+  as `ThumbSize` in `InputPhotoFileLocation`.
+- Download via `telegram/downloader` `.ToPath()` into
+  `~/.cache/gotk4-telegram/` (dir 0700). Cache filename is locally generated:
+  hex photo ID + size letter — never server-supplied strings; final path
+  asserted inside the cache root. Download size capped (10 MB).
+- `FILE_REFERENCE_EXPIRED` → refetch the message once, retry download once.
+- Async: download goroutine → `IdleAdd` → `gtk.Picture` (the new gota async
+  image widget); placeholder while loading.
+
+## Threading
+
+Iron rule: gotd/network calls only in goroutines; all UI mutation through
+`coreglib.IdleAdd` (verified: `pkg/core/glib` — gbox uintptr-id model, safe
+from any goroutine). This is the bindings surface the app exists to prove.
 
 ## Testing and evidence
 
-- Unit tests: config load/save roundtrip, tg→UI message model mapping, photo
-  cache path logic (pure logic, no network).
-- E2E is manual: real login on the dev machine; screenshots serve as PR
-  evidence per the user's global PR rules.
-- CI: compile `examples/telegram` in the Linux/Nix job (GTK available there).
-  macOS/Windows CI jobs untouched.
+- Unit: config roundtrip; auth flow with scripted fake authenticator;
+  message/dialog view-model mapping incl. seen-ID dedup + optimistic
+  replacement; photo size selection; cache path containment.
+- Manual E2E: real login on dev machine; screenshots = PR evidence.
+- CI: compile `examples/telegram` in the Linux/Nix job. macOS/Windows jobs
+  untouched.
 
 ## Phases
 
-1. Scaffold + config + setup/login UI → a real login succeeds.
-2. Dialog list + history + realtime send/receive text.
-3. Photo display.
-4. Polish (errors, reconnect) + CI build hook + README/screenshot +
-   `TestGIRDirs` graceful skip.
+1. Scaffold + config + lifecycle skeleton + setup/login UI → real login
+   succeeds, session persists.
+2. Peer store + dialogs + history + realtime send/receive text + read-marking
+   + logout.
+3. gota async image widget (pkg PR) + photo display.
+4. Polish (banner states, failed-send, empty states) + CI build hook +
+   README/screenshot. (`TestGIRDirs` skip: separate PR, any time.)
 
 ## Out of scope (v1)
 
-Stickers/voice/video rendering, message editing/deleting, search, profiles,
-notifications, multi-account, OS keychain, packaging/installers.
+History pagination, multiline composer, posting to broadcast channels,
+persisted peer/updates state, stickers/voice/video rendering, edit/delete,
+search, profiles, notifications, multi-account, OS keychain, sign-up flow,
+packaging.
