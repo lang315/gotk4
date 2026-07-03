@@ -5201,6 +5201,7 @@ func _gotk4_gtk3_ContainerClass_get_path_for_child(arg0 *C.GtkContainer, arg1 *C
 	var _ *WidgetPath
 
 	cret = (*C.GtkWidgetPath)(gextras.StructNative(unsafe.Pointer(widgetPath)))
+	C.gtk_widget_path_ref(cret)
 
 	return cret
 }
@@ -8193,6 +8194,7 @@ func _gotk4_gtk3_IMContextClass_get_preedit_string(arg0 *C.GtkIMContext, arg1 **
 
 	*arg1 = (*C.gchar)(unsafe.Pointer(C.CString(str)))
 	*arg2 = (*C.PangoAttrList)(gextras.StructNative(unsafe.Pointer(attrs)))
+	C.pango_attr_list_ref(*arg2)
 	*arg3 = C.gint(cursorPos)
 }
 

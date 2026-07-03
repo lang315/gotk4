@@ -645,6 +645,13 @@ func (conv *Converter) cgoConverter(value *ValueConverted) bool {
 			// MustRealloc can also be used to check if we need to take a
 			// reference: instead of reallocating, we take our own reference.
 			if value.MustRealloc() {
+				// Prefer ref_sink over ref: identical for non-floating
+				// instances, and for floating ones (fresh GVariants) it claims
+				// the floating reference instead of leaving it dangling —
+				// matching what intern.Get does for GObjects.
+				if sink := types.RecordHasRefSink(v); sink != nil {
+					ref = sink
+				}
 				value.p.Linef("C.%s(%s)", ref.CIdentifier, value.InNamePtr(1))
 			}
 			unref = true

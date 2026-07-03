@@ -740,7 +740,7 @@ func _gotk4_gtk4_ShortcutFunc(arg1 *C.GtkWidget, arg2 *C.GVariant, arg3 C.gpoint
 	}
 	if arg2 != nil {
 		_args = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(arg2)))
-		C.g_variant_ref(arg2)
+		C.g_variant_ref_sink(arg2)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_args)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -6685,6 +6685,7 @@ func _gotk4_gtk4_IMContextClass_get_preedit_string(arg0 *C.GtkIMContext, arg1 **
 
 	*arg1 = (*C.char)(unsafe.Pointer(C.CString(str)))
 	*arg2 = (*C.PangoAttrList)(gextras.StructNative(unsafe.Pointer(attrs)))
+	C.pango_attr_list_ref(*arg2)
 	*arg3 = C.int(cursorPos)
 }
 

@@ -275,7 +275,7 @@ func (conv *Converter) convertInner(of *ValueConverted, in, out string) *ValueCo
 		existing = &of.Inner[0]
 	}
 
-	value := conv.convertTypeExisting(of, in, out, inner, existing, "")
+	value := conv.convertTypeExisting(of, in, out, inner, existing, "", false)
 	if value == nil {
 		switch {
 		case of.Array != nil:
@@ -292,11 +292,23 @@ func (conv *Converter) convertInner(of *ValueConverted, in, out string) *ValueCo
 func (conv *Converter) convertType(
 	of *ValueConverted, in, out string, typ *gir.Type, ownership string) *ValueConverted {
 
-	return conv.convertTypeExisting(of, in, out, typ, nil, ownership)
+	return conv.convertTypeExisting(of, in, out, typ, nil, ownership, false)
+}
+
+// convertContainerOwnedType is convertType for a Go value being built into a C
+// container that was created with destroy functions (g_hash_table_new_full):
+// the container owns every inserted key/value, so the generated conversion
+// must never free them itself and must take its own reference for refcounted
+// types (see ConversionValue.OwnedByContainer).
+func (conv *Converter) convertContainerOwnedType(
+	of *ValueConverted, in, out string, typ *gir.Type, ownership string) *ValueConverted {
+
+	return conv.convertTypeExisting(of, in, out, typ, nil, ownership, true)
 }
 
 func (conv *Converter) convertTypeExisting(
-	of *ValueConverted, in, out string, typ *gir.Type, existing *ValueType, ownership string) *ValueConverted {
+	of *ValueConverted, in, out string, typ *gir.Type, existing *ValueType, ownership string,
+	ownedByContainer bool) *ValueConverted {
 
 	if ownership == "" {
 		ownership = of.TransferOwnership.TransferOwnership
@@ -315,12 +327,13 @@ func (conv *Converter) convertTypeExisting(
 	attrs.TransferOwnership.TransferOwnership = ownership
 
 	result := newValueConverted(conv, &ConversionValue{
-		InName:         in,
-		OutName:        out,
-		Direction:      of.Direction,
-		ParameterIndex: of.ParameterIndex,
-		ParameterAttrs: attrs,
-		InContainer:    of.Type != nil && len(of.Type.Types) > 0, // is container type
+		InName:           in,
+		OutName:          out,
+		Direction:        of.Direction,
+		ParameterIndex:   of.ParameterIndex,
+		ParameterAttrs:   attrs,
+		InContainer:      of.Type != nil && len(of.Type.Types) > 0, // is container type
+		OwnedByContainer: ownedByContainer,
 	})
 
 	if of.Array != nil || result.InContainer {

@@ -42192,6 +42192,7 @@ func (application *Application) AddOptionGroup(group *glib.OptionGroup) {
 
 	_arg0 = (*C.GApplication)(unsafe.Pointer(coreglib.InternObject(application).Native()))
 	_arg1 = (*C.GOptionGroup)(gextras.StructNative(unsafe.Pointer(group)))
+	C.g_option_group_ref(_arg1)
 
 	C.g_application_add_option_group(_arg0, _arg1)
 	runtime.KeepAlive(application)
@@ -49609,7 +49610,7 @@ func (message *DBusMessage) Body() *glib.Variant {
 
 	if _cret != nil {
 		_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-		C.g_variant_ref(_cret)
+		C.g_variant_ref_sink(_cret)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_variant)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -49742,7 +49743,7 @@ func (message *DBusMessage) Header(headerField DBusMessageHeaderField) *glib.Var
 
 	if _cret != nil {
 		_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-		C.g_variant_ref(_cret)
+		C.g_variant_ref_sink(_cret)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_variant)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -50716,7 +50717,7 @@ func (invocation *DBusMethodInvocation) Parameters() *glib.Variant {
 	var _variant *glib.Variant // out
 
 	_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-	C.g_variant_ref(_cret)
+	C.g_variant_ref_sink(_cret)
 	runtime.SetFinalizer(
 		gextras.StructIntern(unsafe.Pointer(_variant)),
 		func(intern *struct{ C unsafe.Pointer }) {
@@ -67089,7 +67090,7 @@ func (model *MenuModel) itemAttributes(itemIndex int) map[string]*glib.Variant {
 		var vdst *glib.Variant // out
 		kdst = C.GoString((*C.gchar)(unsafe.Pointer(ksrc)))
 		vdst = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(vsrc)))
-		C.g_variant_ref(vsrc)
+		C.g_variant_ref_sink(vsrc)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(vdst)),
 			func(intern *struct{ C unsafe.Pointer }) {

@@ -13999,7 +13999,7 @@ func (actionable *Actionable) ActionTargetValue() *glib.Variant {
 
 	if _cret != nil {
 		_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-		C.g_variant_ref(_cret)
+		C.g_variant_ref_sink(_cret)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_variant)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -14146,7 +14146,7 @@ func (actionable *Actionable) actionTargetValue() *glib.Variant {
 
 	if _cret != nil {
 		_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-		C.g_variant_ref(_cret)
+		C.g_variant_ref_sink(_cret)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_variant)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -42848,6 +42848,7 @@ func (self *ColumnView) ScrollTo(pos uint, column *ColumnViewColumn, flags ListS
 	_arg3 = C.GtkListScrollFlags(flags)
 	if scroll != nil {
 		_arg4 = (*C.GtkScrollInfo)(gextras.StructNative(unsafe.Pointer(scroll)))
+		C.gtk_scroll_info_ref(_arg4)
 	}
 
 	C.gtk_column_view_scroll_to(_arg0, _arg1, _arg2, _arg3, _arg4)
@@ -50809,6 +50810,7 @@ func NewDropTargetAsync(formats *gdk.ContentFormats, actions gdk.DragAction) *Dr
 
 	if formats != nil {
 		_arg1 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(formats)))
+		C.gdk_content_formats_ref(_arg1)
 	}
 	_arg2 = C.GdkDragAction(actions)
 
@@ -58721,7 +58723,7 @@ func (filter *FileFilter) ToGVariant() *glib.Variant {
 	var _variant *glib.Variant // out
 
 	_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-	C.g_variant_ref(_cret)
+	C.g_variant_ref_sink(_cret)
 	runtime.SetFinalizer(
 		gextras.StructIntern(unsafe.Pointer(_variant)),
 		func(intern *struct{ C unsafe.Pointer }) {
@@ -67947,6 +67949,7 @@ func (self *GridView) ScrollTo(pos uint, flags ListScrollFlags, scroll *ScrollIn
 	_arg2 = C.GtkListScrollFlags(flags)
 	if scroll != nil {
 		_arg3 = (*C.GtkScrollInfo)(gextras.StructNative(unsafe.Pointer(scroll)))
+		C.gtk_scroll_info_ref(_arg3)
 	}
 
 	C.gtk_grid_view_scroll_to(_arg0, _arg1, _arg2, _arg3)
@@ -81170,6 +81173,7 @@ func (self *ListView) ScrollTo(pos uint, flags ListScrollFlags, scroll *ScrollIn
 	_arg2 = C.GtkListScrollFlags(flags)
 	if scroll != nil {
 		_arg3 = (*C.GtkScrollInfo)(gextras.StructNative(unsafe.Pointer(scroll)))
+		C.gtk_scroll_info_ref(_arg3)
 	}
 
 	C.gtk_list_view_scroll_to(_arg0, _arg1, _arg2, _arg3)
@@ -88796,7 +88800,7 @@ func (setup *PageSetup) ToGVariant() *glib.Variant {
 	var _variant *glib.Variant // out
 
 	_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-	C.g_variant_ref(_cret)
+	C.g_variant_ref_sink(_cret)
 	runtime.SetFinalizer(
 		gextras.StructIntern(unsafe.Pointer(_variant)),
 		func(intern *struct{ C unsafe.Pointer }) {
@@ -96109,7 +96113,7 @@ func (settings *PrintSettings) ToGVariant() *glib.Variant {
 	var _variant *glib.Variant // out
 
 	_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-	C.g_variant_ref(_cret)
+	C.g_variant_ref_sink(_cret)
 	runtime.SetFinalizer(
 		gextras.StructIntern(unsafe.Pointer(_variant)),
 		func(intern *struct{ C unsafe.Pointer }) {
@@ -101560,7 +101564,7 @@ func (self *Shortcut) Arguments() *glib.Variant {
 
 	if _cret != nil {
 		_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-		C.g_variant_ref(_cret)
+		C.g_variant_ref_sink(_cret)
 		runtime.SetFinalizer(
 			gextras.StructIntern(unsafe.Pointer(_variant)),
 			func(intern *struct{ C unsafe.Pointer }) {
@@ -104885,6 +104889,7 @@ func (snapshot *Snapshot) PushGLShader(shader *gsk.GLShader, bounds *graphene.Re
 	_arg1 = (*C.GskGLShader)(unsafe.Pointer(coreglib.InternObject(shader).Native()))
 	_arg2 = (*C.graphene_rect_t)(gextras.StructNative(unsafe.Pointer(bounds)))
 	_arg3 = (*C.GBytes)(gextras.StructNative(unsafe.Pointer(takeArgs)))
+	C.g_bytes_ref(_arg3)
 
 	C.gtk_snapshot_push_gl_shader(_arg0, _arg1, _arg2, _arg3)
 	runtime.KeepAlive(snapshot)
@@ -128205,6 +128210,7 @@ func (viewport *Viewport) ScrollTo(descendant Widgetter, scroll *ScrollInfo) {
 	_arg1 = (*C.GtkWidget)(unsafe.Pointer(coreglib.InternObject(descendant).Native()))
 	if scroll != nil {
 		_arg2 = (*C.GtkScrollInfo)(gextras.StructNative(unsafe.Pointer(scroll)))
+		C.gtk_scroll_info_ref(_arg2)
 	}
 
 	C.gtk_viewport_scroll_to(_arg0, _arg1, _arg2)
@@ -129498,6 +129504,7 @@ func (widget *Widget) Allocate(width, height, baseline int, transform *gsk.Trans
 	_arg3 = C.int(baseline)
 	if transform != nil {
 		_arg4 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(transform)))
+		C.gsk_transform_ref(_arg4)
 	}
 
 	C.gtk_widget_allocate(_arg0, _arg1, _arg2, _arg3, _arg4)
@@ -140923,7 +140930,7 @@ func (paperSize *PaperSize) ToGVariant() *glib.Variant {
 	var _variant *glib.Variant // out
 
 	_variant = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(_cret)))
-	C.g_variant_ref(_cret)
+	C.g_variant_ref_sink(_cret)
 	runtime.SetFinalizer(
 		gextras.StructIntern(unsafe.Pointer(_variant)),
 		func(intern *struct{ C unsafe.Pointer }) {

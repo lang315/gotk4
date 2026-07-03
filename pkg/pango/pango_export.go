@@ -246,6 +246,7 @@ func _gotk4_pango1_FontClass_get_metrics(arg0 *C.PangoFont, arg1 *C.PangoLanguag
 	var _ *FontMetrics
 
 	cret = (*C.PangoFontMetrics)(gextras.StructNative(unsafe.Pointer(fontMetrics)))
+	C.pango_font_metrics_ref(cret)
 
 	return cret
 }
@@ -629,6 +630,7 @@ func _gotk4_pango1_FontsetClass_get_metrics(arg0 *C.PangoFontset) (cret *C.Pango
 	var _ *FontMetrics
 
 	cret = (*C.PangoFontMetrics)(gextras.StructNative(unsafe.Pointer(fontMetrics)))
+	C.pango_font_metrics_ref(cret)
 
 	return cret
 }

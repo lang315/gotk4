@@ -70,14 +70,14 @@ Captured with `-benchtime=200ms`. Microbenchmark numbers jitter run-to-run
 
 ## Notes on scope
 
-- **`intern` is intentionally not benchmarked.** `intern.Get` requires a real
-  `GObject` and calls `g_object_add_toggle_ref`; cleanup (`finalizeBox`) defers
-  the un-ref to a GLib main-loop iteration via `g_main_context_invoke`. Without
-  a running main loop in the benchmark, every iteration would leak a toggle ref
-  and grow the `shared.strong` map unbounded — the benchmark would measure map
-  growth and leaks, not steady-state intern cost. Standing up GObjects and
-  driving a main loop per iteration is too heavy/fragile for a baseline, so it
-  is skipped.
+- **`intern` is benchmarked only in its steady state.** `intern.Get` on a NEW
+  object calls `g_object_add_toggle_ref`, and cleanup (`finalizeBox`) defers
+  the un-ref to a GLib main-loop iteration via `g_main_context_invoke` —
+  benchmarking that path without a running main loop would measure leaks, not
+  cost. `BenchmarkInternTake` (in `core/glib`) therefore interns ONE object in
+  setup and measures the repeated lookup (`coreglib.Take` on an
+  already-interned pointer), which is the path every object-returning binding
+  call takes: ~23 ns/op, 0 allocs — the intern layer is not a bottleneck.
 - **The `C.CString` benchmark lives in `core/internal/cstrbench`, not in a
   `gbox` test file.** Go does not support `import "C"` inside `_test.go` files
   (golang.org/issue/4030), so the cgo call must sit in a regular source file.
@@ -132,3 +132,38 @@ Other observed costs were likewise judged not worth optimizing now: the once-pat
 `C.CString` malloc (unavoidable for NUL-terminated args; an empty-string
 fast-path via `gextras.ZeroString` would be a generator change with marginal
 payoff).
+
+## Signal dispatch and GValue marshaling (`core/glib`)
+
+`core/glib/marshal_bench_test.go` covers the layer above the registries — the
+code that runs on every signal emission and every GValue conversion. Emitter is
+`gio.SimpleAction`'s "activate" (synchronous `g_signal_emit`, no main loop).
+
+| Benchmark | ns/op | B/op | allocs/op |
+|---|--:|--:|--:|
+| `BenchmarkSignalEmitVoid` (`func()` fast path) | 641 | 104 | 4 |
+| `BenchmarkSignalEmitVariant` (reflect path, 1 param) | 1587 | 144 | 8 |
+| `BenchmarkObjectCast` (`Object.Cast`, registered type) | 714 | 152 | 7 |
+| `BenchmarkInternTake` (steady-state re-intern) | 22.9 | 0 | 0 |
+| `BenchmarkGoValue/int` | 121 | 0 | 0 |
+| `BenchmarkGoValue/string` | 148 | 32 | 2 |
+| `BenchmarkNewValue/int` | 498 | 40 | 3 |
+| `BenchmarkNewValue/string` | 536 | 40 | 3 |
+
+Observations and decisions:
+
+- **The `func()` fast path works**: a void handler dispatches with no
+  reflection; its ~641 ns / 4 allocs are the emission machinery itself
+  (cgo signal emit, box + closure registry lookups), not Go-side marshaling.
+- **The reflect path costs roughly +950 ns / +4 allocs per parameterized
+  signal** (args slice, `reflect.ValueOf`/`Convert`, `Value.Call`, GValue
+  read). Eliminating it would require generating typed marshalers per signal
+  signature — a generator-wide change; deferred until a real workload profile
+  shows signal dispatch itself as a bottleneck.
+- **Object-typed parameters declared as `G_TYPE_OBJECT` marshal twice**
+  (`goGValue` then `Object.Cast` in `_gotk4_goMarshal`), costing about one
+  extra `BenchmarkObjectCast` (~714 ns). Signals with concretely-typed object
+  parameters take one marshal only. Narrow case, medium-risk fix (the same
+  switch handles `*Variant`); deferred with the same profile-first bar.
+- **The intern layer is off the suspect list**: steady-state `Take` is
+  ~23 ns / 0 allocs.

@@ -3,9 +3,6 @@ package girgen_test
 import (
 	"strings"
 	"testing"
-
-	"github.com/diamondburned/gotk4/gir"
-	"github.com/diamondburned/gotk4/gir/girgen"
 )
 
 // This file drives the real generator on tiny, hand-written .gir fixtures held
@@ -22,47 +19,11 @@ import (
 
 // generateNamespace parses the given .gir XML, assembles a Repositories from it
 // (no pkg-config), runs the real namespace generator, and returns the
-// concatenated source of every emitted Go file.
+// concatenated source of every emitted Go file. It is a dependency-less
+// shorthand for generateNamespaceDeps (container_ownership_test.go).
 func generateNamespace(t *testing.T, girXML, namespace, version string) string {
 	t.Helper()
-
-	repo, err := gir.ParseRepositoryFromReader(strings.NewReader(girXML))
-	if err != nil {
-		t.Fatalf("parse fixture .gir: %v", err)
-	}
-
-	// Repositories is a plain []PkgRepository; build it directly instead of
-	// going through Add/AddSelected, which shell out to pkg-config.
-	repos := gir.Repositories{
-		gir.PkgRepository{
-			Repository: *repo,
-			Pkg:        "test",
-			Path:       gir.VersionedName(namespace, version) + ".gir",
-		},
-	}
-
-	g := girgen.NewGenerator(repos, func(n *gir.Namespace) string {
-		return "example.com/test/" + n.Name
-	})
-
-	nsgen := g.UseNamespace(namespace, version)
-	if nsgen == nil {
-		t.Fatalf("UseNamespace(%q, %q) returned nil", namespace, version)
-	}
-
-	files, err := nsgen.Generate()
-	if err != nil {
-		// Generate gofmt's each file; a non-nil error means emitted Go didn't
-		// parse, which is itself a generator bug worth surfacing.
-		t.Fatalf("generate namespace: %v", err)
-	}
-
-	var b strings.Builder
-	for _, content := range files {
-		b.Write(content)
-		b.WriteByte('\n')
-	}
-	return b.String()
+	return generateNamespaceDeps(t, girXML, namespace, version)
 }
 
 // returnStringFixture is a one-function namespace whose function returns a

@@ -174,6 +174,15 @@ func RecordHasRef(record *gir.Record) *gir.Method {
 	return FindMethodName(record.Methods, "ref")
 }
 
+// RecordHasRefSink returns the ref_sink method if it has one. Records with
+// floating references (GVariant) must be sunk, not plainly ref'd, when the
+// binding takes its own reference: ref_sink on a non-floating instance is
+// identical to ref, and on a floating one it claims the floating reference
+// instead of leaking it. This mirrors what intern.Get does for GObjects.
+func RecordHasRefSink(record *gir.Record) *gir.Method {
+	return FindMethodName(record.Methods, "ref_sink")
+}
+
 // FindMethodName finds from the method the given name.
 func FindMethodName(methods []gir.Method, name string) *gir.Method {
 	for i, method := range methods {

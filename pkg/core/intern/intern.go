@@ -155,8 +155,27 @@ func Get(gobject unsafe.Pointer, take bool) *Box {
 	// If the registry is currently strongly referenced, then we must move it to
 	// a weak reference.
 
+	// dropTransferredRef balances the reference that a transfer-full (take ==
+	// false) caller handed us when the object is already interned: the box's
+	// toggle reference is already our ownership, so keeping the transferred
+	// reference would leak it and pin the object strong forever. This mirrors
+	// the !take unref on the new-box path below. It must be called WITHOUT
+	// shared.mu held: the unref can dispatch a toggle notify, which takes the
+	// lock.
+	dropTransferredRef := func() {
+		if !take {
+			C.g_object_unref(C.gpointer(gobject))
+			if toggleRefs {
+				slog.Debug(
+					"Get: already interned and not taking, so unref'd the object",
+					objInfo(gobject))
+			}
+		}
+	}
+
 	box := TryGet(gobject)
 	if box != nil {
+		dropTransferredRef()
 		return box
 	}
 
@@ -165,6 +184,7 @@ func Get(gobject unsafe.Pointer, take bool) *Box {
 	box, _ = gets(gobject)
 	if box != nil {
 		shared.mu.Unlock()
+		dropTransferredRef()
 		return box
 	}
 

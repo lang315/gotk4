@@ -10994,6 +10994,7 @@ func (self *Transform) Invert() *Transform {
 
 	if self != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(self)))
+		C.gsk_transform_ref(_arg0)
 	}
 
 	_cret = C.gsk_transform_invert(_arg0)
@@ -11033,6 +11034,7 @@ func (next *Transform) Matrix(matrix *graphene.Matrix) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = (*C.graphene_matrix_t)(gextras.StructNative(unsafe.Pointer(matrix)))
 
@@ -11085,6 +11087,7 @@ func (next *Transform) Matrix2D(xx float32, yx float32, xy float32, yy float32, 
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(xx)
 	_arg2 = C.float(yx)
@@ -11141,6 +11144,7 @@ func (next *Transform) Perspective(depth float32) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(depth)
 
@@ -11182,6 +11186,7 @@ func (next *Transform) Rotate(angle float32) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(angle)
 
@@ -11227,6 +11232,7 @@ func (next *Transform) Rotate3D(angle float32, axis *graphene.Vec3) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(angle)
 	_arg2 = (*C.graphene_vec3_t)(gextras.StructNative(unsafe.Pointer(axis)))
@@ -11274,6 +11280,7 @@ func (next *Transform) Scale(factorX float32, factorY float32) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(factorX)
 	_arg2 = C.float(factorY)
@@ -11321,6 +11328,7 @@ func (next *Transform) Scale3D(factorX float32, factorY float32, factorZ float32
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(factorX)
 	_arg2 = C.float(factorY)
@@ -11368,6 +11376,7 @@ func (next *Transform) Skew(skewX float32, skewY float32) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = C.float(skewX)
 	_arg2 = C.float(skewY)
@@ -11662,6 +11671,7 @@ func (next *Transform) Transform(other *Transform) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	if other != nil {
 		_arg1 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(other)))
@@ -11765,6 +11775,7 @@ func (next *Transform) Translate(point *graphene.Point) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = (*C.graphene_point_t)(gextras.StructNative(unsafe.Pointer(point)))
 
@@ -11806,6 +11817,7 @@ func (next *Transform) Translate3D(point *graphene.Point3D) *Transform {
 
 	if next != nil {
 		_arg0 = (*C.GskTransform)(gextras.StructNative(unsafe.Pointer(next)))
+		C.gsk_transform_ref(_arg0)
 	}
 	_arg1 = (*C.graphene_point3d_t)(gextras.StructNative(unsafe.Pointer(point)))
 

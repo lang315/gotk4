@@ -395,8 +395,13 @@ func (conv *Converter) gocConvertNested(value *ValueConverted) bool {
 		// So far, we're getting away fine with generating more than just
 		// map[string]string.
 
-		kt := conv.convertType(value, "ksrc", "kdst", &value.Type.Types[0], "full")
-		vt := conv.convertType(value, "vsrc", "vdst", &value.Type.Types[1], "full")
+		// The table below is created with destroy functions for both keys and
+		// values, so the table owns everything inserted into it: the inner
+		// conversions must not free their C copies (the table's destroy
+		// functions do), and refcounted values must take their own reference
+		// for the table to steal.
+		kt := conv.convertContainerOwnedType(value, "ksrc", "kdst", &value.Type.Types[0], "full")
+		vt := conv.convertContainerOwnedType(value, "vsrc", "vdst", &value.Type.Types[1], "full")
 		if kt == nil || vt == nil {
 			value.Logln(logger.Debug, "no key/value-type")
 			return false
@@ -655,12 +660,25 @@ func (conv *Converter) gocConverter(value *ValueConverted) bool {
 		// the value once we're done. However, since the C code is taking
 		// ownership, we can't do that, since the Finalizer won't know that and
 		// free the record. Instead, if we cannot free the data once we're done,
-		// then we detach the finalizer so Go can't.
-		if !value.ShouldFree() && types.RecordHasRef(v) == nil {
-			value.header.Import("runtime")
-			value.vtmpl(
-				"runtime.SetFinalizer(gextras.StructIntern(unsafe.Pointer(<.InNamePtr 1>)), nil)",
-			)
+		// then for a refcounted record we take our own reference for C to
+		// steal (keeping the Go finalizer's unref balanced), and otherwise we
+		// detach the finalizer so Go can't free it.
+		if !value.ShouldFree() {
+			if ref := types.RecordHasRef(v); ref != nil {
+				// Prefer ref_sink for the same reason as the C->Go direction
+				// (c-go.go): identical to ref on a non-floating instance, and
+				// on a floating one it claims the floating reference for C to
+				// own instead of leaving the flag set.
+				if sink := types.RecordHasRefSink(v); sink != nil {
+					ref = sink
+				}
+				value.p.Linef("C.%s(%s)", ref.CIdentifier, value.Out.Set)
+			} else {
+				value.header.Import("runtime")
+				value.vtmpl(
+					"runtime.SetFinalizer(gextras.StructIntern(unsafe.Pointer(<.InNamePtr 1>)), nil)",
+				)
+			}
 		}
 		return true
 

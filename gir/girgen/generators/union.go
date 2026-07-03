@@ -181,6 +181,10 @@ func (ug *UnionGenerator) Use(union *gir.Union) bool {
 
 	{
 		ug.hdr.Import("unsafe")
+		// The CastBlock below always emits runtime.SetFinalizer; the import
+		// must not depend on the per-field loop (which can run zero times when
+		// no field is a readable record/enum/bitfield).
+		ug.hdr.Import("runtime")
 		ug.hdr.ImportCore("gextras")
 
 		p := pen.NewBlock()

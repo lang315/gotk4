@@ -141,6 +141,7 @@ func _gotk4_gdk4_ContentProviderClass_ref_formats(arg0 *C.GdkContentProvider) (c
 	var _ *ContentFormats
 
 	cret = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(contentFormats)))
+	C.gdk_content_formats_ref(cret)
 
 	return cret
 }
@@ -158,6 +159,7 @@ func _gotk4_gdk4_ContentProviderClass_ref_storable_formats(arg0 *C.GdkContentPro
 	var _ *ContentFormats
 
 	cret = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(contentFormats)))
+	C.gdk_content_formats_ref(cret)
 
 	return cret
 }

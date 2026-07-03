@@ -69,6 +69,19 @@ type ConversionValue struct {
 	// that the type is stored indirectly as a pointer in a container. A
 	// container has to be a <type> wrapped inside another <type>.
 	InContainer bool
+	// OwnedByContainer, if true, marks a Go->C value being built into a C
+	// container that was created with destroy functions for its elements
+	// (g_hash_table_new_full): the container owns every inserted element, so
+	// the conversion must never free it (ShouldFree is always false) and must
+	// take its own reference for refcounted types.
+	//
+	// The general rule: a C container owns its elements iff it was created
+	// with per-element destroy functions. Hash tables always are (see the
+	// builder in go-c.go), so their inners set this. Plain GList/GSList are
+	// freed with g_list_free/g_slist_free, which release only the nodes —
+	// list elements follow the value's transfer-ownership instead and must
+	// NOT set this.
+	OwnedByContainer bool
 }
 
 // NewValue creates a new ConversionValue from the given parameter attributes.

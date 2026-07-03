@@ -21034,6 +21034,7 @@ func (first *ContentFormats) Union(second *ContentFormats) *ContentFormats {
 	var _cret *C.GdkContentFormats // in
 
 	_arg0 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(first)))
+	C.gdk_content_formats_ref(_arg0)
 	_arg1 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(second)))
 
 	_cret = C.gdk_content_formats_union(_arg0, _arg1)
@@ -21064,6 +21065,7 @@ func (formats *ContentFormats) UnionDeserializeGTypes() *ContentFormats {
 	var _cret *C.GdkContentFormats // in
 
 	_arg0 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(formats)))
+	C.gdk_content_formats_ref(_arg0)
 
 	_cret = C.gdk_content_formats_union_deserialize_gtypes(_arg0)
 	runtime.KeepAlive(formats)
@@ -21092,6 +21094,7 @@ func (formats *ContentFormats) UnionDeserializeMIMETypes() *ContentFormats {
 	var _cret *C.GdkContentFormats // in
 
 	_arg0 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(formats)))
+	C.gdk_content_formats_ref(_arg0)
 
 	_cret = C.gdk_content_formats_union_deserialize_mime_types(_arg0)
 	runtime.KeepAlive(formats)
@@ -21120,6 +21123,7 @@ func (formats *ContentFormats) UnionSerializeGTypes() *ContentFormats {
 	var _cret *C.GdkContentFormats // in
 
 	_arg0 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(formats)))
+	C.gdk_content_formats_ref(_arg0)
 
 	_cret = C.gdk_content_formats_union_serialize_gtypes(_arg0)
 	runtime.KeepAlive(formats)
@@ -21148,6 +21152,7 @@ func (formats *ContentFormats) UnionSerializeMIMETypes() *ContentFormats {
 	var _cret *C.GdkContentFormats // in
 
 	_arg0 = (*C.GdkContentFormats)(gextras.StructNative(unsafe.Pointer(formats)))
+	C.gdk_content_formats_ref(_arg0)
 
 	_cret = C.gdk_content_formats_union_serialize_mime_types(_arg0)
 	runtime.KeepAlive(formats)

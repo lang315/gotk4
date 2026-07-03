@@ -872,9 +872,23 @@ func difference(i, j int) int {
 
 // ShouldFree returns true if the C value must be freed once we're done.
 func (value *ValueConverted) ShouldFree() bool {
+	// An element handed to a C container that has destroy functions is owned
+	// by the container: the container frees it exactly once, so the generated
+	// conversion must never free it itself. See ConversionValue.OwnedByContainer.
+	if value.OwnedByContainer {
+		return false
+	}
+
 	// goReceiving is true when we're receiving the C value.
 	goReceiving := value.ParameterIndex == ReturnValueIndex || value.ParameterIsOutput()
 	if value.conv.Callback {
+		// Deliberately unfixed misclassification: ParameterIsOutput returns
+		// false for InContainer values, so this flip turns a callback
+		// OUT-PARAM container's inners into "receiving" when they are in fact
+		// being given to C. Correcting the flip (or ParameterIsOutput)
+		// globally regresses the C->Go container paths, whose borrow
+		// semantics depend on the current computation — the OwnedByContainer
+		// early-return above is the targeted override instead.
 		goReceiving = !goReceiving
 	}
 	// If we're not converting C to Go, then we're probably in a callback, so
