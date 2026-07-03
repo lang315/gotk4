@@ -2,11 +2,23 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/diamondburned/gotk4/examples/telegram/internal/model"
 )
+
+// TestPaletteMatchesCSS guards the paletteSize<->CSS coupling: colorIndex can
+// return any 0..paletteSize-1, so style.go must define that many .avatar-N and
+// .sender-N rules or some peers render unstyled.
+func TestPaletteMatchesCSS(t *testing.T) {
+	for _, prefix := range []string{".avatar-", ".sender-"} {
+		if n := strings.Count(themeCSS, prefix); n != paletteSize {
+			t.Errorf("%s rule count = %d, want paletteSize=%d", prefix, n, paletteSize)
+		}
+	}
+}
 
 var now = time.Date(2026, 7, 2, 22, 0, 0, 0, time.Local)
 

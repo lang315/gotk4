@@ -32,9 +32,6 @@ func NewSetupPage(onSave func(id int, hash string)) gtk.Widgetter {
 		errLabel,
 	)
 	w := box.ToWidget()
-	w.SetMarginTop(24)
-	w.SetMarginBottom(24)
-	w.SetMarginStart(24)
-	w.SetMarginEnd(24)
+	setMargins(w, 24, 24, 24, 24)
 	return w
 }

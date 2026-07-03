@@ -30,10 +30,7 @@ func NewLoginPage() *LoginPage {
 		}
 	})
 	p.root = gota.VBox(8).Append(p.label, p.entry, btn).ToWidget()
-	p.root.SetMarginTop(24)
-	p.root.SetMarginBottom(24)
-	p.root.SetMarginStart(24)
-	p.root.SetMarginEnd(24)
+	setMargins(p.root, 24, 24, 24, 24)
 	return p
 }
 

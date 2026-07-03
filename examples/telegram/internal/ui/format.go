@@ -11,7 +11,9 @@ import (
 )
 
 // paletteSize is the number of sender/avatar color slots (spec-pinned: 7).
-// Keep in sync with the avatar-N / sender-N rule count in style.go.
+// TestPaletteMatchesCSS asserts it equals the avatar-N/sender-N rule count
+// in style.go, so a bump that forgets the CSS fails CI instead of silently
+// producing unstyled avatars.
 const paletteSize = 7
 
 func colorIndex(id int64) int {

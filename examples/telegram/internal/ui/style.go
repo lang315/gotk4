@@ -23,7 +23,6 @@ listview > row:hover:not(:selected), listview > child:hover:not(:selected) { bac
   border-radius: 10px; padding: 1px 6px; min-width: 20px; }
 
 .avatar { border-radius: 9999px; color: #FFFFFF; font-weight: bold; }
-/* exactly paletteSize (format.go) slots each: avatar-0..6, sender-0..6 */
 .avatar-0 { background: linear-gradient(to bottom, #FF885E, #FF516A); }
 .avatar-1 { background: linear-gradient(to bottom, #FFCD6A, #FFA85C); }
 .avatar-2 { background: linear-gradient(to bottom, #82B1FF, #665FFF); }

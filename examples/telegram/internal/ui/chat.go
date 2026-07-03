@@ -56,8 +56,8 @@ var (
 	senderClasses = paletteClassNames("sender")
 )
 
-func paletteClassNames(prefix string) [paletteSize]string {
-	var out [paletteSize]string
+func paletteClassNames(prefix string) []string {
+	out := make([]string, paletteSize)
 	for i := range out {
 		out[i] = fmt.Sprintf("%s-%d", prefix, i)
 	}
@@ -65,7 +65,7 @@ func paletteClassNames(prefix string) [paletteSize]string {
 }
 
 // swapPaletteClass leaves exactly one <prefix>-N class on the label.
-func swapPaletteClass(lb *gtk.Label, classes *[paletteSize]string, id int64) {
+func swapPaletteClass(lb *gtk.Label, classes []string, id int64) {
 	for _, cl := range classes {
 		lb.RemoveCSSClass(cl)
 	}
@@ -76,14 +76,23 @@ func swapPaletteClass(lb *gtk.Label, classes *[paletteSize]string, id int64) {
 // gradient class.
 func setAvatar(lb *gtk.Label, title string, id int64) {
 	lb.SetText(initials(title))
-	swapPaletteClass(lb, &avatarClasses, id)
+	swapPaletteClass(lb, avatarClasses, id)
 }
 
-func setMargins(b *gtk.Box, top, bottom, start, end int) {
-	b.SetMarginTop(top)
-	b.SetMarginBottom(bottom)
-	b.SetMarginStart(start)
-	b.SetMarginEnd(end)
+// marginSetter is any widget exposing the four margin setters — *gtk.Box and
+// *gtk.Widget both satisfy it.
+type marginSetter interface {
+	SetMarginTop(int)
+	SetMarginBottom(int)
+	SetMarginStart(int)
+	SetMarginEnd(int)
+}
+
+func setMargins(w marginSetter, top, bottom, start, end int) {
+	w.SetMarginTop(top)
+	w.SetMarginBottom(bottom)
+	w.SetMarginStart(start)
+	w.SetMarginEnd(end)
 }
 
 func NewChatView(actions ChatActions) *ChatView {
@@ -457,7 +466,7 @@ func (v *ChatView) bindMessage(c *msgCell, m model.Message, prev, next *model.Me
 	c.sender.SetVisible(showSender)
 	if showSender {
 		c.sender.SetText(m.Sender)
-		swapPaletteClass(c.sender, &senderClasses, m.SenderID)
+		swapPaletteClass(c.sender, senderClasses, m.SenderID)
 	}
 
 	c.text.SetText(m.Text)
