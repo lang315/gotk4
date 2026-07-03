@@ -79,6 +79,10 @@ jobs:
     - run: cd pkg && go test -race -run='^$' -bench=Parallel -benchtime=10x ./core/slab/ ./core/gbox/
       shell: nix develop -c bash -e {0}
 
+    - name: Build examples/telegram
+      run: cd examples/telegram && go build ./... && go test ./...
+      shell: nix develop -c bash -e {0}
+
   docker:
     name: "${{ github.event_name }} / docker"
     runs-on: ubuntu-latest
