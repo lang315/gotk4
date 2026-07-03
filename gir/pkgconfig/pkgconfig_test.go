@@ -2,6 +2,8 @@ package pkgconfig
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -69,6 +71,10 @@ func TestGIRDirs(t *testing.T) {
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("case_%d", i), func(t *testing.T) {
 			out, err := GIRDirs(test.inPkgs...)
+			if err != nil && runtime.GOOS == "darwin" &&
+				strings.Contains(err.Error(), "could not resolve install prefix") {
+				t.Skipf("homebrew installs packages under per-keg prefixes; no common install prefix: %v", err)
+			}
 			assert.NoError(t, err)
 
 			for pkg, dir := range out {
